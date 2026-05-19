@@ -255,7 +255,7 @@ class Add_To_Cart_Widget extends Widget_Base
             <?php echo $tag_open; ?>
 
             <?php if (!empty($icons[$state])): ?>
-                <span class="nmj-atc-icon"><?php echo wp_kses_post($icons[$state]); ?></span>
+                <span class="nmj-atc-icon"><?php echo $icons[$state]; ?></span>
             <?php endif; ?>
 
             <?php if ('' !== $cur_text): ?>
@@ -266,7 +266,7 @@ class Add_To_Cart_Widget extends Widget_Base
 
             <?php // Hidden icon templates for JS state swaps ?>
             <?php foreach ($icons as $st => $html): ?>
-                <span class="nmj-atc-icon-tpl" data-state="<?php echo esc_attr($st); ?>"><?php echo wp_kses_post($html); ?></span>
+                <span class="nmj-atc-icon-tpl" data-state="<?php echo esc_attr($st); ?>"><?php echo $html; ?></span>
             <?php endforeach; ?>
 
         </div>
@@ -278,23 +278,19 @@ class Add_To_Cart_Widget extends Widget_Base
     protected function content_template(): void
     {
         ?>
-        <# // ── Resolve preview state ──────────────────────────────────────── var state=settings.editor_preview_state
-            || 'in-stock' ; // ── Text map ───────────────────────────────────────────────────── var textMap={ 'in-stock' :
-            settings.in_stock_text !==undefined ? settings.in_stock_text : 'Add to Cart' , 'added' : settings.added_text
-            !==undefined ? settings.added_text : 'Added' , 'oos' : settings.out_of_stock_text !==undefined ?
-            settings.out_of_stock_text : 'Out of Stock' , 'awaiting' : (settings.variable_behavior==='quick_view' ) ?
-            (settings.quick_view_text !==undefined ? settings.quick_view_text : 'Quick View' ) : (settings.awaiting_text
-            !==undefined ? settings.awaiting_text : 'Select options' ), }; var btnText=textMap[state]; // ── Icon map
-            ────────────────────────────────────────────────────── var iconKeyMap={ 'in-stock' : 'in_stock_icon' , 'added'
-            : 'added_icon' , 'oos' : 'out_of_stock_icon' , 'awaiting' : 'awaiting_icon' , }; var iconKey=iconKeyMap[state]; var
-            iconHTML=elementor.helpers.renderIcon(view, settings[iconKey], {'aria-hidden': 'true' }, 'i' , 'object' ); var
-            hasIcon=iconHTML && iconHTML.value; var hasText=btnText !=='' ; // ── State CSS class
-            ─────────────────────────────────────────────── var stateClass='nmj--' + state; var extraClass='' ; if
-            (state==='in-stock' ) { extraClass='button add_to_cart_button ajax_add_to_cart' ; } else if (state==='awaiting' &&
-            settings.variable_behavior==='quick_view' ) { extraClass='nmj-qv-trigger' ; } // ── Quantity visibility
-            ─────────────────────────────────────────── var showQty=settings.show_quantity_input==='yes' ; var
-            qtyPos=settings.qty_position || 'left' ; var qty=settings.qty_default || 1; var qtyHidden=(state !=='in-stock' )
-            ? ' nmj-atc-qty-wrap--hidden' : '' ; #>
+        <# var state=settings.editor_preview_state || 'in-stock' ; var textMap={ 'in-stock' : settings.in_stock_text
+            !==undefined ? settings.in_stock_text : 'Add to Cart' , 'added' : settings.added_text !==undefined ?
+            settings.added_text : 'Added' , 'oos' : settings.out_of_stock_text !==undefined ? settings.out_of_stock_text
+            : 'Out of Stock' , 'awaiting' : (settings.variable_behavior==='quick_view' ) ? (settings.quick_view_text
+            !==undefined ? settings.quick_view_text : 'Quick View' ) : (settings.awaiting_text !==undefined ?
+            settings.awaiting_text : 'Select options' ) }; var btnText=textMap[state]; var iconKeyMap={ 'in-stock'
+            : 'in_stock_icon' , 'added' : 'added_icon' , 'oos' : 'out_of_stock_icon' , 'awaiting' : 'awaiting_icon' }; var
+            iconKey=iconKeyMap[state]; var iconHTML=elementor.helpers.renderIcon(view, settings[iconKey], {'aria-hidden': 'true'
+            }, 'i' , 'object' ); var hasIcon=iconHTML && iconHTML.value; var hasText=btnText !=='' ; var stateClass='nmj--' +
+            state; var extraClass='' ; if (state==='in-stock' ) { extraClass='button add_to_cart_button ajax_add_to_cart' ; }
+            else if (state==='awaiting' && settings.variable_behavior==='quick_view' ) { extraClass='nmj-qv-trigger' ; } var
+            showQty=settings.show_quantity_input==='yes' ; var qtyPos=settings.qty_position || 'left' ; var
+            qty=settings.qty_default || 1; var qtyHidden=(state !=='in-stock' ) ? ' nmj-atc-qty-wrap--hidden' : '' ; #>
             <div class="nmj-atc-wrap" data-qty-position="{{ qtyPos }}">
                 <# if (showQty) { #>
                     <div class="nmj-atc-qty-wrap{{ qtyHidden }}">
