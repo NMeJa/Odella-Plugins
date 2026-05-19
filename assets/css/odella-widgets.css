@@ -21,7 +21,7 @@
 /* ── Button ──────────────────────────────────────────────────────────────── */
 
 .nmj-atc-btn {
-    display: inline-flex;
+    display: inline-flex !important; /* beats any theme/WC .button override regardless of specificity */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -37,17 +37,15 @@
 }
 
 /*
- * WooCommerce's .button rule (display:inline-block) loads after our stylesheet
- * and has equal specificity — this selector wins by being more specific,
- * ensuring inline-flex and the flex layout controls always apply.
+ * Restore flex properties that WC/theme rules may re-declare on .button
+ * even though display is locked above.
  */
 .nmj-atc-btn.button,
 .nmj-atc-btn.add_to_cart_button,
 .nmj-atc-btn.ajax_add_to_cart,
 .nmj-atc-btn.added {
-    display: inline-flex;
     align-items: center;
-    flex-direction: inherit; /* pass-through Elementor's flex-direction control */
+    flex-direction: inherit; /* pass-through Elementor's flex-direction selector */
 }
 
 /* Non-interactive states */

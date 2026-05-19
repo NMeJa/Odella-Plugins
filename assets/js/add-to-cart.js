@@ -3,12 +3,12 @@
 
     // ── State Machine Helper ──────────────────────────────────────────────────
     function nmjSetState($wrap, state) {
-        var $btn      = $wrap.find('.nmj-atc-btn');
-        var $text     = $btn.find('.nmj-atc-text');
-        var $icon     = $btn.find('.nmj-atc-icon');
-        var stTexts   = {};
+        var $btn = $wrap.find('.nmj-atc-btn');
+        var $text = $btn.find('.nmj-atc-text');
+        var $icon = $btn.find('.nmj-atc-icon');
+        var stTexts = {};
 
-        try { stTexts = JSON.parse($btn.attr('data-state-texts') || '{}'); } catch(e) {}
+        try { stTexts = JSON.parse($btn.attr('data-state-texts') || '{}'); } catch (e) { }
 
         // Get icon template for this state
         var $tpl = $wrap.find('.nmj-atc-icon-tpl[data-state="' + state + '"]');
@@ -49,14 +49,14 @@
             } else {
                 $btn.addClass('ajax_add_to_cart');
             }
-            $btn.css({'pointer-events':'', 'cursor':''});
+            $btn.css({ 'pointer-events': '', 'cursor': '' });
             $btn.removeAttr('aria-disabled');
         } else if (isQV) {
             $btn.addClass('nmj-qv-trigger');
-            $btn.css({'pointer-events':'', 'cursor':'pointer'});
+            $btn.css({ 'pointer-events': '', 'cursor': 'pointer' });
             $btn.removeAttr('aria-disabled');
         } else {
-            $btn.css({'pointer-events':'none', 'cursor':'not-allowed'});
+            $btn.css({ 'pointer-events': 'none', 'cursor': 'not-allowed' });
             $btn.attr('aria-disabled', 'true');
         }
 
@@ -82,7 +82,7 @@
         if (!$btn || !$btn.hasClass('nmj-atc-btn')) return;
 
         var $wrap = $btn.closest('.nmj-atc-wrap');
-        var lock  = $btn.attr('data-lock-after-add') === '1';
+        var lock = $btn.attr('data-lock-after-add') === '1';
 
         $btn.removeClass('loading');
 
@@ -104,20 +104,20 @@
     $(document).on('click', '.nmj-atc-btn.ajax_add_to_cart[data-is-variable="1"]', function (e) {
         e.preventDefault();
         var $btn = $(this);
-        var productId   = $btn.data('product_id');
+        var productId = $btn.data('product_id');
         var variationId = $btn.data('variation_id');
-        var qty         = $btn.attr('data-quantity') || 1;
+        var qty = $btn.attr('data-quantity') || 1;
 
         if (!variationId) return;
 
-        var $form    = $('.nmj-variations-form[data-product_id="' + productId + '"]');
+        var $form = $('.nmj-variations-form[data-product_id="' + productId + '"]');
         var formData = $form.length ? $form.serializeArray() : [];
 
         var data = {
-            action:       'woocommerce_add_to_cart',
-            product_id:   productId,
+            action: 'woocommerce_add_to_cart',
+            product_id: productId,
             variation_id: variationId,
-            quantity:     qty
+            quantity: qty
         };
 
         $.each(formData, function (i, field) {
@@ -149,21 +149,21 @@
 
         // Find all ATC widgets for this product with inline behavior
         $('.nmj-atc-btn[data-product_id="' + productId + '"].nmj--variable-inline, ' +
-          '.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
-            var $btn  = $(this);
-            var $wrap = $btn.closest('.nmj-atc-wrap');
+            '.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
+                var $btn = $(this);
+                var $wrap = $btn.closest('.nmj-atc-wrap');
 
-            if (variation.is_in_stock) {
-                // Ready to add — switch to in-stock
-                $btn.attr('data-variation_id', variation.variation_id);
-                $btn.addClass('nmj--variable-inline');
-                nmjSetState($wrap, 'in-stock');
-            } else {
-                // Variation exists but is out of stock
-                $btn.removeAttr('data-variation_id');
-                nmjSetState($wrap, 'oos');
-            }
-        });
+                if (variation.is_in_stock) {
+                    // Ready to add — switch to in-stock
+                    $btn.attr('data-variation_id', variation.variation_id);
+                    $btn.addClass('nmj--variable-inline');
+                    nmjSetState($wrap, 'in-stock');
+                } else {
+                    // Variation exists but is out of stock
+                    $btn.removeAttr('data-variation_id');
+                    nmjSetState($wrap, 'oos');
+                }
+            });
     });
 
     $(document.body).on('reset_data', function (e) {
@@ -171,7 +171,7 @@
         var productId = $form.data('product_id');
 
         $('.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
-            var $btn  = $(this);
+            var $btn = $(this);
             var $wrap = $btn.closest('.nmj-atc-wrap');
 
             $btn.removeAttr('data-variation_id');
@@ -181,49 +181,57 @@
     });
 
     // ── Quick View / Popup Handler ────────────────────────────────────────────
+    // Strategy: AJAX-render the Elementor popup template server-side with the
+    // correct product $post context, then inject the HTML into an Elementor-
+    // compatible dialog structure so the popup's own CSS (width, shadow,
+    // backdrop, animation) applies exactly as designed in the popup builder.
+    // No "Display Conditions" needed — popup is rendered on-demand per product.
     $(document).on('click', '.nmj-qv-trigger', function (e) {
         e.preventDefault();
-        var $btn       = $(this);
-        var productId  = $btn.data('product_id');
-        var popupId    = $btn.data('popup-id');
+        e.stopPropagation();
+
+        var $btn      = $(this);
+        var productId = parseInt($btn.attr('data-product_id'), 10) || 0;
+        var popupId   = parseInt($btn.attr('data-popup-id'), 10) || 0;
 
         if (!popupId) {
-            console.warn('NMJ ATC: No popup ID configured for quick view.');
+            console.warn('[NMJ ATC] Quick View: No Popup ID set. Check the widget "Variable Product" settings.');
             return;
         }
 
-        // Elementor Pro Popup method
-        if (window.elementorProFrontend && window.elementorProFrontend.modules &&
-            window.elementorProFrontend.modules.popup) {
-            // Set product context for dynamic tags inside popup
-            if (window.elementorFrontend && window.elementorFrontend.config) {
-                window.elementorFrontend.config.post = {id: productId};
-            }
-            elementorProFrontend.modules.popup.showPopup({id: popupId});
-            return;
-        }
-
-        // Fallback: custom AJAX modal (no Elementor Pro)
-        nmjOpenFallbackModal(productId, popupId);
+        nmjOpenProductPopup(productId, popupId);
     });
 
-    // ── Fallback Modal (when Elementor Pro is not available) ───────────────────
-    function nmjOpenFallbackModal(productId, templateId) {
-        var $modal = $('#nmj-qv-modal');
+    // ── Product Popup: AJAX render → Elementor dialog shell ──────────────────
+    function nmjOpenProductPopup(productId, popupId) {
+        var dialogId = 'elementor-popup-modal-' + popupId;
+        var $dialog  = $('#' + dialogId);
 
-        if (!$modal.length) {
-            $('body').append(
-                '<div id="nmj-qv-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;align-items:center;justify-content:center;">' +
-                '<div style="background:#fff;width:90%;max-width:900px;max-height:90vh;overflow-y:auto;position:relative;border-radius:8px;padding:20px;">' +
-                '<button class="nmj-modal-close" style="position:absolute;top:10px;right:15px;border:none;background:none;font-size:24px;cursor:pointer;">×</button>' +
-                '<div class="nmj-modal-body"></div></div></div>'
+        // Build the Elementor dialog shell once. Elementor's own popup CSS
+        // (returned in the <style> block of the AJAX response) targets:
+        //   #elementor-popup-modal-{id}          → backdrop + flex centering
+        //   #elementor-popup-modal-{id} .dialog-widget-content → shadow, animation
+        //   #elementor-popup-modal-{id} .dialog-message → dimensions
+        if (!$dialog.length) {
+            $dialog = $(
+                '<div id="' + dialogId + '" class="dialog-widget elementor-popup-modal nmj-dynamic-popup"' +
+                '     role="dialog" aria-modal="true"' +
+                '     style="display:none;position:fixed;inset:0;z-index:9999;">' +
+                '  <div class="dialog-widget-content elementor-popup-modal-content">' +
+                '    <div class="dialog-lightbox-close-button dialog-close-button nmj-qv-close"' +
+                '         role="button" tabindex="0" aria-label="Close">&#x2715;</div>' +
+                '    <div class="dialog-message dialog-type-widget">' +
+                '      <div class="dialog-widget-message nmj-qv-content"></div>' +
+                '    </div>' +
+                '  </div>' +
+                '</div>'
             );
-            $modal = $('#nmj-qv-modal');
+            $('body').append($dialog);
         }
 
-        var $body = $modal.find('.nmj-modal-body');
-        $body.html('<p style="text-align:center;padding:40px;">Loading...</p>');
-        $modal.css('display','flex').hide().fadeIn();
+        // Show loading state
+        $dialog.find('.nmj-qv-content').html('<p style="text-align:center;padding:60px 20px;">Loading...</p>');
+        $dialog.css({ display: 'flex', opacity: 0 }).animate({ opacity: 1 }, 200);
 
         var ajaxUrl = (typeof wc_add_to_cart_params !== 'undefined')
             ? wc_add_to_cart_params.ajax_url
@@ -232,24 +240,43 @@
         $.ajax({
             url:  ajaxUrl,
             type: 'POST',
-            data: { action:'nmj_load_quick_view', product_id:productId, template_id:templateId },
+            data: { action: 'nmj_load_quick_view', product_id: productId, template_id: popupId },
             success: function (r) {
                 if (r.success) {
-                    $body.html(r.data.html);
+                    // Inject full Elementor-rendered HTML (includes <style> block
+                    // with popup CSS that targets #elementor-popup-modal-{id})
+                    $dialog.find('.nmj-qv-content').html(r.data.html);
+
+                    // Re-initialise Elementor widgets rendered inside the dialog
                     if (window.elementorFrontend && window.elementorFrontend.hooks) {
-                        window.elementorFrontend.hooks.doAction('frontend/element_ready/global', $body);
+                        window.elementorFrontend.hooks.doAction('frontend/element_ready/global', $dialog);
                     }
-                    var $form = $body.find('.variations_form');
+                    // Re-initialise WooCommerce variation form if present
+                    var $form = $dialog.find('.variations_form');
                     if ($form.length && $.fn.wc_variation_form) $form.wc_variation_form();
                 } else {
-                    $body.html('<p style="text-align:center;">Failed to load product.</p>');
+                    $dialog.find('.nmj-qv-content').html('<p style="text-align:center;">Failed to load product.</p>');
                 }
+            },
+            error: function (xhr, status, err) {
+                console.error('[NMJ ATC] Quick view AJAX error:', status, err);
+                $dialog.find('.nmj-qv-content').html('<p style="text-align:center;">Network error loading product.</p>');
             }
         });
     }
 
-    // Fallback modal close handlers
-    $(document).on('click', '.nmj-modal-close', function () { $('#nmj-qv-modal').fadeOut(); });
-    $(document).on('click', '#nmj-qv-modal', function (e) { if (e.target === this) $(this).fadeOut(); });
+    // ── Close handlers ────────────────────────────────────────────────────────
+    function nmjClosePopup() {
+        $('.nmj-dynamic-popup').animate({ opacity: 0 }, 200, function () {
+            $(this).css('display', 'none');
+        });
+    }
+    $(document).on('click', '.nmj-qv-close', nmjClosePopup);
+    $(document).on('click', '.nmj-dynamic-popup', function (e) {
+        if ($(e.target).is('.nmj-dynamic-popup') || $(e.target).is('.dialog-message')) {
+            nmjClosePopup();
+        }
+    });
+    $(document).on('keydown', function (e) { if (e.key === 'Escape') nmjClosePopup(); });
 
 })(jQuery);

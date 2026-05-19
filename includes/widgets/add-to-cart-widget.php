@@ -178,9 +178,13 @@ class Add_To_Cart_Widget extends Widget_Base
         $tag_close  = '';
 
         if ($interact) {
-            $href = ($is_var && $var_beh === 'redirect')
-                ? get_permalink($pid)
-                : $product->add_to_cart_url();
+            if ($is_var && $var_beh === 'redirect') {
+                $href = get_permalink($pid);
+            } elseif ($is_var && $var_beh === 'quick_view') {
+                $href = '#'; // JS intercepts click; href must not navigate
+            } else {
+                $href = $product->add_to_cart_url();
+            }
             $tag_open  = '<a href="' . esc_url($href) . '" class="' . esc_attr($cls_str) . '"' . $data_str
                        . ' aria-label="' . esc_attr(sprintf(__('Add "%s" to your cart','nmj'), $product->get_name())) . '" rel="nofollow">';
             $tag_close = '</a>';

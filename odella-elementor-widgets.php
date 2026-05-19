@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Odella Elementor Widgets
  * Description:       A growing library of custom Elementor widgets with WooCommerce support.
- * Version:           1.0.18
+ * Version:           1.0.19
  * Requires at least: 6.3
  * Requires PHP:      8.1
  * Author:            NMJ
@@ -16,7 +16,7 @@
 defined('ABSPATH') || exit;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-define('NMJ_VERSION', '1.0.18');
+define('NMJ_VERSION', '1.0.19');
 define('NMJ_FILE', __FILE__);
 define('NMJ_PATH', plugin_dir_path(__FILE__));
 define('NMJ_URL', plugin_dir_url(__FILE__));
