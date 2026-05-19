@@ -219,6 +219,21 @@
 
     function nmjEnsureShell() {
         if ($nmjPopupShell && $nmjPopupShell.length) return;
+
+        if (!$('#nmj-qv-base-css').length) {
+            $('head').append(
+                '<style id="nmj-qv-base-css">' +
+                '.nmj-dynamic-popup .dialog-widget-content { background-color: #fff; position: relative; max-width: 100%; max-height: 100vh; overflow-y: auto; }' +
+                '.nmj-dynamic-popup .dialog-message { display: flex; flex-direction: column; width: 100%; }' +
+                '.nmj-dynamic-popup .nmj-qv-content { width: 100%; }' +
+                '.nmj-dynamic-popup .nmj-qv-close { position: absolute; right: 15px; top: 15px; z-index: 9999; cursor: pointer; font-size: 20px; font-weight: bold; line-height: 1; }' +
+                '.nmj-dynamic-popup .nmj-qv-content .elementor { display: block !important; }' +
+                '.nmj-dynamic-popup .nmj-qv-content .e-con { display: var(--display, flex) !important; }' +
+                '.nmj-dynamic-popup .nmj-qv-content .elementor-section { display: block !important; }' +
+                '</style>'
+            );
+        }
+
         $nmjPopupShell = $(
             '<div class="dialog-widget elementor-popup-modal nmj-dynamic-popup"' +
             '     role="dialog" aria-modal="true" aria-label="Quick view"' +
@@ -304,6 +319,16 @@
 
                     var $form = $content.find('.variations_form');
                     if ($form.length && $.fn.wc_variation_form) $form.wc_variation_form();
+
+                    // Initialize WooCommerce Product Gallery (fixes opacity: 0 issue)
+                    var $gallery = $content.find('.woocommerce-product-gallery');
+                    if ($gallery.length) {
+                        if (typeof $.fn.wc_product_gallery !== 'undefined') {
+                            $gallery.each(function () { $(this).wc_product_gallery(); });
+                        } else {
+                            $gallery.css({ opacity: 1, transition: 'none' });
+                        }
+                    }
                 } else {
                     $nmjPopupShell.find('.nmj-qv-content').html('<p style="text-align:center;">Failed to load product.</p>');
                 }
