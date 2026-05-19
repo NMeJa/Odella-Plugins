@@ -44,6 +44,11 @@ class Product_Price_Widget extends Widget_Base
         return ['woocommerce', 'price', 'cost', 'out of stock'];
     }
 
+    public function get_script_depends(): array
+    {
+        return ['nmj-add-to-cart'];
+    }
+
     // ── Controls ───────────────────────────────────────────────────────────────
 
     protected function register_controls(): void
@@ -225,10 +230,11 @@ class Product_Price_Widget extends Widget_Base
         $tag = in_array($settings['price_tag'], $allowed_tags, true) ? $settings['price_tag'] : 'div';
         $in_stock = $product->is_in_stock();
         ?>
-        <div class="nmj-product-price-wrapper">
+        <div class="nmj-product-price-wrapper nmj-price-product-<?php echo esc_attr($product_id); ?>" data-product_id="<?php echo esc_attr($product_id); ?>">
             <?php if ($in_stock): ?>
-                <<?php echo $tag; ?> class="nmj-price-in-stock">
-                    <?php echo wp_kses_post($product->get_price_html()); ?>
+                <?php $price_html = $product->get_price_html(); ?>
+                <<?php echo $tag; ?> class="nmj-price-in-stock" data-original-price="<?php echo esc_attr($price_html); ?>">
+                    <?php echo wp_kses_post($price_html); ?>
                 </<?php echo $tag; ?>>
             <?php else: ?>
                 <<?php echo $tag; ?> class="nmj-price-oos">

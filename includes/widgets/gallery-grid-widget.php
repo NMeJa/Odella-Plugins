@@ -56,6 +56,18 @@ class Gallery_Grid_Widget extends Widget_Base
             'separator' => 'before',
         ]);
 
+        $this->add_control('open_lightbox', [
+            'label' => esc_html__('Lightbox', 'nmj'),
+            'type' => Controls_Manager::SELECT,
+            'default' => 'default',
+            'options' => [
+                'default' => esc_html__('Default', 'nmj'),
+                'yes' => esc_html__('Yes', 'nmj'),
+                'no' => esc_html__('No', 'nmj'),
+            ],
+            'separator' => 'before',
+        ]);
+
         $this->end_controls_section();
 
         $this->start_controls_section('section_pattern', [
@@ -88,15 +100,44 @@ class Gallery_Grid_Widget extends Widget_Base
             'default' => 1,
         ]);
 
+        $shape_options = [
+            'square' => esc_html__('Square (1:1)', 'nmj'),
+            'full' => esc_html__('Full (natural ratio)', 'nmj'),
+            'custom' => esc_html__('Custom height', 'nmj'),
+        ];
+
+        global $_wp_additional_image_sizes;
+        $default_image_sizes = get_intermediate_image_sizes();
+
+        foreach ( $default_image_sizes as $size ) {
+            $width = 0;
+            $height = 0;
+            if ( in_array( $size, [ 'thumbnail', 'medium', 'medium_large', 'large' ] ) ) {
+                $width  = (int) get_option( "{$size}_size_w" );
+                $height = (int) get_option( "{$size}_size_h" );
+            } elseif ( isset( $_wp_additional_image_sizes[ $size ] ) ) {
+                $width  = (int) $_wp_additional_image_sizes[ $size ]['width'];
+                $height = (int) $_wp_additional_image_sizes[ $size ]['height'];
+            }
+
+            if ( $width > 0 && $height > 0 ) {
+                $ar = round( $width / $height, 4 );
+                $key = 'ar_' . $ar;
+                $label = ucwords(str_replace(['_', '-'], ' ', $size)) . " ({$width}x{$height})";
+                
+                if (!isset($shape_options[$key])) {
+                    $shape_options[$key] = $label;
+                } else {
+                    $shape_options[$key] .= ' / ' . ucwords(str_replace(['_', '-'], ' ', $size));
+                }
+            }
+        }
+
         $repeater->add_control('row_shape', [
             'label' => esc_html__('Image Shape', 'nmj'),
             'type' => Controls_Manager::SELECT,
             'default' => 'square',
-            'options' => [
-                'square' => esc_html__('Square (1:1)', 'nmj'),
-                'full' => esc_html__('Full (natural ratio)', 'nmj'),
-                'custom' => esc_html__('Custom height', 'nmj'),
-            ],
+            'options' => $shape_options,
         ]);
 
         $repeater->add_responsive_control('row_custom_height', [
@@ -248,6 +289,7 @@ class Gallery_Grid_Widget extends Widget_Base
         $gallery = $settings['gallery'] ?? [];
         $pattern = $settings['row_pattern'] ?? [];
         $image_size = $settings['image_size'] ?? 'large';
+        $open_lightbox = $settings['open_lightbox'] ?? 'default';
         $multiplier = (float) ($settings['big_row_multiplier']['size'] ?? 1);
         $widget_id = $this->get_id();
 
@@ -269,72 +311,7 @@ class Gallery_Grid_Widget extends Widget_Base
         $total = count($gallery);
         $img_index = 0;
         $row_number = 0;
-
-        $row_css = '';
-        foreach ($pattern as $i => $row_def) {
-            $shape = $row_def['row_shape'] ?? 'square';
-            $fit = $row_def['row_object_fit'] ?? 'cover';
-            $pos = $row_def['row_object_position'] ?? 'center center';
-            $custom_h = $row_def['row_custom_height'] ?? [];
-            $cols = max(1, absint($row_def['row_columns'] ?? 1));
-
-            $aspect_ratio_css = '';
-            $height_css = '';
-
-            if ($shape === 'square') {
-                if ($cols === 1 && $multiplier !== 1.0) {
-                    $ar_h = round(1 / $multiplier, 4);
-                    $aspect_ratio_css = "aspect-ratio: 1 / {$ar_h};";
-                } else {
-                    $aspect_ratio_css = 'aspect-ratio: 1 / 1;';
-                }
-            } elseif ($shape === 'full') {
-                $aspect_ratio_css = 'aspect-ratio: auto;';
-                $height_css = 'height: auto;';
-            } elseif ($shape === 'custom' && !empty($custom_h['size'])) {
-                $unit = $custom_h['unit'] ?? 'px';
-                $size = floatval($custom_h['size']);
-                $height_css = "height: {$size}{$unit};";
-                if ($cols === 1 && $multiplier !== 1.0) {
-                    $scaled = round($size * $multiplier, 2);
-                    $height_css = "height: {$scaled}{$unit};";
-                }
-            }
-
-            $row_css .= "
-                #nmj-gg-{$widget_id} .nmj-grid-row[data-row-index='{$i}'] .nmj-grid-item { {$aspect_ratio_css} {$height_css} }
-                #nmj-gg-{$widget_id} .nmj-grid-row[data-row-index='{$i}'] .nmj-grid-img { object-fit: {$fit}; object-position: {$pos}; }
-            ";
-        }
-
-?>
-        <style id="nmj-gg-<?php echo esc_attr($widget_id); ?>-css">
-            #nmj-gg-<?php echo esc_attr($widget_id); ?> .nmj-gallery-grid {
-                display: flex;
-                flex-direction: column;
-            }
-
-            #nmj-gg-<?php echo esc_attr($widget_id); ?> .nmj-grid-row {
-                display: grid;
-                grid-template-columns: repeat(var(--nmj-cols, 1), 1fr);
-            }
-
-            #nmj-gg-<?php echo esc_attr($widget_id); ?> .nmj-grid-item {
-                overflow: hidden;
-                display: block;
-                width: 100%;
-                position: relative;
-            }
-
-            #nmj-gg-<?php echo esc_attr($widget_id); ?> .nmj-grid-img {
-                display: block;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-
-            <?php echo $row_css; ?>
-        </style>
+        ?>
 
         <div id="nmj-gg-<?php echo esc_attr($widget_id); ?>">
             <div class="nmj-gallery-grid">
@@ -347,26 +324,72 @@ class Gallery_Grid_Widget extends Widget_Base
 
                     if (empty($row_images))
                         break;
+                        
+                    $shape = $row_def['row_shape'] ?? 'square';
+                    $fit = $row_def['row_object_fit'] ?? 'cover';
+                    $pos = $row_def['row_object_position'] ?? 'center center';
+                    $custom_h = $row_def['row_custom_height'] ?? [];
+                    
+                    $ar_css = 'auto';
+                    $h_css = 'auto';
+                    
+                    if ($shape === 'square') {
+                        if ($cols === 1 && $multiplier !== 1.0) {
+                            $ar_h = round(1 / $multiplier, 4);
+                            $ar_css = "1 / {$ar_h}";
+                        } else {
+                            $ar_css = '1 / 1';
+                        }
+                    } elseif (strpos($shape, 'ar_') === 0) {
+                        $ar_val = (float) substr($shape, 3);
+                        if ($cols === 1 && $multiplier !== 1.0) {
+                            $ar_val = round($ar_val / $multiplier, 4);
+                        }
+                        $ar_css = "{$ar_val}";
+                    } elseif ($shape === 'custom' && !empty($custom_h['size'])) {
+                        $unit = $custom_h['unit'] ?? 'px';
+                        $size = floatval($custom_h['size']);
+                        $h_css = "{$size}{$unit}";
+                        if ($cols === 1 && $multiplier !== 1.0) {
+                            $scaled = round($size * $multiplier, 2);
+                            $h_css = "{$scaled}{$unit}";
+                        }
+                    }
                 ?>
-                    <div class="nmj-grid-row" data-row-index="<?php echo $pattern_idx; ?>"
-                        style="--nmj-cols: <?php echo $cols; ?>;">
+                    <div class="nmj-grid-row" data-row-index="<?php echo esc_attr($pattern_idx); ?>"
+                        style="--nmj-cols: <?php echo esc_attr($cols); ?>; --nmj-ar: <?php echo esc_attr($ar_css); ?>; --nmj-h: <?php echo esc_attr($h_css); ?>; --nmj-fit: <?php echo esc_attr($fit); ?>; --nmj-pos: <?php echo esc_attr($pos); ?>;">
                         <?php foreach ($row_images as $image):
                             $img_id = isset($image['id']) ? absint($image['id']) : 0;
                             $img_url = $image['url'] ?? '';
 
+                            $full_img_url = '';
                             if ($img_id) {
                                 $img_html = wp_get_attachment_image($img_id, $image_size, false, [
                                     'class' => 'nmj-grid-img',
                                     'loading' => $img_index === 0 ? 'eager' : 'lazy',
                                     'alt' => get_post_meta($img_id, '_wp_attachment_image_alt', true) ?: '',
                                 ]);
+                                $full_img_url = wp_get_attachment_image_url($img_id, 'full');
                             } elseif ($img_url) {
                                 $img_html = '<img src="' . esc_url($img_url) . '" class="nmj-grid-img" loading="lazy" alt="">';
+                                $full_img_url = $img_url;
                             } else {
                                 continue;
                             }
+                            
+                            $item_html = $img_html;
+                            $is_lightbox = 'yes' === $open_lightbox || ('default' === $open_lightbox && 'yes' === \Elementor\Plugin::$instance->kit->get_settings('global_image_lightbox'));
+                            
+                            if ( $is_lightbox && ! empty( $full_img_url ) ) {
+                                $item_html = sprintf(
+                                    '<a href="%s" data-elementor-open-lightbox="yes" data-elementor-lightbox-slideshow="%s" class="nmj-gallery-lightbox-link">%s</a>',
+                                    esc_url( $full_img_url ),
+                                    esc_attr( $widget_id ),
+                                    $img_html
+                                );
+                            }
                         ?>
-                            <div class="nmj-grid-item"><?php echo $img_html; ?></div>
+                            <div class="nmj-grid-item"><?php echo $item_html; ?></div>
                         <?php endforeach; ?>
                     </div>
                 <?php
@@ -383,30 +406,83 @@ class Gallery_Grid_Widget extends Widget_Base
     {
     ?>
         <# 
-            var pattern=settings.row_pattern || []; 
+            var pattern = settings.row_pattern || []; 
             if (!pattern.length) { 
-                pattern=[{row_columns: 1, row_shape: 'square' }, {row_columns: 2, row_shape: 'square' }]; 
+                pattern = [{row_columns: 1, row_shape: 'square'}, {row_columns: 2, row_shape: 'square'}]; 
             } 
-            var hasImages=settings.gallery && settings.gallery.length> 0;
+            var gallery = settings.gallery || [];
+            var hasImages = gallery.length > 0;
+            var multiplier = settings.big_row_multiplier ? parseFloat(settings.big_row_multiplier.size) || 1 : 1;
+            var open_lightbox = settings.open_lightbox || 'default';
         #>
         <# if (!hasImages) { #>
             <p style="background:#fff3cd;color:#856404;padding:10px 14px;font-size:13px;border-radius:4px;">⚠ <em>Add images in the Images panel, or connect a dynamic tag.</em></p>
-        <# } #>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-            <# for (var r=0; r < pattern.length; r++) { 
-                var cols=parseInt(pattern[r].row_columns) || 1; 
-                var shape=pattern[r].row_shape || 'square' ; 
-                var ar=shape==='square' ? '1/1' : shape==='full' ? '3/2' : 'unset' ; 
-                var h=shape==='custom' ? '80px' : 'auto' ; 
+        <# return; } #>
+        
+        <div class="nmj-gallery-grid">
+            <# 
+            var img_index = 0;
+            var row_number = 0;
+            var pattern_length = pattern.length;
+            
+            while (img_index < gallery.length) {
+                var row_def = pattern[row_number % pattern_length];
+                var cols = Math.max(1, parseInt(row_def.row_columns) || 1);
+                var row_images = gallery.slice(img_index, img_index + cols);
+                
+                if (!row_images.length) break;
+                
+                var shape = row_def.row_shape || 'square';
+                var fit = row_def.row_object_fit || 'cover';
+                var pos = row_def.row_object_position || 'center center';
+                
+                var ar_css = 'auto';
+                var h_css = 'auto';
+                
+                if (shape === 'square') {
+                    if (cols === 1 && multiplier !== 1.0) {
+                        var ar_h = (1 / multiplier).toFixed(4);
+                        ar_css = '1 / ' + ar_h;
+                    } else {
+                        ar_css = '1 / 1';
+                    }
+                } else if (shape.indexOf('ar_') === 0) {
+                    var ar_val = parseFloat(shape.substring(3));
+                    if (cols === 1 && multiplier !== 1.0) {
+                        ar_val = (ar_val / multiplier).toFixed(4);
+                    }
+                    ar_css = ar_val;
+                } else if (shape === 'custom') {
+                    var size = row_def.row_custom_height ? parseFloat(row_def.row_custom_height.size) : 0;
+                    var unit = row_def.row_custom_height ? row_def.row_custom_height.unit : 'px';
+                    if (size) {
+                        h_css = size + unit;
+                        if (cols === 1 && multiplier !== 1.0) {
+                            var scaled = (size * multiplier).toFixed(2);
+                            h_css = scaled + unit;
+                        }
+                    }
+                }
             #>
-                <div style="display:grid;grid-template-columns:repeat({{ cols }}, 1fr);gap:6px;">
-                    <# for (var c=0; c < cols; c++) { #>
-                        <div style="background:#e5e7eb;aspect-ratio:{{ ar }};height:{{ h }};border-radius:4px;display:flex;align-items:center;justify-content:center;min-height:40px;">
-                            <span style="font-size:18px;opacity:0.5;">🖼</span>
-                        </div>
-                    <# } #>
+                <div class="nmj-grid-row" style="--nmj-cols: {{ cols }}; --nmj-ar: {{ ar_css }}; --nmj-h: {{ h_css }}; --nmj-fit: {{ fit }}; --nmj-pos: {{ pos }};">
+                    <# _.each(row_images, function(image) { 
+                        var img_html = '<img src="' + _.escape(image.url) + '" class="nmj-grid-img" alt="">';
+                        var item_html = img_html;
+                        
+                        var is_lightbox = open_lightbox === 'yes' || (open_lightbox === 'default' && typeof elementor !== 'undefined' && elementor.getKitSettings && elementor.getKitSettings('global_image_lightbox') === 'yes');
+                        
+                        if (is_lightbox && image.url) {
+                            item_html = '<a href="' + _.escape(image.url) + '" data-elementor-open-lightbox="yes" class="nmj-gallery-lightbox-link">' + img_html + '</a>';
+                        }
+                    #>
+                        <div class="nmj-grid-item">{{{ item_html }}}</div>
+                    <# }); #>
                 </div>
-            <# } #>
+            <# 
+                img_index += row_images.length;
+                row_number++;
+            } 
+            #>
         </div>
         <?php
     }

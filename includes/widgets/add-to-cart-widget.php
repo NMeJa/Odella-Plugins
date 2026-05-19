@@ -182,10 +182,14 @@ class Add_To_Cart_Widget extends Widget_Base
 
         if ($interact && $state === 'in-stock') {
             $cls[] = 'add_to_cart_button';
-            if (!$is_var || $var_beh !== 'redirect') {
-                $cls[] = 'ajax_add_to_cart';
-            }
             $cls[] = 'button';
+            if (!$is_var || $var_beh !== 'redirect') {
+                if (!$is_var) {
+                    $cls[] = 'ajax_add_to_cart';
+                } else {
+                    $cls[] = 'nmj_custom_ajax_add_to_cart';
+                }
+            }
         }
         if ($is_var && $var_beh === 'quick_view' && $state === 'awaiting') {
             $cls[] = 'nmj-qv-trigger';
@@ -287,8 +291,9 @@ class Add_To_Cart_Widget extends Widget_Base
             : 'in_stock_icon' , 'added' : 'added_icon' , 'oos' : 'out_of_stock_icon' , 'awaiting' : 'awaiting_icon' }; var
             iconKey=iconKeyMap[state]; var iconHTML=elementor.helpers.renderIcon(view, settings[iconKey], {'aria-hidden': 'true'
             }, 'i' , 'object' ); var hasIcon=iconHTML && iconHTML.value; var hasText=btnText !=='' ; var stateClass='nmj--' +
-            state; var extraClass='' ; if (state==='in-stock' ) { extraClass='button add_to_cart_button ajax_add_to_cart' ; }
-            else if (state==='awaiting' && settings.variable_behavior==='quick_view' ) { extraClass='nmj-qv-trigger' ; } var
+            state; var extraClass='' ; if (state==='in-stock' ) {
+            extraClass='button add_to_cart_button nmj_custom_ajax_add_to_cart' ; } else if (state==='awaiting' &&
+            settings.variable_behavior==='quick_view' ) { extraClass='nmj-qv-trigger' ; } var
             showQty=settings.show_quantity_input==='yes' ; var qtyPos=settings.qty_position || 'left' ; var
             qty=settings.qty_default || 1; var qtyHidden=(state !=='in-stock' ) ? ' nmj-atc-qty-wrap--hidden' : '' ; #>
             <div class="nmj-atc-wrap" data-qty-position="{{ qtyPos }}">

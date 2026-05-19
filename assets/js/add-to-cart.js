@@ -42,7 +42,12 @@
         var isQV = (state === 'awaiting' && $btn.attr('data-variable-behavior') === 'quick_view');
 
         if (isInteractive) {
-            $btn.addClass('add_to_cart_button button ajax_add_to_cart');
+            $btn.addClass('add_to_cart_button button');
+            if ($btn.attr('data-is-variable') !== '1') {
+                $btn.addClass('ajax_add_to_cart');
+            } else {
+                $btn.addClass('nmj_custom_ajax_add_to_cart');
+            }
             $btn.css({ 'pointer-events': '', 'cursor': '' });
             $btn.removeAttr('aria-disabled');
         } else if (isQV) {
@@ -95,7 +100,7 @@
     });
 
     // ── Variable Product: Custom AJAX Handler ─────────────────────────────────
-    $(document).on('click', '.nmj-atc-btn.ajax_add_to_cart[data-is-variable="1"]', function (e) {
+    $(document).on('click', '.nmj-atc-btn.nmj_custom_ajax_add_to_cart[data-is-variable="1"]', function (e) {
         e.preventDefault();
         var $btn = $(this);
         var $wrap = $btn.closest('.nmj-atc-wrap');
@@ -117,7 +122,8 @@
         var data = {
             product_id: productId,
             variation_id: variationId,
-            quantity: qty
+            quantity: qty,
+            variation: {}
         };
 
         // Note: wc-ajax=add_to_cart is a public WC endpoint that does not
@@ -126,7 +132,7 @@
         // and would be silently ignored. Omitting it is honest about the reality.
 
         $.each(formData, function (i, field) {
-            if (field.name.indexOf('attribute_') === 0) data[field.name] = field.value;
+            if (field.name.indexOf('attribute_') === 0) data.variation[field.name] = field.value;
         });
 
         $btn.removeClass('added').addClass('loading');
@@ -151,6 +157,9 @@
         var $form = $(e.target);
         var productId = $form.data('product_id');
 
+        // --- Product Price Widget Integration ---
+        $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock').html(variation.price_html);
+
         // Find all ATC widgets for this product with inline behavior
         $('.nmj-atc-btn[data-product_id="' + productId + '"].nmj--variable-inline, ' +
             '.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
@@ -173,6 +182,12 @@
     $(document.body).on('reset_data', function (e) {
         var $form = $(e.target);
         var productId = $form.data('product_id');
+
+        // --- Product Price Widget Integration ---
+        var $priceWrap = $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock');
+        if ($priceWrap.length && $priceWrap.attr('data-original-price')) {
+            $priceWrap.html($priceWrap.attr('data-original-price'));
+        }
 
         $('.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
             var $btn = $(this);
