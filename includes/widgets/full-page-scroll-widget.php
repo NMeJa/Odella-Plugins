@@ -35,6 +35,7 @@ class Full_Page_Scroll_Widget extends Widget_Base
     {
         return ['nmj-widgets'];
     }
+    public function get_script_depends(): array { return ['nmj-full-page-scroll']; }
 
     protected function register_controls(): void
     {

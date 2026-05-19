@@ -39,7 +39,7 @@
 
         // Interactivity
         var isInteractive = (state === 'in-stock');
-        var isQV = (state === 'awaiting' && $btn.data('variable-behavior') === 'quick_view');
+        var isQV = (state === 'awaiting' && $btn.attr('data-variable-behavior') === 'quick_view');
 
         if (isInteractive) {
             $btn.addClass('add_to_cart_button button ajax_add_to_cart');
@@ -57,7 +57,7 @@
         // Quantity field visibility
         var $qtyWrap = $wrap.find('.nmj-atc-qty-wrap');
         if ($qtyWrap.length) {
-            if (isInteractive && state === 'in-stock') {
+            if (isInteractive) {
                 $qtyWrap.removeClass('nmj-atc-qty-wrap--hidden');
             } else {
                 $qtyWrap.addClass('nmj-atc-qty-wrap--hidden');
@@ -79,8 +79,8 @@
         if (!$btn || !$btn.hasClass('nmj-atc-btn')) return;
 
         var $wrap = $btn.closest('.nmj-atc-wrap');
-        var wrap  = $wrap[0];
-        var lock  = $btn.attr('data-lock-after-add') === '1';
+        var wrap = $wrap[0];
+        var lock = $btn.attr('data-lock-after-add') === '1';
 
         // Cancel any pending transition from a previous click
         clearTimeout(nmjTimers.get(wrap));
@@ -97,24 +97,27 @@
     // ── Variable Product: Custom AJAX Handler ─────────────────────────────────
     $(document).on('click', '.nmj-atc-btn.ajax_add_to_cart[data-is-variable="1"]', function (e) {
         e.preventDefault();
-        var $btn        = $(this);
-        var $wrap       = $btn.closest('.nmj-atc-wrap');
-        var productId   = $btn.data('product_id');
-        var variationId = $btn.data('variation_id');
-        var qty         = parseInt($btn.attr('data-quantity'), 10) || 1;
+        var $btn = $(this);
+        var $wrap = $btn.closest('.nmj-atc-wrap');
+        var productId = $btn.data('product_id');
+        // Use .attr() not .data() — jQuery's .data() cache is seeded once at
+        // page load and never sees subsequent .attr('data-variation_id', ...) writes
+        // from the found_variation handler. .attr() always reads the live DOM.
+        var variationId = $btn.attr('data-variation_id');
+        var qty = parseInt($btn.attr('data-quantity'), 10) || 1;
 
         if (!variationId) return;
 
         // Cancel any pending state-transition timer from a previous click
         clearTimeout(nmjTimers.get($wrap[0]));
 
-        var $form    = $('.nmj-variations-form[data-product_id="' + productId + '"]');
+        var $form = $('.nmj-variations-form[data-product_id="' + productId + '"]');
         var formData = $form.length ? $form.serializeArray() : [];
 
         var data = {
-            product_id:   productId,
+            product_id: productId,
             variation_id: variationId,
-            quantity:     qty
+            quantity: qty
         };
 
         // Note: wc-ajax=add_to_cart is a public WC endpoint that does not
@@ -191,17 +194,20 @@
         e.preventDefault();
         e.stopPropagation();
 
-        var $btn      = $(this);
+        var $btn = $(this);
         var productId = parseInt($btn.attr('data-product_id'), 10) || 0;
-        var popupId   = parseInt($btn.attr('data-popup-id'), 10) || 0;
+        var popupId = parseInt($btn.attr('data-popup-id'), 10) || 0;
 
         if (!popupId) {
             console.warn('[NMJ ATC] Quick View: No Popup ID set. Check the widget "Variable Product" settings.');
             return;
         }
 
+        // Add loading state to the trigger button so the user gets immediate
+        // feedback while the AJAX request is in flight.
+        $btn.addClass('nmj-qv-loading');
         nmjLastTrigger = this; // store for focus-return on close
-        nmjOpenProductPopup(productId, popupId);
+        nmjOpenProductPopup(productId, popupId, $btn);
     });
 
     // ── Product Popup: AJAX render → Elementor dialog shell ──────────────────
@@ -245,8 +251,15 @@
         });
     }
 
-    function nmjOpenProductPopup(productId, popupId) {
+    // Track in-flight XHR so concurrent quick-view opens can abort the previous
+    // request before firing a new one, preventing race conditions on the content area.
+    var nmjQvXHR = null;
+
+    function nmjOpenProductPopup(productId, popupId, $triggerBtn) {
         nmjEnsureShell();
+
+        // Abort any in-flight request before starting a new one
+        if (nmjQvXHR) { nmjQvXHR.abort(); nmjQvXHR = null; }
 
         // Swap the ID so popup-specific CSS (#elementor-popup-modal-{id}) applies
         $nmjPopupShell.attr('id', 'elementor-popup-modal-' + popupId);
@@ -257,26 +270,26 @@
         // Move focus into dialog for accessibility
         $nmjPopupShell.attr('tabindex', '-1').focus();
 
-        $.ajax({
-            url:  (typeof nmj_params !== 'undefined') ? nmj_params.ajax_url : '/wp-admin/admin-ajax.php',
+        nmjQvXHR = $.ajax({
+            url: (typeof nmj_params !== 'undefined') ? nmj_params.ajax_url : '/wp-admin/admin-ajax.php',
             type: 'POST',
             data: {
-                action:      'nmj_load_quick_view',
-                product_id:  productId,
+                action: 'nmj_load_quick_view',
+                product_id: productId,
                 template_id: popupId,
-                nonce:       (typeof nmj_params !== 'undefined') ? nmj_params.nonce : ''
+                nonce: (typeof nmj_params !== 'undefined') ? nmj_params.nonce : ''
             },
             success: function (r) {
+                nmjQvXHR = null;
+                if ($triggerBtn) $triggerBtn.removeClass('nmj-qv-loading');
+
                 if (r.success) {
                     var $content = $nmjPopupShell.find('.nmj-qv-content');
 
+                    // Inject rendered HTML. Elementor's inline <style> blocks
+                    // (column widths, spacing, custom CSS) are part of the response
+                    // body and must be kept — do NOT strip them.
                     $content.html(r.data.html);
-
-                    // Strip popup-specific <style> blocks injected by Elementor
-                    // from the newly-rendered HTML to keep <head> clean on
-                    // repeat opens of different products.
-                    $content.find('style').remove();
-
 
                     // Properly re-initialise each Elementor widget individually
                     if (window.elementorFrontend && window.elementorFrontend.hooks) {
@@ -295,8 +308,11 @@
                     $nmjPopupShell.find('.nmj-qv-content').html('<p style="text-align:center;">Failed to load product.</p>');
                 }
             },
-            error: function (xhr, status, err) {
-                console.error('[NMJ ATC] Quick view AJAX error:', status, err);
+            error: function (xhr, status) {
+                nmjQvXHR = null;
+                if ($triggerBtn) $triggerBtn.removeClass('nmj-qv-loading');
+                if (status === 'abort') return; // intentional abort — no error to show
+                console.error('[NMJ ATC] Quick view AJAX error:', status);
                 $nmjPopupShell.find('.nmj-qv-content').html('<p style="text-align:center;">Network error loading product.</p>');
             }
         });

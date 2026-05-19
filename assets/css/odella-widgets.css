@@ -319,4 +319,6 @@
 /* When open, JS sets display:block and animates height */
 .nmj-anm-submenu[aria-hidden="false"] {
     /* display / height managed by JS; just ensure it's visible */
+    visibility: visible;
+    display: block;
 }

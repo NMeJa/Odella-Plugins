@@ -46,16 +46,16 @@ final class Plugin
 
     public function load_quick_view_template(): void
     {
-        if (! isset($_POST['product_id']) || ! isset($_POST['template_id'])) {
+        if (!isset($_POST['product_id']) || !isset($_POST['template_id'])) {
             wp_send_json_error('Missing data');
         }
 
         // Verify nonce — prevents unauthenticated rendering of arbitrary templates.
-        if (! wp_verify_nonce($_POST['nonce'] ?? '', 'nmj_ajax')) {
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'nmj_ajax')) {
             wp_send_json_error('Invalid nonce');
         }
 
-        $product_id  = absint($_POST['product_id']);
+        $product_id = absint($_POST['product_id']);
         $template_id = absint($_POST['template_id']);
 
         // Guard: ensure the product exists and is actually a product post type.
@@ -65,6 +65,10 @@ final class Plugin
         if (!$product_post || $product_post->post_type !== 'product') {
             wp_send_json_error('Product not found');
         }
+        // Prevent unauthenticated access to draft, private, or password-protected products.
+        if ($product_post->post_status !== 'publish' || post_password_required($product_post)) {
+            wp_send_json_error('Product not available');
+        }
 
         $template_post = get_post($template_id);
         if (!$template_post || $template_post->post_status !== 'publish' || $template_post->post_type !== 'elementor_library') {
@@ -72,15 +76,24 @@ final class Plugin
         }
 
         global $post;
-        $post = $product_post; // already fetched and validated above
+        $post = $product_post;
         setup_postdata($post);
 
-        // get_builder_content_for_display() returns a string directly —
-        // no output buffer needed. Using ob_start() here would silently capture
-        // any stray output from action hooks fired during Elementor's render.
-        $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($template_id);
+        // Wrap in try/catch/finally:
+        //   - \Throwable catches both \Exception and PHP Error (e.g. Elementor type errors).
+        //   - catch sends a structured JSON error so the client never gets a silent 500.
+        //   - wp_reset_postdata() called in catch (before wp_die) AND in finally (success path),
+        //     because wp_die() in the catch block prevents finally from running.
+        $html = '';
+        try {
+            $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($template_id);
+        } catch (\Throwable $e) {
+            wp_reset_postdata();
+            wp_send_json_error('Render failed'); // calls wp_die(); finally does NOT run after this
+        } finally {
+            wp_reset_postdata(); // runs on the success path
+        }
 
-        wp_reset_postdata();
         wp_send_json_success(['html' => $html]);
     }
 
@@ -100,10 +113,10 @@ final class Plugin
     // ── Widget registration ────────────────────────────────────────────────────
 
     private array $widgets = [
-        'add-to-cart-widget'      => \NMJ\Widgets\Add_To_Cart_Widget::class,
-        'product-price-widget'    => \NMJ\Widgets\Product_Price_Widget::class,
+        'add-to-cart-widget' => \NMJ\Widgets\Add_To_Cart_Widget::class,
+        'product-price-widget' => \NMJ\Widgets\Product_Price_Widget::class,
         'full-page-scroll-widget' => \NMJ\Widgets\Full_Page_Scroll_Widget::class,
-        'gallery-grid-widget'     => \NMJ\Widgets\Gallery_Grid_Widget::class,
+        'gallery-grid-widget' => \NMJ\Widgets\Gallery_Grid_Widget::class,
         'variation-selector-widget' => \NMJ\Widgets\Variation_Selector_Widget::class,
     ];
 
@@ -136,28 +149,28 @@ final class Plugin
 
     public function enqueue_frontend_assets(): void
     {
-        if (function_exists('WC')) {
-            wp_enqueue_script('wc-add-to-cart');
-        }
-
-        $css_path    = NMJ_PATH . 'assets/css/odella-widgets.css';
-        $js_path     = NMJ_PATH . 'assets/js/add-to-cart.js';
+        $css_path = NMJ_PATH . 'assets/css/odella-widgets.css';
+        $js_path = NMJ_PATH . 'assets/js/add-to-cart.js';
         $fps_js_path = NMJ_PATH . 'assets/js/full-page-scroll.js';
 
+        // CSS: enqueue unconditionally — it's shared by multiple widgets and
+        // Elementor has no lazy-enqueue mechanism for styles.
         wp_register_style('nmj-widgets', NMJ_URL . 'assets/css/odella-widgets.css', [], $this->get_asset_version($css_path));
         wp_enqueue_style('nmj-widgets');
 
+        // JS: register only — each widget declares the handle in get_script_depends()
+        // so Elementor enqueues it lazily only on pages that contain the widget.
+        // wp_localize_script works on registered handles: it stores the data object
+        // immediately and WordPress outputs it alongside the script when enqueued.
         wp_register_script('nmj-add-to-cart', NMJ_URL . 'assets/js/add-to-cart.js', ['jquery', 'wc-add-to-cart'], $this->get_asset_version($js_path), true);
-        wp_enqueue_script('nmj-add-to-cart');
 
         // Pass a plugin-owned nonce — wc_add_to_cart_params has no nonce field.
         wp_localize_script('nmj-add-to-cart', 'nmj_params', [
-            'nonce'    => wp_create_nonce('nmj_ajax'),
+            'nonce' => wp_create_nonce('nmj_ajax'),
             'ajax_url' => admin_url('admin-ajax.php'),
         ]);
 
         wp_register_script('nmj-full-page-scroll', NMJ_URL . 'assets/js/full-page-scroll.js', [], $this->get_asset_version($fps_js_path), true);
-        wp_enqueue_script('nmj-full-page-scroll');
     }
 
     public function enqueue_editor_assets(): void

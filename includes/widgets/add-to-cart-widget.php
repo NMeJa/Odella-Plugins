@@ -21,13 +21,34 @@ class Add_To_Cart_Widget extends Widget_Base
     use Traits\ATC_Content_Controls;
     use Traits\ATC_Style_Controls;
 
-    public function get_name(): string { return 'nmj_add_to_cart'; }
-    public function get_title(): string { return esc_html__('Add to Cart (AJAX)', 'nmj'); }
-    public function get_icon(): string { return 'eicon-cart-solid'; }
-    public function get_categories(): array { return ['nmj-widgets']; }
-    public function get_keywords(): array { return ['woocommerce','cart','add','buy','ajax','variation','quick view']; }
-    public function get_script_depends(): array { return ['wc-add-to-cart','wc-add-to-cart-variation','nmj-add-to-cart']; }
-    public function get_style_depends(): array { return ['nmj-widgets']; }
+    public function get_name(): string
+    {
+        return 'nmj_add_to_cart';
+    }
+    public function get_title(): string
+    {
+        return esc_html__('Add to Cart (AJAX)', 'nmj');
+    }
+    public function get_icon(): string
+    {
+        return 'eicon-cart-solid';
+    }
+    public function get_categories(): array
+    {
+        return ['nmj-widgets'];
+    }
+    public function get_keywords(): array
+    {
+        return ['woocommerce', 'cart', 'add', 'buy', 'ajax', 'variation', 'quick view'];
+    }
+    public function get_script_depends(): array
+    {
+        return ['wc-add-to-cart', 'wc-add-to-cart-variation', 'nmj-add-to-cart'];
+    }
+    public function get_style_depends(): array
+    {
+        return ['nmj-widgets'];
+    }
 
     protected function register_controls(): void
     {
@@ -39,11 +60,14 @@ class Add_To_Cart_Widget extends Widget_Base
 
     private function is_product_in_cart(int $pid, int $variation_id = 0): bool
     {
-        if (!function_exists('WC') || !is_object(WC()->cart)) return false;
+        if (!function_exists('WC') || is_null(WC()->cart) || !did_action('woocommerce_cart_loaded_from_session'))
+            return false;
         foreach (WC()->cart->get_cart() as $item) {
-            if ((int) $item['product_id'] !== $pid) continue;
+            if ((int) $item['product_id'] !== $pid)
+                continue;
             // For variable products, also verify the variation matches
-            if ($variation_id > 0 && (int) $item['variation_id'] !== $variation_id) continue;
+            if ($variation_id > 0 && (int) $item['variation_id'] !== $variation_id)
+                continue;
             return true;
         }
         return false;
@@ -51,7 +75,8 @@ class Add_To_Cart_Widget extends Widget_Base
 
     private function capture_icon(array $settings, string $key): string
     {
-        if (empty($settings[$key]['value'])) return '';
+        if (empty($settings[$key]['value']))
+            return '';
         ob_start();
         Icons_Manager::render_icon($settings[$key], ['aria-hidden' => 'true']);
         return ob_get_clean();
@@ -75,47 +100,62 @@ class Add_To_Cart_Widget extends Widget_Base
 
         // Resolve product
         $pid = !empty($s['product_id']) ? absint($s['product_id']) : get_the_ID();
-        if (!$pid) { $this->editor_notice('⚠ Set a Product ID or use on a product page.'); return; }
+        if (!$pid) {
+            $this->editor_notice('⚠ Set a Product ID or use on a product page.');
+            return;
+        }
 
         $product = wc_get_product($pid);
-        if (!$product) { $this->editor_notice('⚠ Product not found (ID: '.$pid.').'); return; }
+        if (!$product) {
+            $this->editor_notice('⚠ Product not found (ID: ' . $pid . ').');
+            return;
+        }
 
         // Settings
-        $in_stock  = $product->is_in_stock();
-        $is_var    = $product->is_type('variable');
-        $lock      = ($s['lock_after_add'] ?? 'yes') === 'yes';
-        $show_qty  = ($s['show_quantity_input'] ?? 'no') === 'yes';
-        $qty_pos   = $s['qty_position'] ?? 'left';
-        $qty_val   = max(1, absint($s['qty_default'] ?? 1));
-        $var_beh   = $s['variable_behavior'] ?? 'inline';
+        $in_stock = $product->is_in_stock();
+        $is_var = $product->is_type('variable');
+        $lock = ($s['lock_after_add'] ?? 'yes') === 'yes';
+        $show_qty = ($s['show_quantity_input'] ?? 'no') === 'yes';
+        $qty_pos = $s['qty_position'] ?? 'left';
+        $qty_val = max(1, absint($s['qty_default'] ?? 1));
+        $var_beh = $s['variable_behavior'] ?? 'inline';
 
         // ── State machine ─────────────────────────────────────────────────
-        $state    = 'in-stock';
+        $state = 'in-stock';
         $interact = true;
         $hide_qty = false;
 
         if (!$in_stock) {
             // Out of stock — highest priority, nothing else matters
-            $state = 'oos'; $interact = false; $hide_qty = true;
+            $state = 'oos';
+            $interact = false;
+            $hide_qty = true;
         } elseif ($lock && $this->is_product_in_cart($pid)) {
             // Already in cart + lock enabled — show added before checking variable
             // branches so variable products that have been added also lock correctly.
             // Note: for inline-variable the variation_id isn't known at page-load
             // time, so we match on parent product_id only (conservative).
-            $state = 'added'; $interact = false; $hide_qty = true;
+            $state = 'added';
+            $interact = false;
+            $hide_qty = true;
         } elseif ($is_var && $var_beh === 'inline') {
-            $state = 'awaiting'; $interact = false; $hide_qty = true;
+            $state = 'awaiting';
+            $interact = false;
+            $hide_qty = true;
         } elseif ($is_var && $var_beh === 'quick_view') {
-            $state = 'awaiting'; $interact = true; $hide_qty = true;
+            $state = 'awaiting';
+            $interact = true;
+            $hide_qty = true;
         } elseif ($is_var && $var_beh === 'redirect') {
-            $state = 'in-stock'; $interact = true;
+            $state = 'in-stock';
+            $interact = true;
         }
 
         // ── Resolve current text ──────────────────────────────────────────
         $text_map = [
             'in-stock' => $s['in_stock_text'] ?? '',
-            'added'    => $s['added_text'] ?? '',
-            'oos'      => $s['out_of_stock_text'] ?? '',
+            'added' => $s['added_text'] ?? '',
+            'oos' => $s['out_of_stock_text'] ?? '',
             'awaiting' => ($is_var && $var_beh === 'quick_view')
                 ? ($s['quick_view_text'] ?? '')
                 : ($s['awaiting_text'] ?? ''),
@@ -125,11 +165,11 @@ class Add_To_Cart_Widget extends Widget_Base
         // ── Resolve current icon key ──────────────────────────────────────
         $icon_keys = [
             'in-stock' => 'in_stock_icon',
-            'added'    => 'added_icon',
-            'oos'      => 'out_of_stock_icon',
+            'added' => 'added_icon',
+            'oos' => 'out_of_stock_icon',
             'awaiting' => 'awaiting_icon',
         ];
-        $cur_icon_key = $icon_keys[$state];
+        // $cur_icon_key omitted — icons[$state] is used directly below.
 
         // ── Capture all icon HTML for JS templates ────────────────────────
         $icons = [];
@@ -156,16 +196,16 @@ class Add_To_Cart_Widget extends Widget_Base
 
         // ── Data attributes ───────────────────────────────────────────────
         $data = [
-            'data-product_id'      => $pid,
-            'data-product_sku'     => $product->get_sku(),
-            'data-quantity'        => $qty_val,
-            'data-lock-after-add'  => $lock ? '1' : '0',
-            'data-state'           => $state,
-            'data-state-texts'     => wp_json_encode($text_map),
+            'data-product_id' => $pid,
+            'data-product_sku' => $product->get_sku(),
+            'data-quantity' => $qty_val,
+            'data-lock-after-add' => $lock ? '1' : '0',
+            'data-state' => $state,
+            'data-state-texts' => wp_json_encode($text_map),
         ];
 
         if ($is_var) {
-            $data['data-is-variable']       = '1';
+            $data['data-is-variable'] = '1';
             $data['data-variable-behavior'] = $var_beh;
         }
         if ($is_var && $var_beh === 'quick_view') {
@@ -180,10 +220,10 @@ class Add_To_Cart_Widget extends Widget_Base
             $data_str .= ' ' . esc_attr($k) . '="' . esc_attr($v) . '"';
         }
 
-        $cls_str    = implode(' ', $cls);
+        $cls_str = implode(' ', $cls);
         $qty_hidden = ($hide_qty || !$show_qty) ? ' nmj-atc-qty-wrap--hidden' : '';
-        $tag_open   = '';
-        $tag_close  = '';
+        $tag_open = '';
+        $tag_close = '';
 
         if ($interact) {
             if ($is_var && $var_beh === 'redirect') {
@@ -193,11 +233,11 @@ class Add_To_Cart_Widget extends Widget_Base
             } else {
                 $href = $product->add_to_cart_url();
             }
-            $tag_open  = '<a href="' . esc_url($href) . '" class="' . esc_attr($cls_str) . '"' . $data_str
-                       . ' aria-label="' . esc_attr(sprintf(__('Add "%s" to your cart','nmj'), $product->get_name())) . '" rel="nofollow">';
+            $tag_open = '<a href="' . esc_url($href) . '" class="' . esc_attr($cls_str) . '"' . $data_str
+                . ' aria-label="' . esc_attr(sprintf(__('Add "%s" to your cart', 'nmj'), $product->get_name())) . '" rel="nofollow">';
             $tag_close = '</a>';
         } else {
-            $tag_open  = '<span class="' . esc_attr($cls_str) . '"' . $data_str . ' aria-disabled="true">';
+            $tag_open = '<span class="' . esc_attr($cls_str) . '"' . $data_str . ' aria-disabled="true">';
             $tag_close = '</span>';
         }
 
@@ -205,31 +245,28 @@ class Add_To_Cart_Widget extends Widget_Base
         ?>
         <div class="nmj-atc-wrap" data-qty-position="<?php echo esc_attr($qty_pos); ?>">
 
-            <?php if ($show_qty) : ?>
+            <?php if ($show_qty): ?>
                 <div class="nmj-atc-qty-wrap<?php echo esc_attr($qty_hidden); ?>">
-                    <input type="number"
-                           class="nmj-atc-qty"
-                           value="<?php echo esc_attr($qty_val); ?>"
-                           min="1"
-                           aria-label="<?php esc_attr_e('Quantity', 'nmj'); ?>" />
+                    <input type="number" class="nmj-atc-qty" value="<?php echo esc_attr($qty_val); ?>" min="1"
+                        aria-label="<?php esc_attr_e('Quantity', 'nmj'); ?>" />
                 </div>
             <?php endif; ?>
 
             <?php echo $tag_open; ?>
 
-                <?php if (!empty($icons[$state])) : ?>
-                    <span class="nmj-atc-icon"><?php echo $icons[$state]; ?></span>
-                <?php endif; ?>
+            <?php if (!empty($icons[$state])): ?>
+                <span class="nmj-atc-icon"><?php echo wp_kses_post($icons[$state]); ?></span>
+            <?php endif; ?>
 
-                <?php if ('' !== $cur_text) : ?>
-                    <span class="nmj-atc-text"><?php echo esc_html($cur_text); ?></span>
-                <?php endif; ?>
+            <?php if ('' !== $cur_text): ?>
+                <span class="nmj-atc-text"><?php echo esc_html($cur_text); ?></span>
+            <?php endif; ?>
 
             <?php echo $tag_close; ?>
 
             <?php // Hidden icon templates for JS state swaps ?>
-            <?php foreach ($icons as $st => $html) : ?>
-                <span class="nmj-atc-icon-tpl" data-state="<?php echo esc_attr($st); ?>"><?php echo $html; ?></span>
+            <?php foreach ($icons as $st => $html): ?>
+                <span class="nmj-atc-icon-tpl" data-state="<?php echo esc_attr($st); ?>"><?php echo wp_kses_post($html); ?></span>
             <?php endforeach; ?>
 
         </div>
@@ -241,63 +278,38 @@ class Add_To_Cart_Widget extends Widget_Base
     protected function content_template(): void
     {
         ?>
-        <#
-        // ── Resolve preview state ────────────────────────────────────────
-        var state = settings.editor_preview_state || 'in-stock';
-
-        // ── Text map ─────────────────────────────────────────────────────
-        var textMap = {
-            'in-stock': settings.in_stock_text     !== undefined ? settings.in_stock_text     : 'Add to Cart',
-            'added':    settings.added_text         !== undefined ? settings.added_text         : 'Added',
-            'oos':      settings.out_of_stock_text  !== undefined ? settings.out_of_stock_text  : 'Out of Stock',
-            'awaiting': (settings.variable_behavior === 'quick_view')
-                ? (settings.quick_view_text !== undefined ? settings.quick_view_text : 'Quick View')
-                : (settings.awaiting_text   !== undefined ? settings.awaiting_text   : 'Select options'),
-        };
-        var btnText = textMap[state];
-
-        // ── Icon map ──────────────────────────────────────────────────────
-        var iconKeyMap = {
-            'in-stock': 'in_stock_icon',
-            'added':    'added_icon',
-            'oos':      'out_of_stock_icon',
-            'awaiting': 'awaiting_icon',
-        };
-        var iconKey  = iconKeyMap[state];
-        var iconHTML = elementor.helpers.renderIcon(view, settings[iconKey], {'aria-hidden': 'true'}, 'i', 'object');
-        var hasIcon  = iconHTML && iconHTML.value;
-        var hasText  = btnText !== '';
-
-        // ── State CSS class ───────────────────────────────────────────────
-        var stateClass = 'nmj--' + state;
-        var extraClass = '';
-        if (state === 'in-stock') {
-            extraClass = 'button add_to_cart_button ajax_add_to_cart';
-        } else if (state === 'awaiting' && settings.variable_behavior === 'quick_view') {
-            extraClass = 'nmj-qv-trigger';
-        }
-
-        // ── Quantity visibility ───────────────────────────────────────────
-        var showQty    = settings.show_quantity_input === 'yes';
-        var qtyPos     = settings.qty_position || 'left';
-        var qty        = settings.qty_default  || 1;
-        var qtyHidden  = (state !== 'in-stock') ? ' nmj-atc-qty-wrap--hidden' : '';
-        #>
-        <div class="nmj-atc-wrap" data-qty-position="{{ qtyPos }}">
-            <# if (showQty) { #>
-                <div class="nmj-atc-qty-wrap{{ qtyHidden }}">
-                    <input type="number" class="nmj-atc-qty" value="{{ qty }}" min="1" disabled />
-                </div>
-            <# } #>
-            <a href="#" class="nmj-atc-btn {{ stateClass }} {{ extraClass }}">
-                <# if (hasIcon) { #>
-                    <span class="nmj-atc-icon">{{{ iconHTML.value }}}</span>
-                <# } #>
-                <# if (hasText) { #>
-                    <span class="nmj-atc-text">{{ btnText }}</span>
-                <# } #>
-            </a>
-        </div>
-        <?php
+        <# // ── Resolve preview state ──────────────────────────────────────── var state=settings.editor_preview_state
+            || 'in-stock' ; // ── Text map ───────────────────────────────────────────────────── var textMap={ 'in-stock' :
+            settings.in_stock_text !==undefined ? settings.in_stock_text : 'Add to Cart' , 'added' : settings.added_text
+            !==undefined ? settings.added_text : 'Added' , 'oos' : settings.out_of_stock_text !==undefined ?
+            settings.out_of_stock_text : 'Out of Stock' , 'awaiting' : (settings.variable_behavior==='quick_view' ) ?
+            (settings.quick_view_text !==undefined ? settings.quick_view_text : 'Quick View' ) : (settings.awaiting_text
+            !==undefined ? settings.awaiting_text : 'Select options' ), }; var btnText=textMap[state]; // ── Icon map
+            ────────────────────────────────────────────────────── var iconKeyMap={ 'in-stock' : 'in_stock_icon' , 'added'
+            : 'added_icon' , 'oos' : 'out_of_stock_icon' , 'awaiting' : 'awaiting_icon' , }; var iconKey=iconKeyMap[state]; var
+            iconHTML=elementor.helpers.renderIcon(view, settings[iconKey], {'aria-hidden': 'true' }, 'i' , 'object' ); var
+            hasIcon=iconHTML && iconHTML.value; var hasText=btnText !=='' ; // ── State CSS class
+            ─────────────────────────────────────────────── var stateClass='nmj--' + state; var extraClass='' ; if
+            (state==='in-stock' ) { extraClass='button add_to_cart_button ajax_add_to_cart' ; } else if (state==='awaiting' &&
+            settings.variable_behavior==='quick_view' ) { extraClass='nmj-qv-trigger' ; } // ── Quantity visibility
+            ─────────────────────────────────────────── var showQty=settings.show_quantity_input==='yes' ; var
+            qtyPos=settings.qty_position || 'left' ; var qty=settings.qty_default || 1; var qtyHidden=(state !=='in-stock' )
+            ? ' nmj-atc-qty-wrap--hidden' : '' ; #>
+            <div class="nmj-atc-wrap" data-qty-position="{{ qtyPos }}">
+                <# if (showQty) { #>
+                    <div class="nmj-atc-qty-wrap{{ qtyHidden }}">
+                        <input type="number" class="nmj-atc-qty" value="{{ qty }}" min="1" disabled />
+                    </div>
+                    <# } #>
+                        <a href="#" class="nmj-atc-btn {{ stateClass }} {{ extraClass }}">
+                            <# if (hasIcon) { #>
+                                <span class="nmj-atc-icon">{{{ iconHTML.value }}}</span>
+                                <# } #>
+                                    <# if (hasText) { #>
+                                        <span class="nmj-atc-text">{{ btnText }}</span>
+                                        <# } #>
+                        </a>
+            </div>
+            <?php
     }
 }
