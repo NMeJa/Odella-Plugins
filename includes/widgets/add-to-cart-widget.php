@@ -37,11 +37,14 @@ class Add_To_Cart_Widget extends Widget_Base
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
-    private function is_product_in_cart(int $pid): bool
+    private function is_product_in_cart(int $pid, int $variation_id = 0): bool
     {
         if (!function_exists('WC') || !is_object(WC()->cart)) return false;
         foreach (WC()->cart->get_cart() as $item) {
-            if ((int) $item['product_id'] === $pid) return true;
+            if ((int) $item['product_id'] !== $pid) continue;
+            // For variable products, also verify the variation matches
+            if ($variation_id > 0 && (int) $item['variation_id'] !== $variation_id) continue;
+            return true;
         }
         return false;
     }
@@ -87,20 +90,25 @@ class Add_To_Cart_Widget extends Widget_Base
         $var_beh   = $s['variable_behavior'] ?? 'inline';
 
         // ── State machine ─────────────────────────────────────────────────
-        $state       = 'in-stock';
-        $interact    = true;
-        $hide_qty    = false;
+        $state    = 'in-stock';
+        $interact = true;
+        $hide_qty = false;
 
         if (!$in_stock) {
+            // Out of stock — highest priority, nothing else matters
             $state = 'oos'; $interact = false; $hide_qty = true;
+        } elseif ($lock && $this->is_product_in_cart($pid)) {
+            // Already in cart + lock enabled — show added before checking variable
+            // branches so variable products that have been added also lock correctly.
+            // Note: for inline-variable the variation_id isn't known at page-load
+            // time, so we match on parent product_id only (conservative).
+            $state = 'added'; $interact = false; $hide_qty = true;
         } elseif ($is_var && $var_beh === 'inline') {
             $state = 'awaiting'; $interact = false; $hide_qty = true;
         } elseif ($is_var && $var_beh === 'quick_view') {
             $state = 'awaiting'; $interact = true; $hide_qty = true;
         } elseif ($is_var && $var_beh === 'redirect') {
             $state = 'in-stock'; $interact = true;
-        } elseif ($lock && $this->is_product_in_cart($pid)) {
-            $state = 'added'; $interact = false; $hide_qty = true;
         }
 
         // ── Resolve current text ──────────────────────────────────────────
@@ -286,7 +294,7 @@ class Add_To_Cart_Widget extends Widget_Base
                     <span class="nmj-atc-icon">{{{ iconHTML.value }}}</span>
                 <# } #>
                 <# if (hasText) { #>
-                    <span class="nmj-atc-text">{{{ btnText }}}</span>
+                    <span class="nmj-atc-text">{{ btnText }}</span>
                 <# } #>
             </a>
         </div>

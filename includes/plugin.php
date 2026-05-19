@@ -50,8 +50,21 @@ final class Plugin
             wp_send_json_error('Missing data');
         }
 
-        $product_id = absint($_POST['product_id']);
+        // Verify nonce — prevents unauthenticated rendering of arbitrary templates.
+        if (! wp_verify_nonce($_POST['nonce'] ?? '', 'nmj_ajax')) {
+            wp_send_json_error('Invalid nonce');
+        }
+
+        $product_id  = absint($_POST['product_id']);
         $template_id = absint($_POST['template_id']);
+
+        // Guard: ensure the product exists and is actually a product post type.
+        // Without this, get_post() returns null and setup_postdata(null)
+        // generates PHP warnings and Elementor renders with no post context.
+        $product_post = get_post($product_id);
+        if (!$product_post || $product_post->post_type !== 'product') {
+            wp_send_json_error('Product not found');
+        }
 
         $template_post = get_post($template_id);
         if (!$template_post || $template_post->post_status !== 'publish' || $template_post->post_type !== 'elementor_library') {
@@ -59,12 +72,13 @@ final class Plugin
         }
 
         global $post;
-        $post = get_post($product_id);
+        $post = $product_post; // already fetched and validated above
         setup_postdata($post);
 
-        ob_start();
-        echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($template_id);
-        $html = ob_get_clean();
+        // get_builder_content_for_display() returns a string directly —
+        // no output buffer needed. Using ob_start() here would silently capture
+        // any stray output from action hooks fired during Elementor's render.
+        $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($template_id);
 
         wp_reset_postdata();
         wp_send_json_success(['html' => $html]);
@@ -135,6 +149,12 @@ final class Plugin
 
         wp_register_script('nmj-add-to-cart', NMJ_URL . 'assets/js/add-to-cart.js', ['jquery', 'wc-add-to-cart'], $this->get_asset_version($js_path), true);
         wp_enqueue_script('nmj-add-to-cart');
+
+        // Pass a plugin-owned nonce — wc_add_to_cart_params has no nonce field.
+        wp_localize_script('nmj-add-to-cart', 'nmj_params', [
+            'nonce'    => wp_create_nonce('nmj_ajax'),
+            'ajax_url' => admin_url('admin-ajax.php'),
+        ]);
 
         wp_register_script('nmj-full-page-scroll', NMJ_URL . 'assets/js/full-page-scroll.js', [], $this->get_asset_version($fps_js_path), true);
         wp_enqueue_script('nmj-full-page-scroll');
