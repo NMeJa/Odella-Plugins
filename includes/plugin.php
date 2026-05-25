@@ -152,6 +152,7 @@ final class Plugin
         $css_path = NMJ_PATH . 'assets/css/odella-widgets.css';
         $js_path = NMJ_PATH . 'assets/js/add-to-cart.js';
         $fps_js_path = NMJ_PATH . 'assets/js/full-page-scroll.js';
+        $gg_js_path = NMJ_PATH . 'assets/js/gallery-grid.js';
 
         // CSS: enqueue unconditionally — it's shared by multiple widgets and
         // Elementor has no lazy-enqueue mechanism for styles.
@@ -171,6 +172,8 @@ final class Plugin
         ]);
 
         wp_register_script('nmj-full-page-scroll', NMJ_URL . 'assets/js/full-page-scroll.js', [], $this->get_asset_version($fps_js_path), true);
+        
+        wp_register_script('nmj-gallery-grid', NMJ_URL . 'assets/js/gallery-grid.js', ['jquery', 'elementor-frontend'], $this->get_asset_version($gg_js_path), true);
     }
 
     public function enqueue_editor_assets(): void
