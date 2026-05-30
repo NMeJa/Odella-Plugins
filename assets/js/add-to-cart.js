@@ -105,9 +105,6 @@
         var $btn = $(this);
         var $wrap = $btn.closest('.nmj-atc-wrap');
         var productId = $btn.data('product_id');
-        // Use .attr() not .data() — jQuery's .data() cache is seeded once at
-        // page load and never sees subsequent .attr('data-variation_id', ...) writes
-        // from the found_variation handler. .attr() always reads the live DOM.
         var variationId = $btn.attr('data-variation_id');
         var qty = parseInt($btn.attr('data-quantity'), 10) || 1;
 
@@ -120,24 +117,20 @@
         var formData = $form.length ? $form.serializeArray() : [];
 
         var data = {
-            product_id: productId,
-            variation_id: variationId,
-            quantity: qty,
-            variation: {}
+            // TRICK: Native WC add-to-cart endpoint handles variables perfectly
+            // IF you pass the variation ID as the main product_id.
+            product_id: variationId,
+            quantity: qty
         };
 
-        // Note: wc-ajax=add_to_cart is a public WC endpoint that does not
-        // enforce its own nonce on most WC versions. Sending nmj_params.nonce
-        // here would be a nonce action mismatch (our action vs WC's 'add-to-cart')
-        // and would be silently ignored. Omitting it is honest about the reality.
-
+        // WC validation requires attributes at the root of $_POST
         $.each(formData, function (i, field) {
-            if (field.name.indexOf('attribute_') === 0) data.variation[field.name] = field.value;
+            if (field.name.indexOf('attribute_') === 0) data[field.name] = field.value;
         });
 
         $btn.removeClass('added').addClass('loading');
 
-        // Use the WC AJAX endpoint (?wc-ajax=add_to_cart) preferred by WC 3.x+
+        // Use the WC AJAX endpoint (?wc-ajax=add_to_cart)
         var wcAjaxUrl = (typeof wc_add_to_cart_params !== 'undefined')
             ? wc_add_to_cart_params.wc_ajax_url.replace('%%endpoint%%', 'add_to_cart')
             : '/?wc-ajax=add_to_cart';
@@ -158,7 +151,13 @@
         var productId = $form.data('product_id');
 
         // --- Product Price Widget Integration ---
-        $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock').html(variation.price_html);
+        var $priceWrap = $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock');
+        if (variation.price_html) {
+            $priceWrap.html(variation.price_html);
+        } else if ($priceWrap.attr('data-original-price')) {
+            // WC sends empty price_html if all variations share the same price. Revert to base price.
+            $priceWrap.html($priceWrap.attr('data-original-price'));
+        }
 
         // Find all ATC widgets for this product with inline behavior
         $('.nmj-atc-btn[data-product_id="' + productId + '"].nmj--variable-inline, ' +

@@ -1,0 +1,47 @@
+.nmj-fps-nav {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 9999;
+}
+
+.nmj-fps-dot {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.nmj-fps-dot.active {
+    transform: scale(1.3);
+}
+
+.nmj-fps-dot::before {
+    content: attr(title);
+    position: absolute;
+    right: calc(100% + 15px);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.nmj-fps-dot:hover::before {
+    opacity: 1;
+    visibility: visible;
+}

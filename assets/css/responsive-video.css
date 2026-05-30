@@ -1,0 +1,38 @@
+/* ──────────────────────────────────────────────────────────────────────────────
+   Responsive Video Widget
+   ────────────────────────────────────────────────────────────────────────────── */
+
+.nmj-rv-wrap {
+	display: inline-block;
+	width: 100%;
+	vertical-align: top;
+}
+
+.nmj-rv-inner {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	/* aspect-ratio injected by Elementor selector control */
+}
+
+.nmj-rv-video {
+	display: block;
+	width: 100%;
+	height: 100%;
+	/* object-fit injected by Elementor selector control */
+}
+
+/* Editor placeholder shown when no video is configured */
+.nmj-rv-placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 200px;
+	background: #f0f0f1;
+	border: 2px dashed #c3c4c7;
+	border-radius: 4px;
+	color: #646970;
+	font-size: 14px;
+	padding: 20px;
+	text-align: center;
+}

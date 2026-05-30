@@ -41,6 +41,11 @@ class Gallery_Grid_Widget extends Widget_Base
         return ['nmj-gallery-grid'];
     }
 
+    public function get_style_depends(): array
+    {
+        return ['nmj-gallery-grid'];
+    }
+
     protected function register_controls(): void
     {
         $this->start_controls_section('section_images', [

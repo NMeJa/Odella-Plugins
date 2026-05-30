@@ -47,7 +47,7 @@ class Add_To_Cart_Widget extends Widget_Base
     }
     public function get_style_depends(): array
     {
-        return ['nmj-widgets'];
+        return ['nmj-add-to-cart'];
     }
 
     protected function register_controls(): void

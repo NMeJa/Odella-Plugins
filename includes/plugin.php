@@ -118,6 +118,7 @@ final class Plugin
         'full-page-scroll-widget' => \NMJ\Widgets\Full_Page_Scroll_Widget::class,
         'gallery-grid-widget' => \NMJ\Widgets\Gallery_Grid_Widget::class,
         'variation-selector-widget' => \NMJ\Widgets\Variation_Selector_Widget::class,
+        'responsive-video-widget' => \NMJ\Widgets\Responsive_Video_Widget::class,
     ];
 
     public function register_widgets(\Elementor\Widgets_Manager $manager): void
@@ -149,38 +150,51 @@ final class Plugin
 
     public function enqueue_frontend_assets(): void
     {
-        $css_path = NMJ_PATH . 'assets/css/odella-widgets.css';
         $js_path = NMJ_PATH . 'assets/js/add-to-cart.js';
         $fps_js_path = NMJ_PATH . 'assets/js/full-page-scroll.js';
         $gg_js_path = NMJ_PATH . 'assets/js/gallery-grid.js';
 
-        // CSS: enqueue unconditionally — it's shared by multiple widgets and
-        // Elementor has no lazy-enqueue mechanism for styles.
-        wp_register_style('nmj-widgets', NMJ_URL . 'assets/css/odella-widgets.css', [], $this->get_asset_version($css_path));
-        wp_enqueue_style('nmj-widgets');
+        // Per-widget CSS — register only; each widget declares its handle in
+        // get_style_depends() so Elementor enqueues it lazily on pages that
+        // actually contain the widget.
+        foreach ([
+            'nmj-add-to-cart'       => 'assets/css/add-to-cart.css',
+            'nmj-full-page-scroll'  => 'assets/css/full-page-scroll.css',
+            'nmj-gallery-grid'      => 'assets/css/gallery-grid.css',
+            'nmj-responsive-video'  => 'assets/css/responsive-video.css',
+        ] as $handle => $rel_path) {
+            $abs = NMJ_PATH . $rel_path;
+            wp_register_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
+        }
 
-        // JS: register only — each widget declares the handle in get_script_depends()
-        // so Elementor enqueues it lazily only on pages that contain the widget.
-        // wp_localize_script works on registered handles: it stores the data object
-        // immediately and WordPress outputs it alongside the script when enqueued.
+        // JS — register only; lazy-enqueued via get_script_depends().
         wp_register_script('nmj-add-to-cart', NMJ_URL . 'assets/js/add-to-cart.js', ['jquery', 'wc-add-to-cart'], $this->get_asset_version($js_path), true);
 
-        // Pass a plugin-owned nonce — wc_add_to_cart_params has no nonce field.
         wp_localize_script('nmj-add-to-cart', 'nmj_params', [
             'nonce' => wp_create_nonce('nmj_ajax'),
             'ajax_url' => admin_url('admin-ajax.php'),
         ]);
 
         wp_register_script('nmj-full-page-scroll', NMJ_URL . 'assets/js/full-page-scroll.js', [], $this->get_asset_version($fps_js_path), true);
-        
+
         wp_register_script('nmj-gallery-grid', NMJ_URL . 'assets/js/gallery-grid.js', ['jquery', 'elementor-frontend'], $this->get_asset_version($gg_js_path), true);
+
+        $rv_js_path = NMJ_PATH . 'assets/js/responsive-video.js';
+        wp_register_script('nmj-responsive-video', NMJ_URL . 'assets/js/responsive-video.js', [], $this->get_asset_version($rv_js_path), true);
     }
 
     public function enqueue_editor_assets(): void
     {
-        // Load the widget CSS inside the Elementor editor iframe so that
-        // selector-based controls (and prefix_class) take effect live.
-        $css_path = NMJ_PATH . 'assets/css/odella-widgets.css';
-        wp_enqueue_style('nmj-widgets', NMJ_URL . 'assets/css/odella-widgets.css', [], $this->get_asset_version($css_path));
+        // Load every widget CSS inside the Elementor editor iframe so that
+        // selector-based controls and prefix_class take effect in live preview.
+        foreach ([
+            'nmj-add-to-cart'       => 'assets/css/add-to-cart.css',
+            'nmj-full-page-scroll'  => 'assets/css/full-page-scroll.css',
+            'nmj-gallery-grid'      => 'assets/css/gallery-grid.css',
+            'nmj-responsive-video'  => 'assets/css/responsive-video.css',
+        ] as $handle => $rel_path) {
+            $abs = NMJ_PATH . $rel_path;
+            wp_enqueue_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
+        }
     }
 }

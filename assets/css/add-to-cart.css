@@ -1,0 +1,115 @@
+.nmj-atc-wrap {
+    display: inline-flex;
+    align-items: center;
+}
+
+.nmj-atc-wrap[data-qty-position="right"] {
+    flex-direction: row-reverse;
+}
+
+.nmj-atc-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1;
+    white-space: nowrap;
+    border: none;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.nmj-atc-btn.button,
+.nmj-atc-btn.add_to_cart_button,
+.nmj-atc-btn.ajax_add_to_cart,
+.nmj-atc-btn.added {
+    align-items: center;
+    flex-direction: inherit;
+}
+
+.nmj-atc-btn.nmj--oos,
+.nmj-atc-btn.nmj--added,
+.nmj-atc-btn.nmj--awaiting:not(.nmj-qv-trigger) {
+    pointer-events: none;
+    cursor: not-allowed;
+    user-select: none;
+}
+
+.nmj-atc-btn.loading .nmj-atc-icon {
+    opacity: 0.5;
+}
+
+.nmj-atc-icon {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.nmj-atc-icon svg {
+    display: block;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+.nmj-atc-qty-wrap {
+    display: inline-flex;
+    align-items: center;
+}
+
+.nmj-atc-qty-wrap.nmj-atc-qty-wrap--hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.nmj-atc-qty {
+    box-sizing: border-box;
+    -moz-appearance: textfield;
+}
+
+.nmj-atc-qty::-webkit-inner-spin-button,
+.nmj-atc-qty::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.nmj-atc-wrap .added_to_cart.wc-forward {
+    display: none !important;
+}
+
+.nmj-atc-wrap .nmj-atc-btn.added::after {
+    display: none !important;
+}
+
+.nmj-atc-icon-tpl {
+    display: none !important;
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.reveal-cart-on-hover .nmj-atc-wrap {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s ease-in-out;
+}
+
+.reveal-cart-on-hover:hover .nmj-atc-wrap {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+@media (max-width: 1024px) {
+    .reveal-cart-on-hover .nmj-atc-wrap {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+}
