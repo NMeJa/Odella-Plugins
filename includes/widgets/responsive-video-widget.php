@@ -99,6 +99,14 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 				'dynamic'     => [ 'active' => true ],
 			] );
 
+			$this->add_control( "{$device}_fallback_video", [
+				'label'       => esc_html__( 'Fallback Video (MP4)', 'nmj' ),
+				'description' => esc_html__( 'Optional MP4 fallback if the primary video is a format like WebM.', 'nmj' ),
+				'type'        => \Elementor\Controls_Manager::MEDIA,
+				'media_types' => [ 'video' ],
+				'dynamic'     => [ 'active' => true ],
+			] );
+
 			$this->add_control( "{$device}_poster", [
 				'label'   => esc_html__( 'Poster Image', 'nmj' ),
 				'type'    => \Elementor\Controls_Manager::MEDIA,
@@ -313,6 +321,9 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 		$desktop_src    = ! empty( $s['desktop_video']['url'] )  ? $s['desktop_video']['url']  : '';
 		$tablet_src     = ! empty( $s['tablet_video']['url'] )   ? $s['tablet_video']['url']   : '';
 		$mobile_src     = ! empty( $s['mobile_video']['url'] )   ? $s['mobile_video']['url']   : '';
+		$desktop_fallback = ! empty( $s['desktop_fallback_video']['url'] ) ? $s['desktop_fallback_video']['url'] : '';
+		$tablet_fallback  = ! empty( $s['tablet_fallback_video']['url'] )  ? $s['tablet_fallback_video']['url']  : '';
+		$mobile_fallback  = ! empty( $s['mobile_fallback_video']['url'] )  ? $s['mobile_fallback_video']['url']  : '';
 		$desktop_poster = ! empty( $s['desktop_poster']['url'] ) ? $s['desktop_poster']['url'] : '';
 		$tablet_poster  = ! empty( $s['tablet_poster']['url'] )  ? $s['tablet_poster']['url']  : '';
 		$mobile_poster  = ! empty( $s['mobile_poster']['url'] )  ? $s['mobile_poster']['url']  : '';
@@ -361,6 +372,9 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 		     data-desktop-src="<?php echo esc_url( $desktop_src ); ?>"
 		     data-tablet-src="<?php echo esc_url( $tablet_src ); ?>"
 		     data-mobile-src="<?php echo esc_url( $mobile_src ); ?>"
+		     data-desktop-fallback="<?php echo esc_url( $desktop_fallback ); ?>"
+		     data-tablet-fallback="<?php echo esc_url( $tablet_fallback ); ?>"
+		     data-mobile-fallback="<?php echo esc_url( $mobile_fallback ); ?>"
 		     data-desktop-poster="<?php echo esc_url( $desktop_poster ); ?>"
 		     data-tablet-poster="<?php echo esc_url( $tablet_poster ); ?>"
 		     data-mobile-poster="<?php echo esc_url( $mobile_poster ); ?>"
@@ -388,6 +402,9 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 		var desktopSrc    = settings.desktop_video  && settings.desktop_video.url  ? settings.desktop_video.url  : '';
 		var tabletSrc     = settings.tablet_video   && settings.tablet_video.url   ? settings.tablet_video.url   : '';
 		var mobileSrc     = settings.mobile_video   && settings.mobile_video.url   ? settings.mobile_video.url   : '';
+		var desktopFallback = settings.desktop_fallback_video && settings.desktop_fallback_video.url ? settings.desktop_fallback_video.url : '';
+		var tabletFallback  = settings.tablet_fallback_video  && settings.tablet_fallback_video.url  ? settings.tablet_fallback_video.url  : '';
+		var mobileFallback  = settings.mobile_fallback_video  && settings.mobile_fallback_video.url  ? settings.mobile_fallback_video.url  : '';
 		var desktopPoster = settings.desktop_poster && settings.desktop_poster.url ? settings.desktop_poster.url : '';
 		var tabletPoster  = settings.tablet_poster  && settings.tablet_poster.url  ? settings.tablet_poster.url  : '';
 		var mobilePoster  = settings.mobile_poster  && settings.mobile_poster.url  ? settings.mobile_poster.url  : '';
@@ -408,6 +425,9 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 		     data-desktop-src="{{ desktopSrc }}"
 		     data-tablet-src="{{ tabletSrc }}"
 		     data-mobile-src="{{ mobileSrc }}"
+		     data-desktop-fallback="{{ desktopFallback }}"
+		     data-tablet-fallback="{{ tabletFallback }}"
+		     data-mobile-fallback="{{ mobileFallback }}"
 		     data-desktop-poster="{{ desktopPoster }}"
 		     data-tablet-poster="{{ tabletPoster }}"
 		     data-mobile-poster="{{ mobilePoster }}"
@@ -416,6 +436,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 			<div class="nmj-rv-inner">
 				{{!-- src/poster set directly for editor canvas immediate preview --}}
 				<#
+				var editorFallback = desktopFallback || tabletFallback || mobileFallback;
 				var editorPoster  = desktopPoster || tabletPoster || mobilePoster;
 				var editorSrc     = desktopSrc || tabletSrc || mobileSrc;
 				var editorPreload = settings.preload || 'none';
@@ -423,8 +444,10 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 				<video class="nmj-rv-video"
 				       preload="{{ editorPreload }}"
 				       {{{ boolAttrs }}}
-				       src="{{ editorSrc }}"
-				       <# if ( editorPoster ) { #>poster="{{ editorPoster }}"<# } #>></video>
+				       <# if ( editorPoster ) { #>poster="{{ editorPoster }}"<# } #>>
+					<# if ( editorSrc ) { #><source src="{{ editorSrc }}"><# } #>
+					<# if ( editorFallback ) { #><source src="{{ editorFallback }}"><# } #>
+				</video>
 			</div>
 		</div>
 		<# } #>

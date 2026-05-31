@@ -55,8 +55,9 @@
 		var video = wrap.querySelector( '.nmj-rv-video' );
 		if ( ! video ) return;
 
-		var newSrc    = resolve( wrap, 'Src' );
-		var newPoster = resolve( wrap, 'Poster' );
+		var newSrc      = resolve( wrap, 'Src' );
+		var newFallback = resolve( wrap, 'Fallback' );
+		var newPoster   = resolve( wrap, 'Poster' );
 
 		/* Poster — always safe to swap instantly */
 		var curPoster = video.getAttribute( 'poster' ) || '';
@@ -68,15 +69,34 @@
 			}
 		}
 
-		/* Src — only reload when it actually changed */
-		var curSrc = video.getAttribute( 'src' ) || '';
-		if ( newSrc === curSrc ) return;
+		/* Src & Fallback — only reload when they actually change */
+		var curSrc      = video.getAttribute( 'data-nmj-src' ) || '';
+		var curFallback = video.getAttribute( 'data-nmj-fallback' ) || '';
+		if ( newSrc === curSrc && newFallback === curFallback ) return;
 
 		var wasPlaying = ! video.paused && ! video.ended;
 		var time       = video.currentTime || 0;
 
-		if ( newSrc ) {
-			video.setAttribute( 'src', newSrc );
+		// Save state so we don't infinitely reload on resize
+		video.setAttribute( 'data-nmj-src', newSrc );
+		video.setAttribute( 'data-nmj-fallback', newFallback );
+
+		// Clear old sources
+		video.removeAttribute( 'src' );
+		video.innerHTML = '';
+
+		if ( newSrc || newFallback ) {
+			if ( newSrc ) {
+				var s1 = document.createElement( 'source' );
+				s1.src = newSrc;
+				video.appendChild( s1 );
+			}
+			if ( newFallback ) {
+				var s2 = document.createElement( 'source' );
+				s2.src = newFallback;
+				video.appendChild( s2 );
+			}
+
 			video.load();
 
 			if ( wasPlaying ) {
@@ -87,7 +107,6 @@
 				} );
 			}
 		} else {
-			video.removeAttribute( 'src' );
 			video.load();
 		}
 	}
