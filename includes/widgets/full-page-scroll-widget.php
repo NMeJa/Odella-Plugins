@@ -52,6 +52,16 @@ class Full_Page_Scroll_Widget extends Widget_Base
             'default' => 100,
         ]);
 
+        $this->add_control('allow_scroll_past', [
+            'label' => esc_html__('Allow Scroll Past Last Section', 'nmj'),
+            'description' => esc_html__('When ON, normal scrolling resumes after the last section so the footer is reachable. Snap re-activates when scrolling back up.', 'nmj'),
+            'type' => Controls_Manager::SWITCHER,
+            'label_on' => esc_html__('Yes', 'nmj'),
+            'label_off' => esc_html__('No', 'nmj'),
+            'return_value' => 'yes',
+            'default' => 'no',
+        ]);
+
         $repeater = new Repeater();
 
         $repeater->add_control('section_id', [
@@ -177,6 +187,7 @@ class Full_Page_Scroll_Widget extends Widget_Base
 
         $offset = absint($settings['header_offset'] ?? 0);
         $show_dots = $settings['show_dots'] === 'yes';
+        $allow_past = ($settings['allow_scroll_past'] ?? 'no') === 'yes';
 
         // Pre-render the chosen SVG/Icon
         ob_start();
@@ -187,9 +198,10 @@ class Full_Page_Scroll_Widget extends Widget_Base
 
         // Output the JSON data for JS to read
         echo sprintf(
-            '<div class="nmj-fps-data" style="display:none;" data-offset="%d" data-sections="%s"></div>',
+            '<div class="nmj-fps-data" style="display:none;" data-offset="%d" data-sections="%s" data-allow-past="%s"></div>',
             $offset,
-            esc_attr(wp_json_encode($clean_sections))
+            esc_attr(wp_json_encode($clean_sections)),
+            $allow_past ? '1' : '0'
         );
 
         // Output Navigation Dots HTML
