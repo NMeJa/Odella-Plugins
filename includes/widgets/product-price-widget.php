@@ -229,6 +229,16 @@ class Product_Price_Widget extends Widget_Base
         $allowed_tags = ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span'];
         $tag = in_array($settings['price_tag'], $allowed_tags, true) ? $settings['price_tag'] : 'div';
         $in_stock = $product->is_in_stock();
+
+        // Print once per page: override theme loading animations on .price
+        // elements inside this widget. Many themes fade-in or skeleton-load
+        // .price nodes; when JS swaps the HTML the new nodes restart in the
+        // "loading" state and get stuck there.
+        static $css_printed = false;
+        if (!$css_printed) {
+            echo '<style>.nmj-price-in-stock .price,.nmj-price-in-stock .price *{opacity:1!important;visibility:visible!important;animation:none!important;transition:none!important}</style>';
+            $css_printed = true;
+        }
         ?>
         <div class="nmj-product-price-wrapper nmj-price-product-<?php echo esc_attr($product_id); ?>" data-product_id="<?php echo esc_attr($product_id); ?>">
             <?php if ($in_stock): ?>

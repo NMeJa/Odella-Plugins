@@ -150,18 +150,33 @@
         });
     });
 
+    // ── Price Update Helper ───────────────────────────────────────────────────
+    // After swapping price HTML, the new .price DOM nodes lack whatever
+    // "loaded/ready" state the theme's CSS expects (many themes fade-in prices
+    // via class toggle or transition). Force visibility so the price never
+    // gets stuck in a loading/skeleton state.
+    function nmjUpdatePrice($el, html) {
+        $el.html(html);
+        $el.find('.price').css({ opacity: 1, visibility: 'visible', animation: 'none' });
+    }
+
     // ── Variation Selector Integration (inline behavior) ──────────────────────
     $(document.body).on('found_variation', function (e, variation) {
         var $form = $(e.target);
         var productId = $form.data('product_id');
 
         // --- Product Price Widget Integration ---
+        // Defer with setTimeout(0) so this runs after any theme/WC handlers
+        // that also listen to found_variation and might override prices.
         var $priceWrap = $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock');
-        if (variation.price_html) {
-            $priceWrap.html(variation.price_html);
-        } else if ($priceWrap.attr('data-original-price')) {
-            // WC sends empty price_html if all variations share the same price. Revert to base price.
-            $priceWrap.html($priceWrap.attr('data-original-price'));
+        if ($priceWrap.length) {
+            setTimeout(function () {
+                if (variation.price_html) {
+                    nmjUpdatePrice($priceWrap, variation.price_html);
+                } else if ($priceWrap.attr('data-original-price')) {
+                    nmjUpdatePrice($priceWrap, $priceWrap.attr('data-original-price'));
+                }
+            }, 0);
         }
 
         // Find all ATC widgets for this product with inline behavior
@@ -171,11 +186,9 @@
                 var $wrap = $btn.closest('.nmj-atc-wrap');
 
                 if (variation.is_in_stock) {
-                    // Ready to add — switch to in-stock
                     $btn.attr('data-variation_id', variation.variation_id);
                     nmjSetState($wrap, 'in-stock');
                 } else {
-                    // Variation exists but is out of stock
                     $btn.removeAttr('data-variation_id');
                     nmjSetState($wrap, 'oos');
                 }
@@ -189,7 +202,9 @@
         // --- Product Price Widget Integration ---
         var $priceWrap = $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock');
         if ($priceWrap.length && $priceWrap.attr('data-original-price')) {
-            $priceWrap.html($priceWrap.attr('data-original-price'));
+            setTimeout(function () {
+                nmjUpdatePrice($priceWrap, $priceWrap.attr('data-original-price'));
+            }, 0);
         }
 
         $('.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
