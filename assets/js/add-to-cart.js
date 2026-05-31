@@ -68,6 +68,11 @@
                 $qtyWrap.addClass('nmj-atc-qty-wrap--hidden');
             }
         }
+
+        // Preserve variable-inline marker through state swaps
+        if ($btn.attr('data-variable-behavior') === 'inline') {
+            $btn.addClass('nmj--variable-inline');
+        }
     }
 
     // ── Quantity → data-quantity sync ──────────────────────────────────────────
@@ -168,7 +173,6 @@
                 if (variation.is_in_stock) {
                     // Ready to add — switch to in-stock
                     $btn.attr('data-variation_id', variation.variation_id);
-                    $btn.addClass('nmj--variable-inline');
                     nmjSetState($wrap, 'in-stock');
                 } else {
                     // Variation exists but is out of stock
@@ -193,7 +197,6 @@
             var $wrap = $btn.closest('.nmj-atc-wrap');
 
             $btn.removeAttr('data-variation_id');
-            $btn.addClass('nmj--variable-inline');
             nmjSetState($wrap, 'awaiting');
         });
     });
