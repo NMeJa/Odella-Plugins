@@ -3,7 +3,7 @@
 
 namespace NMJ\Widgets;
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /**
  * Responsive Video Widget
@@ -17,41 +17,50 @@ defined( 'ABSPATH' ) || exit;
  *   tablet  → desktop → mobile
  *   desktop → tablet  → mobile
  */
-class Responsive_Video_Widget extends \Elementor\Widget_Base {
+class Responsive_Video_Widget extends \Elementor\Widget_Base
+{
 
 	// ── Identity ─────────────────────────────────────────────────────────────
 
-	public function get_name(): string {
+	public function get_name(): string
+	{
 		return 'nmj-responsive-video';
 	}
 
-	public function get_title(): string {
-		return esc_html__( 'Responsive Video', 'nmj' );
+	public function get_title(): string
+	{
+		return esc_html__('Responsive Video', 'nmj');
 	}
 
-	public function get_icon(): string {
+	public function get_icon(): string
+	{
 		return 'eicon-video-camera';
 	}
 
-	public function get_categories(): array {
-		return [ 'nmj-widgets' ];
+	public function get_categories(): array
+	{
+		return ['nmj-widgets'];
 	}
 
-	public function get_keywords(): array {
-		return [ 'video', 'responsive', 'mobile', 'desktop', 'tablet', 'mp4', 'self-hosted', 'poster' ];
+	public function get_keywords(): array
+	{
+		return ['video', 'responsive', 'mobile', 'desktop', 'tablet', 'mp4', 'self-hosted', 'poster'];
 	}
 
-	public function get_script_depends(): array {
-		return [ 'nmj-responsive-video' ];
+	public function get_script_depends(): array
+	{
+		return ['nmj-responsive-video'];
 	}
 
-	public function get_style_depends(): array {
-		return [ 'nmj-responsive-video' ];
+	public function get_style_depends(): array
+	{
+		return ['nmj-responsive-video'];
 	}
 
 	// ── Controls ─────────────────────────────────────────────────────────────
 
-	protected function register_controls(): void {
+	protected function register_controls(): void
+	{
 		$this->controls_videos();
 		$this->controls_playback();
 		$this->controls_breakpoints();
@@ -60,334 +69,340 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 	}
 
 	// Content — Videos & Posters
-	private function controls_videos(): void {
-		$this->start_controls_section( 'section_videos', [
-			'label' => esc_html__( 'Videos & Posters', 'nmj' ),
-			'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
-		] );
+	private function controls_videos(): void
+	{
+		$this->start_controls_section('section_videos', [
+			'label' => esc_html__('Videos & Posters', 'nmj'),
+			'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+		]);
 
-		foreach ( [
-			'desktop' => esc_html__( 'Desktop', 'nmj' ),
-			'tablet'  => esc_html__( 'Tablet', 'nmj' ),
-			'mobile'  => esc_html__( 'Mobile', 'nmj' ),
-		] as $device => $label ) {
+		foreach ([
+			'desktop' => esc_html__('Desktop', 'nmj'),
+			'tablet' => esc_html__('Tablet', 'nmj'),
+			'mobile' => esc_html__('Mobile', 'nmj'),
+		] as $device => $label) {
 
 			// Build heading args — only tablet/mobile get a visual separator
 			$heading_args = [
 				'label' => $label,
-				'type'  => \Elementor\Controls_Manager::HEADING,
+				'type' => \Elementor\Controls_Manager::HEADING,
 			];
-			if ( $device !== 'desktop' ) {
+			if ($device !== 'desktop') {
 				$heading_args['separator'] = 'before';
 			}
 
-			$this->add_control( "heading_{$device}", $heading_args );
+			$this->add_control("heading_{$device}", $heading_args);
 
 			// Tablet and mobile are optional; show a hint
-			if ( $device !== 'desktop' ) {
-				$this->add_control( "{$device}_notice", [
-					'type'            => \Elementor\Controls_Manager::RAW_HTML,
-					'raw'             => esc_html__( 'Optional — falls back to Desktop if left empty.', 'nmj' ),
+			if ($device !== 'desktop') {
+				$this->add_control("{$device}_notice", [
+					'type' => \Elementor\Controls_Manager::RAW_HTML,
+					'raw' => esc_html__('Optional — falls back to Desktop if left empty.', 'nmj'),
 					'content_classes' => 'elementor-descriptor',
-				] );
+				]);
 			}
 
-			$this->add_control( "{$device}_source_type", [
-				'label'   => esc_html__( 'Video Source', 'nmj' ),
-				'type'    => \Elementor\Controls_Manager::SELECT,
+			$this->add_control("{$device}_source_type", [
+				'label' => esc_html__('Video Source', 'nmj'),
+				'type' => \Elementor\Controls_Manager::SELECT,
 				'default' => 'hosted',
 				'options' => [
-					'hosted'   => esc_html__( 'Self Hosted', 'nmj' ),
-					'external' => esc_html__( 'YouTube / Vimeo', 'nmj' ),
+					'hosted' => esc_html__('Self Hosted', 'nmj'),
+					'external' => esc_html__('YouTube / Vimeo', 'nmj'),
 				],
-			] );
+			]);
 
-			$this->add_control( "{$device}_video", [
-				'label'       => esc_html__( 'Video File', 'nmj' ),
-				'type'        => \Elementor\Controls_Manager::MEDIA,
-				'media_types' => [ 'video' ],
-				'dynamic'     => [ 'active' => true ],
-				'condition'   => [ "{$device}_source_type" => 'hosted' ],
-			] );
+			$this->add_control("{$device}_video", [
+				'label' => esc_html__('Video File', 'nmj'),
+				'type' => \Elementor\Controls_Manager::MEDIA,
+				'media_types' => ['video'],
+				'dynamic' => ['active' => true],
+				'condition' => ["{$device}_source_type" => 'hosted'],
+			]);
 
-			$this->add_control( "{$device}_fallback_video", [
-				'label'       => esc_html__( 'Fallback Video (MP4)', 'nmj' ),
-				'description' => esc_html__( 'Optional MP4 fallback if the primary video is a format like WebM.', 'nmj' ),
-				'type'        => \Elementor\Controls_Manager::MEDIA,
-				'media_types' => [ 'video' ],
-				'dynamic'     => [ 'active' => true ],
-				'condition'   => [ "{$device}_source_type" => 'hosted' ],
-			] );
+			$this->add_control("{$device}_fallback_video", [
+				'label' => esc_html__('Fallback Video (MP4)', 'nmj'),
+				'description' => esc_html__('Optional MP4 fallback if the primary video is a format like WebM.', 'nmj'),
+				'type' => \Elementor\Controls_Manager::MEDIA,
+				'media_types' => ['video'],
+				'dynamic' => ['active' => true],
+				'condition' => ["{$device}_source_type" => 'hosted'],
+			]);
 
-			$this->add_control( "{$device}_external_url", [
-				'label'       => esc_html__( 'External URL', 'nmj' ),
-				'description' => esc_html__( 'Enter a YouTube or Vimeo link.', 'nmj' ),
-				'type'        => \Elementor\Controls_Manager::TEXT,
-				'dynamic'     => [ 'active' => true ],
+			$this->add_control("{$device}_external_url", [
+				'label' => esc_html__('External URL', 'nmj'),
+				'description' => esc_html__('Enter a YouTube or Vimeo link.', 'nmj'),
+				'type' => \Elementor\Controls_Manager::TEXT,
+				'dynamic' => ['active' => true],
 				'label_block' => true,
-				'condition'   => [ "{$device}_source_type" => 'external' ],
-			] );
+				'condition' => ["{$device}_source_type" => 'external'],
+			]);
 
-			$this->add_control( "{$device}_poster", [
-				'label'   => esc_html__( 'Poster Image', 'nmj' ),
-				'type'    => \Elementor\Controls_Manager::MEDIA,
-				'dynamic' => [ 'active' => true ],
-				'condition'   => [ "{$device}_source_type" => 'hosted' ],
-			] );
+			$this->add_control("{$device}_poster", [
+				'label' => esc_html__('Poster Image', 'nmj'),
+				'type' => \Elementor\Controls_Manager::MEDIA,
+				'dynamic' => ['active' => true],
+				'condition' => ["{$device}_source_type" => 'hosted'],
+			]);
 		}
 
 		$this->end_controls_section();
 	}
 
 	// Content — Playback
-	private function controls_playback(): void {
-		$this->start_controls_section( 'section_playback', [
-			'label' => esc_html__( 'Playback', 'nmj' ),
-			'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
-		] );
+	private function controls_playback(): void
+	{
+		$this->start_controls_section('section_playback', [
+			'label' => esc_html__('Playback', 'nmj'),
+			'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+		]);
 
-		$this->add_control( 'autoplay', [
-			'label'   => esc_html__( 'Autoplay', 'nmj' ),
-			'type'    => \Elementor\Controls_Manager::SWITCHER,
+		$this->add_control('autoplay', [
+			'label' => esc_html__('Autoplay', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SWITCHER,
 			'default' => '',
-		] );
+		]);
 
-		$this->add_control( 'autoplay_notice', [
-			'type'            => \Elementor\Controls_Manager::RAW_HTML,
-			'raw'             => esc_html__( 'Browsers require Muted to be enabled for autoplay to work.', 'nmj' ),
+		$this->add_control('autoplay_notice', [
+			'type' => \Elementor\Controls_Manager::RAW_HTML,
+			'raw' => esc_html__('Browsers require Muted to be enabled for autoplay to work.', 'nmj'),
 			'content_classes' => 'elementor-descriptor',
-			'condition'       => [ 'autoplay' => 'yes' ],
-		] );
+			'condition' => ['autoplay' => 'yes'],
+		]);
 
-		$this->add_control( 'muted', [
-			'label'   => esc_html__( 'Muted', 'nmj' ),
-			'type'    => \Elementor\Controls_Manager::SWITCHER,
+		$this->add_control('muted', [
+			'label' => esc_html__('Muted', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SWITCHER,
 			'default' => 'yes',
-		] );
+		]);
 
-		$this->add_control( 'loop', [
-			'label'   => esc_html__( 'Loop', 'nmj' ),
-			'type'    => \Elementor\Controls_Manager::SWITCHER,
+		$this->add_control('loop', [
+			'label' => esc_html__('Loop', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SWITCHER,
 			'default' => '',
-		] );
+		]);
 
-		$this->add_control( 'controls', [
-			'label'   => esc_html__( 'Show Controls', 'nmj' ),
-			'type'    => \Elementor\Controls_Manager::SWITCHER,
+		$this->add_control('controls', [
+			'label' => esc_html__('Show Controls', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SWITCHER,
 			'default' => 'yes',
-		] );
+		]);
 
-		$this->add_control( 'playsinline', [
-			'label'       => esc_html__( 'Plays Inline on iOS', 'nmj' ),
-			'description' => esc_html__( 'Prevents iOS Safari from going fullscreen automatically.', 'nmj' ),
-			'type'        => \Elementor\Controls_Manager::SWITCHER,
-			'default'     => 'yes',
-		] );
+		$this->add_control('playsinline', [
+			'label' => esc_html__('Plays Inline on iOS', 'nmj'),
+			'description' => esc_html__('Prevents iOS Safari from going fullscreen automatically.', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SWITCHER,
+			'default' => 'yes',
+		]);
 
-		$this->add_control( 'preload', [
-			'label'       => esc_html__( 'Preload', 'nmj' ),
-			'description' => esc_html__( 'Use "None" for below-fold placement. "Metadata" or "Auto" can speed up above-fold start time at the cost of more bandwidth.', 'nmj' ),
-			'type'        => \Elementor\Controls_Manager::SELECT,
-			'default'     => 'none',
-			'options'     => [
-				'none'     => esc_html__( 'None', 'nmj' ),
-				'metadata' => esc_html__( 'Metadata', 'nmj' ),
-				'auto'     => esc_html__( 'Auto', 'nmj' ),
+		$this->add_control('preload', [
+			'label' => esc_html__('Preload', 'nmj'),
+			'description' => esc_html__('Use "None" for below-fold placement. "Metadata" or "Auto" can speed up above-fold start time at the cost of more bandwidth.', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SELECT,
+			'default' => 'none',
+			'options' => [
+				'none' => esc_html__('None', 'nmj'),
+				'metadata' => esc_html__('Metadata', 'nmj'),
+				'auto' => esc_html__('Auto', 'nmj'),
 			],
-		] );
+		]);
 
 		$this->end_controls_section();
 	}
 
 	// Content — Breakpoints
-	private function controls_breakpoints(): void {
-		$this->start_controls_section( 'section_breakpoints', [
-			'label' => esc_html__( 'Breakpoints', 'nmj' ),
-			'tab'   => \Elementor\Controls_Manager::TAB_CONTENT,
-		] );
+	private function controls_breakpoints(): void
+	{
+		$this->start_controls_section('section_breakpoints', [
+			'label' => esc_html__('Breakpoints', 'nmj'),
+			'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+		]);
 
-		$this->add_control( 'breakpoints_info', [
-			'type'            => \Elementor\Controls_Manager::RAW_HTML,
-			'raw'             => wp_kses_post(
-				__( '<strong>Mobile</strong>: ≤ Mobile Max width<br><strong>Tablet</strong>: Mobile Max &lt; width ≤ Tablet Max<br><strong>Desktop</strong>: above Tablet Max', 'nmj' )
+		$this->add_control('breakpoints_info', [
+			'type' => \Elementor\Controls_Manager::RAW_HTML,
+			'raw' => wp_kses_post(
+				__('<strong>Mobile</strong>: ≤ Mobile Max width<br><strong>Tablet</strong>: Mobile Max &lt; width ≤ Tablet Max<br><strong>Desktop</strong>: above Tablet Max', 'nmj')
 			),
 			'content_classes' => 'elementor-descriptor',
-		] );
+		]);
 
-		$this->add_control( 'mobile_breakpoint', [
-			'label'   => esc_html__( 'Mobile Max Width (px)', 'nmj' ),
-			'type'    => \Elementor\Controls_Manager::NUMBER,
+		$this->add_control('mobile_breakpoint', [
+			'label' => esc_html__('Mobile Max Width (px)', 'nmj'),
+			'type' => \Elementor\Controls_Manager::NUMBER,
 			'default' => 767,
-			'min'     => 200,
-			'max'     => 1280,
-		] );
+			'min' => 200,
+			'max' => 1280,
+		]);
 
-		$this->add_control( 'tablet_breakpoint', [
-			'label'   => esc_html__( 'Tablet Max Width (px)', 'nmj' ),
-			'type'    => \Elementor\Controls_Manager::NUMBER,
+		$this->add_control('tablet_breakpoint', [
+			'label' => esc_html__('Tablet Max Width (px)', 'nmj'),
+			'type' => \Elementor\Controls_Manager::NUMBER,
 			'default' => 1024,
-			'min'     => 320,
-			'max'     => 2560,
-		] );
+			'min' => 320,
+			'max' => 2560,
+		]);
 
 		$this->end_controls_section();
 	}
 
 	// Style — Layout
-	private function controls_style_layout(): void {
-		$this->start_controls_section( 'section_style_layout', [
-			'label' => esc_html__( 'Layout', 'nmj' ),
-			'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-		] );
+	private function controls_style_layout(): void
+	{
+		$this->start_controls_section('section_style_layout', [
+			'label' => esc_html__('Layout', 'nmj'),
+			'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+		]);
 
 		// Responsive SELECT control → Elementor auto-generates per-breakpoint CSS rules,
 		// so the aspect ratio can be 16/9 on desktop and 9/16 on mobile, for example.
-		$this->add_responsive_control( 'aspect_ratio', [
-			'label'     => esc_html__( 'Aspect Ratio', 'nmj' ),
-			'type'      => \Elementor\Controls_Manager::SELECT,
-			'default'   => '16/9',
-			'options'   => [
+		$this->add_responsive_control('aspect_ratio', [
+			'label' => esc_html__('Aspect Ratio', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SELECT,
+			'default' => '16/9',
+			'options' => [
 				'16/9' => '16:9 — Widescreen',
 				'9/16' => '9:16 — Portrait',
-				'4/3'  => '4:3 — Standard',
-				'3/2'  => '3:2',
-				'1/1'  => '1:1 — Square',
+				'4/3' => '4:3 — Standard',
+				'3/2' => '3:2',
+				'1/1' => '1:1 — Square',
 				'21/9' => '21:9 — Ultrawide',
 			],
 			'selectors' => [
 				'{{WRAPPER}} .nmj-rv-inner' => 'aspect-ratio: {{VALUE}};',
 			],
-		] );
+		]);
 
-		$this->add_responsive_control( 'max_width', [
-			'label'      => esc_html__( 'Max Width', 'nmj' ),
-			'type'       => \Elementor\Controls_Manager::SLIDER,
-			'size_units' => [ 'px', '%', 'vw' ],
-			'range'      => [
-				'px'  => [ 'min' => 100, 'max' => 2400, 'step' => 10 ],
-				'%'   => [ 'min' => 10, 'max' => 100 ],
-				'vw'  => [ 'min' => 10, 'max' => 100 ],
+		$this->add_control('max_width', [
+			'label' => esc_html__('Max Width', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SLIDER,
+			'size_units' => ['px', '%', 'vw'],
+			'range' => [
+				'px' => ['min' => 100, 'max' => 2400, 'step' => 10],
+				'%' => ['min' => 10, 'max' => 100],
+				'vw' => ['min' => 10, 'max' => 100],
 			],
-			'selectors'  => [
+			'selectors' => [
 				'{{WRAPPER}} .nmj-rv-wrap' => 'max-width: {{SIZE}}{{UNIT}};',
 			],
-		] );
+		]);
 
 		// Block-level alignment via margins (applies when max-width constrains the wrap).
-		$this->add_responsive_control( 'alignment', [
-			'label'     => esc_html__( 'Alignment', 'nmj' ),
-			'type'      => \Elementor\Controls_Manager::CHOOSE,
-			'options'   => [
-				'left'   => [ 'title' => esc_html__( 'Left', 'nmj' ),   'icon' => 'eicon-text-align-left' ],
-				'center' => [ 'title' => esc_html__( 'Center', 'nmj' ), 'icon' => 'eicon-text-align-center' ],
-				'right'  => [ 'title' => esc_html__( 'Right', 'nmj' ),  'icon' => 'eicon-text-align-right' ],
+		$this->add_responsive_control('alignment', [
+			'label' => esc_html__('Alignment', 'nmj'),
+			'type' => \Elementor\Controls_Manager::CHOOSE,
+			'options' => [
+				'left' => ['title' => esc_html__('Left', 'nmj'), 'icon' => 'eicon-text-align-left'],
+				'center' => ['title' => esc_html__('Center', 'nmj'), 'icon' => 'eicon-text-align-center'],
+				'right' => ['title' => esc_html__('Right', 'nmj'), 'icon' => 'eicon-text-align-right'],
 			],
 			'selectors' => [
 				'{{WRAPPER}} .nmj-rv-wrap' => '{{VALUE}}',
 			],
 			'selectors_dictionary' => [
-				'left'   => 'margin-right: auto;',
+				'left' => 'margin-right: auto;',
 				'center' => 'margin-left: auto; margin-right: auto;',
-				'right'  => 'margin-left: auto;',
+				'right' => 'margin-left: auto;',
 			],
-		] );
+		]);
 
 		$this->end_controls_section();
 	}
 
 	// Style — Video
-	private function controls_style_video(): void {
-		$this->start_controls_section( 'section_style_video', [
-			'label' => esc_html__( 'Video', 'nmj' ),
-			'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
-		] );
+	private function controls_style_video(): void
+	{
+		$this->start_controls_section('section_style_video', [
+			'label' => esc_html__('Video', 'nmj'),
+			'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+		]);
 
-		$this->add_control( 'object_fit', [
-			'label'     => esc_html__( 'Object Fit', 'nmj' ),
-			'type'      => \Elementor\Controls_Manager::SELECT,
-			'default'   => 'cover',
-			'options'   => [
-				'cover'   => esc_html__( 'Cover', 'nmj' ),
-				'contain' => esc_html__( 'Contain', 'nmj' ),
-				'fill'    => esc_html__( 'Fill', 'nmj' ),
+		$this->add_control('object_fit', [
+			'label' => esc_html__('Object Fit', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SELECT,
+			'default' => 'cover',
+			'options' => [
+				'cover' => esc_html__('Cover', 'nmj'),
+				'contain' => esc_html__('Contain', 'nmj'),
+				'fill' => esc_html__('Fill', 'nmj'),
 			],
 			'selectors' => [
 				'{{WRAPPER}} .nmj-rv-video' => 'object-fit: {{VALUE}};',
 			],
-		] );
+		]);
 
-		$this->add_responsive_control( 'border_radius', [
-			'label'      => esc_html__( 'Border Radius', 'nmj' ),
-			'type'       => \Elementor\Controls_Manager::DIMENSIONS,
-			'size_units' => [ 'px', '%', 'em', 'rem' ],
-			'selectors'  => [
+		$this->add_responsive_control('border_radius', [
+			'label' => esc_html__('Border Radius', 'nmj'),
+			'type' => \Elementor\Controls_Manager::DIMENSIONS,
+			'size_units' => ['px', '%', 'em', 'rem'],
+			'selectors' => [
 				// overflow:hidden written here so radius clips the video correctly
 				'{{WRAPPER}} .nmj-rv-inner' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}; overflow: hidden;',
 			],
-		] );
+		]);
 
-		$this->add_group_control( \Elementor\Group_Control_Box_Shadow::get_type(), [
-			'name'     => 'box_shadow',
+		$this->add_group_control(\Elementor\Group_Control_Box_Shadow::get_type(), [
+			'name' => 'box_shadow',
 			'selector' => '{{WRAPPER}} .nmj-rv-inner',
-		] );
+		]);
 
-		$this->add_group_control( \Elementor\Group_Control_Border::get_type(), [
-			'name'     => 'border',
+		$this->add_group_control(\Elementor\Group_Control_Border::get_type(), [
+			'name' => 'border',
 			'selector' => '{{WRAPPER}} .nmj-rv-inner',
-		] );
+		]);
 
 		$this->end_controls_section();
 	}
 
 	// ── Render (server-side / frontend) ──────────────────────────────────────
 
-	protected function render(): void {
+	protected function render(): void
+	{
 		$s = $this->get_settings_for_display();
 
-		$desktop_type     = $s['desktop_source_type'] ?? 'hosted';
-		$tablet_type      = $s['tablet_source_type']  ?? 'hosted';
-		$mobile_type      = $s['mobile_source_type']  ?? 'hosted';
-		$desktop_src      = ! empty( $s['desktop_video']['url'] )  ? $s['desktop_video']['url']  : '';
-		$tablet_src       = ! empty( $s['tablet_video']['url'] )   ? $s['tablet_video']['url']   : '';
-		$mobile_src       = ! empty( $s['mobile_video']['url'] )   ? $s['mobile_video']['url']   : '';
-		$desktop_fallback = ! empty( $s['desktop_fallback_video']['url'] ) ? $s['desktop_fallback_video']['url'] : '';
-		$tablet_fallback  = ! empty( $s['tablet_fallback_video']['url'] )  ? $s['tablet_fallback_video']['url']  : '';
-		$mobile_fallback  = ! empty( $s['mobile_fallback_video']['url'] )  ? $s['mobile_fallback_video']['url']  : '';
+		$desktop_type = $s['desktop_source_type'] ?? 'hosted';
+		$tablet_type = $s['tablet_source_type'] ?? 'hosted';
+		$mobile_type = $s['mobile_source_type'] ?? 'hosted';
+		$desktop_src = !empty($s['desktop_video']['url']) ? $s['desktop_video']['url'] : '';
+		$tablet_src = !empty($s['tablet_video']['url']) ? $s['tablet_video']['url'] : '';
+		$mobile_src = !empty($s['mobile_video']['url']) ? $s['mobile_video']['url'] : '';
+		$desktop_fallback = !empty($s['desktop_fallback_video']['url']) ? $s['desktop_fallback_video']['url'] : '';
+		$tablet_fallback = !empty($s['tablet_fallback_video']['url']) ? $s['tablet_fallback_video']['url'] : '';
+		$mobile_fallback = !empty($s['mobile_fallback_video']['url']) ? $s['mobile_fallback_video']['url'] : '';
 		$desktop_external = $s['desktop_external_url'] ?? '';
-		$tablet_external  = $s['tablet_external_url']  ?? '';
-		$mobile_external  = $s['mobile_external_url']  ?? '';
-		$desktop_poster   = ! empty( $s['desktop_poster']['url'] ) ? $s['desktop_poster']['url'] : '';
-		$tablet_poster    = ! empty( $s['tablet_poster']['url'] )  ? $s['tablet_poster']['url']  : '';
-		$mobile_poster    = ! empty( $s['mobile_poster']['url'] )  ? $s['mobile_poster']['url']  : '';
+		$tablet_external = $s['tablet_external_url'] ?? '';
+		$mobile_external = $s['mobile_external_url'] ?? '';
+		$desktop_poster = !empty($s['desktop_poster']['url']) ? $s['desktop_poster']['url'] : '';
+		$tablet_poster = !empty($s['tablet_poster']['url']) ? $s['tablet_poster']['url'] : '';
+		$mobile_poster = !empty($s['mobile_poster']['url']) ? $s['mobile_poster']['url'] : '';
 
 		// Bail early when no video is configured
-		$has_desktop = ( 'hosted' === $desktop_type && $desktop_src ) || ( 'external' === $desktop_type && $desktop_external );
-		$has_tablet  = ( 'hosted' === $tablet_type && $tablet_src ) || ( 'external' === $tablet_type && $tablet_external );
-		$has_mobile  = ( 'hosted' === $mobile_type && $mobile_src ) || ( 'external' === $mobile_type && $mobile_external );
+		$has_desktop = ('hosted' === $desktop_type && $desktop_src) || ('external' === $desktop_type && $desktop_external);
+		$has_tablet = ('hosted' === $tablet_type && $tablet_src) || ('external' === $tablet_type && $tablet_external);
+		$has_mobile = ('hosted' === $mobile_type && $mobile_src) || ('external' === $mobile_type && $mobile_external);
 
-		if ( ! $has_desktop && ! $has_tablet && ! $has_mobile ) {
-			if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
+		if (!$has_desktop && !$has_tablet && !$has_mobile) {
+			if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
 				echo '<div class="nmj-rv-placeholder"><span>'
-					. esc_html__( 'Set a Desktop or Mobile video in the widget settings.', 'nmj' )
+					. esc_html__('Set a Desktop or Mobile video in the widget settings.', 'nmj')
 					. '</span></div>';
 			}
 			return;
 		}
 
-		$mobile_bp = absint( $s['mobile_breakpoint'] ?? 767 );
-		$tablet_bp = absint( $s['tablet_breakpoint'] ?? 1024 );
+		$mobile_bp = absint($s['mobile_breakpoint'] ?? 767);
+		$tablet_bp = absint($s['tablet_breakpoint'] ?? 1024);
 
 		// Build boolean attribute string from switcher controls.
 		// All values come from a fixed set of known-safe HTML attribute names.
 		$bool_attrs = '';
-		foreach ( [
-			'autoplay'    => $s['autoplay']    ?? '',
-			'muted'       => $s['muted']       ?? '',
-			'loop'        => $s['loop']        ?? '',
-			'controls'    => $s['controls']    ?? 'yes',
+		foreach ([
+			'autoplay' => $s['autoplay'] ?? '',
+			'muted' => $s['muted'] ?? '',
+			'loop' => $s['loop'] ?? '',
+			'controls' => $s['controls'] ?? 'yes',
 			'playsinline' => $s['playsinline'] ?? 'yes',
-		] as $attr => $val ) {
-			if ( 'yes' === $val ) {
+		] as $attr => $val) {
+			if ('yes' === $val) {
 				$bool_attrs .= ' ' . $attr;
 			}
 		}
@@ -399,38 +414,35 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 
 		// Preload attribute — validated against a known-safe allowlist.
 		$preload = $s['preload'] ?? 'none';
-		if ( ! in_array( $preload, [ 'none', 'metadata', 'auto' ], true ) ) {
+		if (!in_array($preload, ['none', 'metadata', 'auto'], true)) {
 			$preload = 'none';
 		}
 
 		?>
-		<div class="nmj-rv-wrap"
-		     data-desktop-type="<?php echo esc_attr( $desktop_type ); ?>"
-		     data-tablet-type="<?php echo esc_attr( $tablet_type ); ?>"
-		     data-mobile-type="<?php echo esc_attr( $mobile_type ); ?>"
-		     data-desktop-src="<?php echo esc_url( $desktop_src ); ?>"
-		     data-tablet-src="<?php echo esc_url( $tablet_src ); ?>"
-		     data-mobile-src="<?php echo esc_url( $mobile_src ); ?>"
-		     data-desktop-fallback="<?php echo esc_url( $desktop_fallback ); ?>"
-		     data-tablet-fallback="<?php echo esc_url( $tablet_fallback ); ?>"
-		     data-mobile-fallback="<?php echo esc_url( $mobile_fallback ); ?>"
-		     data-desktop-external="<?php echo esc_url( $desktop_external ); ?>"
-		     data-tablet-external="<?php echo esc_url( $tablet_external ); ?>"
-		     data-mobile-external="<?php echo esc_url( $mobile_external ); ?>"
-		     data-desktop-poster="<?php echo esc_url( $desktop_poster ); ?>"
-		     data-tablet-poster="<?php echo esc_url( $tablet_poster ); ?>"
-		     data-mobile-poster="<?php echo esc_url( $mobile_poster ); ?>"
-		     data-mobile-bp="<?php echo esc_attr( $mobile_bp ); ?>"
-		     data-tablet-bp="<?php echo esc_attr( $tablet_bp ); ?>">
+		<div class="nmj-rv-wrap" data-desktop-type="<?php echo esc_attr($desktop_type); ?>"
+			data-tablet-type="<?php echo esc_attr($tablet_type); ?>"
+			data-mobile-type="<?php echo esc_attr($mobile_type); ?>" data-desktop-src="<?php echo esc_url($desktop_src); ?>"
+			data-tablet-src="<?php echo esc_url($tablet_src); ?>" data-mobile-src="<?php echo esc_url($mobile_src); ?>"
+			data-desktop-fallback="<?php echo esc_url($desktop_fallback); ?>"
+			data-tablet-fallback="<?php echo esc_url($tablet_fallback); ?>"
+			data-mobile-fallback="<?php echo esc_url($mobile_fallback); ?>"
+			data-desktop-external="<?php echo esc_url($desktop_external); ?>"
+			data-tablet-external="<?php echo esc_url($tablet_external); ?>"
+			data-mobile-external="<?php echo esc_url($mobile_external); ?>"
+			data-desktop-poster="<?php echo esc_url($desktop_poster); ?>"
+			data-tablet-poster="<?php echo esc_url($tablet_poster); ?>"
+			data-mobile-poster="<?php echo esc_url($mobile_poster); ?>" data-mobile-bp="<?php echo esc_attr($mobile_bp); ?>"
+			data-tablet-bp="<?php echo esc_attr($tablet_bp); ?>">
 			<div class="nmj-rv-inner">
 				<?php
 				// We render an empty container here. 
 				// JavaScript will inject either a <video> or <iframe> natively based on the breakpoint type.
 				// This guarantees that we don't accidentally play two videos simultaneously.
 				?>
-				<div class="nmj-rv-media-container" data-preload="<?php echo esc_attr( $preload ); ?>" data-attrs="<?php echo esc_attr( trim( $bool_attrs ) ); ?>">
-					<?php if ( $server_poster ) : ?>
-						<img class="nmj-rv-poster-fallback" src="<?php echo esc_url( $server_poster ); ?>" alt="" />
+				<div class="nmj-rv-media-container" data-preload="<?php echo esc_attr($preload); ?>"
+					data-attrs="<?php echo esc_attr(trim($bool_attrs)); ?>">
+					<?php if ($server_poster): ?>
+						<img class="nmj-rv-poster-fallback" src="<?php echo esc_url($server_poster); ?>" alt="" />
 					<?php endif; ?>
 				</div>
 			</div>
@@ -440,70 +452,52 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 
 	// ── content_template (Elementor editor live preview) ─────────────────────
 
-	protected function content_template(): void {
+	protected function content_template(): void
+	{
 		?>
-		<#
-		var desktopType     = settings.desktop_source_type || 'hosted';
-		var tabletType      = settings.tablet_source_type || 'hosted';
-		var mobileType      = settings.mobile_source_type || 'hosted';
-		var desktopSrc      = settings.desktop_video  && settings.desktop_video.url  ? settings.desktop_video.url  : '';
-		var tabletSrc       = settings.tablet_video   && settings.tablet_video.url   ? settings.tablet_video.url   : '';
-		var mobileSrc       = settings.mobile_video   && settings.mobile_video.url   ? settings.mobile_video.url   : '';
-		var desktopFallback = settings.desktop_fallback_video && settings.desktop_fallback_video.url ? settings.desktop_fallback_video.url : '';
-		var tabletFallback  = settings.tablet_fallback_video  && settings.tablet_fallback_video.url  ? settings.tablet_fallback_video.url  : '';
-		var mobileFallback  = settings.mobile_fallback_video  && settings.mobile_fallback_video.url  ? settings.mobile_fallback_video.url  : '';
-		var desktopExternal = settings.desktop_external_url || '';
-		var tabletExternal  = settings.tablet_external_url || '';
-		var mobileExternal  = settings.mobile_external_url || '';
-		var desktopPoster   = settings.desktop_poster && settings.desktop_poster.url ? settings.desktop_poster.url : '';
-		var tabletPoster    = settings.tablet_poster  && settings.tablet_poster.url  ? settings.tablet_poster.url  : '';
-		var mobilePoster    = settings.mobile_poster  && settings.mobile_poster.url  ? settings.mobile_poster.url  : '';
-
-		var hasDesktop = (desktopType === 'hosted' && desktopSrc) || (desktopType === 'external' && desktopExternal);
-		var hasTablet  = (tabletType === 'hosted' && tabletSrc) || (tabletType === 'external' && tabletExternal);
-		var hasMobile  = (mobileType === 'hosted' && mobileSrc) || (mobileType === 'external' && mobileExternal);
-
-		if ( ! hasDesktop && ! hasTablet && ! hasMobile ) { #>
+		<# var desktopType=settings.desktop_source_type || 'hosted' ; var tabletType=settings.tablet_source_type || 'hosted' ;
+			var mobileType=settings.mobile_source_type || 'hosted' ; var desktopSrc=settings.desktop_video &&
+			settings.desktop_video.url ? settings.desktop_video.url : '' ; var tabletSrc=settings.tablet_video &&
+			settings.tablet_video.url ? settings.tablet_video.url : '' ; var mobileSrc=settings.mobile_video &&
+			settings.mobile_video.url ? settings.mobile_video.url : '' ; var desktopFallback=settings.desktop_fallback_video &&
+			settings.desktop_fallback_video.url ? settings.desktop_fallback_video.url : '' ; var
+			tabletFallback=settings.tablet_fallback_video && settings.tablet_fallback_video.url ?
+			settings.tablet_fallback_video.url : '' ; var mobileFallback=settings.mobile_fallback_video &&
+			settings.mobile_fallback_video.url ? settings.mobile_fallback_video.url : '' ; var
+			desktopExternal=settings.desktop_external_url || '' ; var tabletExternal=settings.tablet_external_url || '' ; var
+			mobileExternal=settings.mobile_external_url || '' ; var desktopPoster=settings.desktop_poster &&
+			settings.desktop_poster.url ? settings.desktop_poster.url : '' ; var tabletPoster=settings.tablet_poster &&
+			settings.tablet_poster.url ? settings.tablet_poster.url : '' ; var mobilePoster=settings.mobile_poster &&
+			settings.mobile_poster.url ? settings.mobile_poster.url : '' ; var hasDesktop=(desktopType==='hosted' && desktopSrc)
+			|| (desktopType==='external' && desktopExternal); var hasTablet=(tabletType==='hosted' && tabletSrc) ||
+			(tabletType==='external' && tabletExternal); var hasMobile=(mobileType==='hosted' && mobileSrc) ||
+			(mobileType==='external' && mobileExternal); if ( ! hasDesktop && ! hasTablet && ! hasMobile ) { #>
 			<div class="nmj-rv-placeholder">
-				<span><?php echo esc_js( __( 'Set a Desktop or Mobile video in the widget settings.', 'nmj' ) ); ?></span>
+				<span><?php echo esc_js(__('Set a Desktop or Mobile video in the widget settings.', 'nmj')); ?></span>
 			</div>
-		<# } else {
-			var boolAttrs = '';
-			if ( settings.autoplay    === 'yes' ) boolAttrs += ' autoplay';
-			if ( settings.muted       === 'yes' ) boolAttrs += ' muted';
-			if ( settings.loop        === 'yes' ) boolAttrs += ' loop';
-			if ( settings.controls    === 'yes' ) boolAttrs += ' controls';
-			if ( settings.playsinline === 'yes' ) boolAttrs += ' playsinline';
-			boolAttrs = boolAttrs.trim();
-		#>
-		<div class="nmj-rv-wrap"
-		     data-desktop-type="{{ desktopType }}"
-		     data-tablet-type="{{ tabletType }}"
-		     data-mobile-type="{{ mobileType }}"
-		     data-desktop-src="{{ desktopSrc }}"
-		     data-tablet-src="{{ tabletSrc }}"
-		     data-mobile-src="{{ mobileSrc }}"
-		     data-desktop-fallback="{{ desktopFallback }}"
-		     data-tablet-fallback="{{ tabletFallback }}"
-		     data-mobile-fallback="{{ mobileFallback }}"
-		     data-desktop-external="{{ desktopExternal }}"
-		     data-tablet-external="{{ tabletExternal }}"
-		     data-mobile-external="{{ mobileExternal }}"
-		     data-desktop-poster="{{ desktopPoster }}"
-		     data-tablet-poster="{{ tabletPoster }}"
-		     data-mobile-poster="{{ mobilePoster }}"
-		     data-mobile-bp="{{ settings.mobile_breakpoint || 767 }}"
-		     data-tablet-bp="{{ settings.tablet_breakpoint || 1024 }}">
-			<div class="nmj-rv-inner">
-				<div class="nmj-rv-media-container" data-preload="{{ settings.preload || 'none' }}" data-attrs="{{ boolAttrs }}">
-					<# var serverPoster = desktopPoster || tabletPoster || mobilePoster;
-					if ( serverPoster ) { #>
-						<img class="nmj-rv-poster-fallback" src="{{ serverPoster }}" alt="" />
-					<# } #>
+			<# } else { var boolAttrs='' ; if ( settings.autoplay==='yes' ) boolAttrs +=' autoplay' ; if (
+				settings.muted==='yes' ) boolAttrs +=' muted' ; if ( settings.loop==='yes' ) boolAttrs +=' loop' ; if (
+				settings.controls==='yes' ) boolAttrs +=' controls' ; if ( settings.playsinline==='yes' ) boolAttrs
+				+=' playsinline' ; boolAttrs=boolAttrs.trim(); #>
+				<div class="nmj-rv-wrap" data-desktop-type="{{ desktopType }}" data-tablet-type="{{ tabletType }}"
+					data-mobile-type="{{ mobileType }}" data-desktop-src="{{ desktopSrc }}" data-tablet-src="{{ tabletSrc }}"
+					data-mobile-src="{{ mobileSrc }}" data-desktop-fallback="{{ desktopFallback }}"
+					data-tablet-fallback="{{ tabletFallback }}" data-mobile-fallback="{{ mobileFallback }}"
+					data-desktop-external="{{ desktopExternal }}" data-tablet-external="{{ tabletExternal }}"
+					data-mobile-external="{{ mobileExternal }}" data-desktop-poster="{{ desktopPoster }}"
+					data-tablet-poster="{{ tabletPoster }}" data-mobile-poster="{{ mobilePoster }}"
+					data-mobile-bp="{{ settings.mobile_breakpoint || 767 }}"
+					data-tablet-bp="{{ settings.tablet_breakpoint || 1024 }}">
+					<div class="nmj-rv-inner">
+						<div class="nmj-rv-media-container" data-preload="{{ settings.preload || 'none' }}"
+							data-attrs="{{ boolAttrs }}">
+							<# var serverPoster=desktopPoster || tabletPoster || mobilePoster; if ( serverPoster ) { #>
+								<img class="nmj-rv-poster-fallback" src="{{ serverPoster }}" alt="" />
+								<# } #>
+						</div>
+					</div>
 				</div>
-			</div>
-		</div>
-		<# } #>
-		<?php
+				<# } #>
+					<?php
 	}
 }
