@@ -162,7 +162,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 		$this->add_control( 'muted', [
 			'label'   => esc_html__( 'Muted', 'nmj' ),
 			'type'    => \Elementor\Controls_Manager::SWITCHER,
-			'default' => '',
+			'default' => 'yes',
 		] );
 
 		$this->add_control( 'loop', [
@@ -273,8 +273,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 			],
 		] );
 
-		// Standard Elementor inline-block alignment pattern (same as Image widget).
-		// .nmj-rv-wrap is display:inline-block so text-align on the wrapper centers it.
+		// Block-level alignment via margins (applies when max-width constrains the wrap).
 		$this->add_responsive_control( 'alignment', [
 			'label'     => esc_html__( 'Alignment', 'nmj' ),
 			'type'      => \Elementor\Controls_Manager::CHOOSE,
@@ -284,7 +283,12 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base {
 				'right'  => [ 'title' => esc_html__( 'Right', 'nmj' ),  'icon' => 'eicon-text-align-right' ],
 			],
 			'selectors' => [
-				'{{WRAPPER}}' => 'text-align: {{VALUE}};',
+				'{{WRAPPER}} .nmj-rv-wrap' => '{{VALUE}}',
+			],
+			'selectors_dictionary' => [
+				'left'   => 'margin-right: auto;',
+				'center' => 'margin-left: auto; margin-right: auto;',
+				'right'  => 'margin-left: auto;',
 			],
 		] );
 

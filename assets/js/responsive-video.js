@@ -137,8 +137,19 @@
 		container.setAttribute( 'data-nmj-fallback', newFallback );
 		container.setAttribute( 'data-nmj-external', newExternal );
 
-		// Clear container to DESTROY existing video/iframe nodes so they stop playing
-		container.innerHTML = '';
+		// Remove existing video/iframe to stop playback, but keep poster fallback
+		var oldMedia = container.querySelectorAll( 'video, iframe' );
+		for ( var k = 0; k < oldMedia.length; k++ ) {
+			oldMedia[ k ].parentNode.removeChild( oldMedia[ k ] );
+		}
+
+		// Helper: remove poster fallback image
+		function removePoster() {
+			var poster = container.querySelector( '.nmj-rv-poster-fallback' );
+			if ( poster && poster.parentNode ) {
+				poster.parentNode.removeChild( poster );
+			}
+		}
 
 		if ( newType === 'hosted' ) {
 			if ( ! newSrc && ! newFallback ) return;
@@ -155,6 +166,18 @@
 			var attrsArr = attrsStr.split( ' ' );
 			for ( var j = 0; j < attrsArr.length; j++ ) {
 				if ( attrsArr[ j ] ) video.setAttribute( attrsArr[ j ], '' );
+			}
+
+			// Browsers check the .muted PROPERTY (not just attribute) for autoplay policy.
+			// setAttribute('muted','') alone doesn't reliably sync the property on
+			// dynamically created elements — always set both.
+			if ( video.hasAttribute( 'autoplay' ) ) {
+				video.muted = true;
+				if ( ! video.hasAttribute( 'muted' ) ) {
+					video.setAttribute( 'muted', '' );
+				}
+			} else if ( video.hasAttribute( 'muted' ) ) {
+				video.muted = true;
 			}
 
 			if ( newSrc ) {
@@ -175,6 +198,19 @@
 			container.appendChild( video );
 			video.load();
 
+			// Remove poster only once video actually starts playing
+			video.addEventListener( 'playing', removePoster, { once: true } );
+
+			// Safety net: if the browser doesn't honour the autoplay attribute
+			// on this dynamically-created element, retry once data is ready.
+			if ( video.hasAttribute( 'autoplay' ) ) {
+				video.addEventListener( 'canplay', function () {
+					if ( video.paused ) {
+						video.play().catch( function () {} );
+					}
+				}, { once: true } );
+			}
+
 		} else if ( newType === 'external' ) {
 			if ( ! newExternal ) return;
 
@@ -193,6 +229,9 @@
 			iframe.setAttribute( 'loading', 'lazy' );
 
 			container.appendChild( iframe );
+
+			// Remove poster once iframe loads
+			iframe.addEventListener( 'load', removePoster, { once: true } );
 		}
 	}
 
