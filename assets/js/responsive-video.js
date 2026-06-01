@@ -2,24 +2,17 @@
  * Responsive Video Widget – front-end controller
  *
  * Reads data-* attrs from .nmj-rv-wrap, picks the right video src + poster
- * for the current viewport, and injects them into the <video> element.
+ * for the current viewport, and injects them into the DOM.
  *
- * Fallback chains (smaller → larger):
- *   mobile  → tablet  → desktop
- *   tablet  → desktop → mobile
- *   desktop → tablet  → mobile
- *
- * Only the matched source is ever set on the <video>, so no wasted bandwidth.
+ * It dynamically swaps between HTML5 <video> elements and YouTube/Vimeo <iframe>
+ * elements when hitting breakpoints. The un-needed DOM node is destroyed so
+ * background audio doesn't continue playing.
  */
 ( function () {
 	'use strict';
 
 	/* ── helpers ────────────────────────────────────────────────────────── */
 
-	/**
-	 * Return 'mobile' | 'tablet' | 'desktop' based on viewport width
-	 * and the per-widget breakpoint data-attributes.
-	 */
 	function getBreakpoint( wrap ) {
 		var mobileBp = parseInt( wrap.dataset.mobileBp, 10 ) || 767;
 		var tabletBp = parseInt( wrap.dataset.tabletBp, 10 ) || 1024;
@@ -30,84 +23,176 @@
 		return 'desktop';
 	}
 
-	/**
-	 * Resolve a URL (video or poster) for the current breakpoint,
-	 * falling back through the chain when a slot is empty.
-	 *
-	 * @param {HTMLElement} wrap   – .nmj-rv-wrap element
-	 * @param {string}      suffix – 'Src' or 'Poster' (camelCase to match dataset keys)
-	 * @return {string} resolved URL or ''
-	 */
-	function resolve( wrap, suffix ) {
-		var desktop = wrap.dataset[ 'desktop' + suffix ] || '';
-		var tablet  = wrap.dataset[ 'tablet'  + suffix ] || '';
-		var mobile  = wrap.dataset[ 'mobile'  + suffix ] || '';
-		var bp      = getBreakpoint( wrap );
+	function hasData( wrap, bp ) {
+		var type = wrap.dataset[ bp + 'Type' ];
+		if ( type === 'external' ) return !!wrap.dataset[ bp + 'External' ];
+		return !!wrap.dataset[ bp + 'Src' ];
+	}
 
-		if ( bp === 'mobile'  ) return mobile  || tablet || desktop;
-		if ( bp === 'tablet'  ) return tablet  || desktop || mobile;
-		/* desktop */             return desktop || tablet || mobile;
+	/**
+	 * Find the active breakpoint, walking up/down the fallback chain
+	 * if the exact matched breakpoint has no video configured.
+	 */
+	function getActiveBreakpoint( wrap ) {
+		var bp = getBreakpoint( wrap );
+
+		if ( bp === 'mobile' ) {
+			if ( hasData( wrap, 'mobile' ) ) return 'mobile';
+			if ( hasData( wrap, 'tablet' ) ) return 'tablet';
+			return 'desktop';
+		}
+		if ( bp === 'tablet' ) {
+			if ( hasData( wrap, 'tablet' ) ) return 'tablet';
+			if ( hasData( wrap, 'desktop' ) ) return 'desktop';
+			return 'mobile';
+		}
+		// desktop
+		if ( hasData( wrap, 'desktop' ) ) return 'desktop';
+		if ( hasData( wrap, 'tablet' ) ) return 'tablet';
+		return 'mobile';
+	}
+
+	function parseExternalUrl( url ) {
+		var ytMatch = url.match( /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/ );
+		if ( ytMatch ) return { type: 'youtube', id: ytMatch[1] };
+
+		var viMatch = url.match( /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/ );
+		if ( viMatch ) return { type: 'vimeo', id: viMatch[1] };
+
+		return null;
+	}
+
+	function guessVideoType( url ) {
+		var ext = url.split( '?' )[0].split( '.' ).pop().toLowerCase();
+		var map = { mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', ogg: 'video/ogg', ogv: 'video/ogg', mov: 'video/quicktime' };
+		return map[ ext ] || '';
+	}
+
+	function buildIframeUrl( parsed, attrsStr ) {
+		var autoplay    = attrsStr.indexOf( 'autoplay' ) !== -1;
+		var muted       = attrsStr.indexOf( 'muted' ) !== -1;
+		var loop        = attrsStr.indexOf( 'loop' ) !== -1;
+		var controls    = attrsStr.indexOf( 'controls' ) !== -1;
+		var playsinline = attrsStr.indexOf( 'playsinline' ) !== -1;
+
+		if ( parsed.type === 'youtube' ) {
+			var url = 'https://www.youtube-nocookie.com/embed/' + parsed.id + '?rel=0';
+			if ( autoplay )    url += '&autoplay=1';
+			if ( muted )       url += '&mute=1';
+			if ( loop )        url += '&loop=1&playlist=' + parsed.id;
+			if ( ! controls )  url += '&controls=0';
+			if ( playsinline ) url += '&playsinline=1';
+			return url;
+		}
+
+		if ( parsed.type === 'vimeo' ) {
+			var vUrl = 'https://player.vimeo.com/video/' + parsed.id + '?dnt=1';
+			if ( autoplay )    vUrl += '&autoplay=1';
+			if ( muted )       vUrl += '&muted=1';
+			if ( loop )        vUrl += '&loop=1';
+			if ( ! controls )  vUrl += '&background=1'; // Vimeo hides controls entirely in background mode
+			if ( playsinline ) vUrl += '&playsinline=1';
+			return vUrl;
+		}
+
+		return '';
 	}
 
 	/* ── per-widget apply ──────────────────────────────────────────────── */
 
 	function applySource( wrap ) {
-		var video = wrap.querySelector( '.nmj-rv-video' );
-		if ( ! video ) return;
+		var container = wrap.querySelector( '.nmj-rv-media-container' );
+		if ( ! container ) return;
 
-		var newSrc      = resolve( wrap, 'Src' );
-		var newFallback = resolve( wrap, 'Fallback' );
-		var newPoster   = resolve( wrap, 'Poster' );
+		var bp          = getActiveBreakpoint( wrap );
+		var newType     = wrap.dataset[ bp + 'Type' ] || 'hosted';
+		var newSrc      = wrap.dataset[ bp + 'Src' ] || '';
+		var newFallback = wrap.dataset[ bp + 'Fallback' ] || '';
+		var newExternal = wrap.dataset[ bp + 'External' ] || '';
+		var newPoster   = wrap.dataset[ bp + 'Poster' ] || '';
 
-		/* Poster — always safe to swap instantly */
-		var curPoster = video.getAttribute( 'poster' ) || '';
-		if ( newPoster !== curPoster ) {
-			if ( newPoster ) {
-				video.setAttribute( 'poster', newPoster );
-			} else {
-				video.removeAttribute( 'poster' );
+		var curType     = container.getAttribute( 'data-nmj-type' ) || '';
+		var curSrc      = container.getAttribute( 'data-nmj-src' ) || '';
+		var curFallback = container.getAttribute( 'data-nmj-fallback' ) || '';
+		var curExternal = container.getAttribute( 'data-nmj-external' ) || '';
+
+		// If nothing structural changed, bail out (or just update poster)
+		if ( newType === curType && newSrc === curSrc && newFallback === curFallback && newExternal === curExternal ) {
+			if ( newType === 'hosted' ) {
+				var existingVideo = container.querySelector( 'video' );
+				if ( existingVideo ) {
+					var curPoster = existingVideo.getAttribute( 'poster' ) || '';
+					if ( newPoster !== curPoster ) {
+						if ( newPoster ) existingVideo.setAttribute( 'poster', newPoster );
+						else existingVideo.removeAttribute( 'poster' );
+					}
+				}
 			}
+			return;
 		}
 
-		/* Src & Fallback — only reload when they actually change */
-		var curSrc      = video.getAttribute( 'data-nmj-src' ) || '';
-		var curFallback = video.getAttribute( 'data-nmj-fallback' ) || '';
-		if ( newSrc === curSrc && newFallback === curFallback ) return;
+		// Save state
+		container.setAttribute( 'data-nmj-type', newType );
+		container.setAttribute( 'data-nmj-src', newSrc );
+		container.setAttribute( 'data-nmj-fallback', newFallback );
+		container.setAttribute( 'data-nmj-external', newExternal );
 
-		var wasPlaying = ! video.paused && ! video.ended;
-		var time       = video.currentTime || 0;
+		// Clear container to DESTROY existing video/iframe nodes so they stop playing
+		container.innerHTML = '';
 
-		// Save state so we don't infinitely reload on resize
-		video.setAttribute( 'data-nmj-src', newSrc );
-		video.setAttribute( 'data-nmj-fallback', newFallback );
+		if ( newType === 'hosted' ) {
+			if ( ! newSrc && ! newFallback ) return;
 
-		// Clear old sources
-		video.removeAttribute( 'src' );
-		video.innerHTML = '';
+			var video = document.createElement( 'video' );
+			video.className = 'nmj-rv-video';
 
-		if ( newSrc || newFallback ) {
+			var preload = container.getAttribute( 'data-preload' ) || 'none';
+			video.setAttribute( 'preload', preload );
+
+			if ( newPoster ) video.setAttribute( 'poster', newPoster );
+
+			var attrsStr = container.getAttribute( 'data-attrs' ) || '';
+			var attrsArr = attrsStr.split( ' ' );
+			for ( var j = 0; j < attrsArr.length; j++ ) {
+				if ( attrsArr[ j ] ) video.setAttribute( attrsArr[ j ], '' );
+			}
+
 			if ( newSrc ) {
 				var s1 = document.createElement( 'source' );
 				s1.src = newSrc;
+				var t1 = guessVideoType( newSrc );
+				if ( t1 ) s1.type = t1;
 				video.appendChild( s1 );
 			}
 			if ( newFallback ) {
 				var s2 = document.createElement( 'source' );
 				s2.src = newFallback;
+				var t2 = guessVideoType( newFallback );
+				if ( t2 ) s2.type = t2;
 				video.appendChild( s2 );
 			}
 
+			container.appendChild( video );
 			video.load();
 
-			if ( wasPlaying ) {
-				video.addEventListener( 'loadeddata', function onLoaded() {
-					video.removeEventListener( 'loadeddata', onLoaded );
-					video.currentTime = Math.min( time, video.duration || 0 );
-					video.play().catch( function () {} );
-				} );
-			}
-		} else {
-			video.load();
+		} else if ( newType === 'external' ) {
+			if ( ! newExternal ) return;
+
+			var parsed = parseExternalUrl( newExternal );
+			if ( ! parsed ) return;
+
+			var iframeUrl = buildIframeUrl( parsed, container.getAttribute( 'data-attrs' ) || '' );
+			if ( ! iframeUrl ) return;
+
+			var iframe = document.createElement( 'iframe' );
+			iframe.className = 'nmj-rv-video';
+			iframe.src = iframeUrl;
+			iframe.setAttribute( 'frameborder', '0' );
+			iframe.setAttribute( 'allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' );
+			iframe.setAttribute( 'allowfullscreen', '1' );
+			iframe.setAttribute( 'loading', 'lazy' );
+
+			container.appendChild( iframe );
 		}
 	}
 
@@ -144,7 +229,7 @@
 
 	if ( typeof jQuery !== 'undefined' ) {
 		jQuery( window ).on( 'elementor/frontend/init', function () {
-			if ( window.elementorFrontend && elementorFrontend.hooks ) {
+			if ( window.elementorFrontend && window.elementorFrontend.hooks ) {
 				elementorFrontend.hooks.addAction(
 					'frontend/element_ready/nmj-responsive-video.default',
 					function ( $scope ) {

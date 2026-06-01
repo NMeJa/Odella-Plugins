@@ -22,6 +22,14 @@
 	/* object-fit injected by Elementor selector control */
 }
 
+/* Server-rendered poster — visible until JS injects the real <video>/<iframe> */
+.nmj-rv-poster-fallback {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
 /* Editor placeholder shown when no video is configured */
 .nmj-rv-placeholder {
 	display: flex;
