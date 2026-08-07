@@ -8,90 +8,90 @@
  * elements when hitting breakpoints. The un-needed DOM node is destroyed so
  * background audio doesn't continue playing.
  */
-( function () {
+(function () {
 	'use strict';
 
 	/* ── helpers ────────────────────────────────────────────────────────── */
 
-	function getBreakpoint( wrap ) {
-		var mobileBp = parseInt( wrap.dataset.mobileBp, 10 ) || 767;
-		var tabletBp = parseInt( wrap.dataset.tabletBp, 10 ) || 1024;
-		var w        = window.innerWidth;
+	function getBreakpoint(wrap) {
+		var mobileBp = parseInt(wrap.dataset.mobileBp, 10) || 767;
+		var tabletBp = parseInt(wrap.dataset.tabletBp, 10) || 1024;
+		var w = window.innerWidth;
 
-		if ( w <= mobileBp ) return 'mobile';
-		if ( w <= tabletBp ) return 'tablet';
+		if (w <= mobileBp) return 'mobile';
+		if (w <= tabletBp) return 'tablet';
 		return 'desktop';
 	}
 
-	function hasData( wrap, bp ) {
-		var type = wrap.dataset[ bp + 'Type' ];
-		if ( type === 'external' ) return !!wrap.dataset[ bp + 'External' ];
-		return !!wrap.dataset[ bp + 'Src' ];
+	function hasData(wrap, bp) {
+		var type = wrap.dataset[bp + 'Type'];
+		if (type === 'external') return !!wrap.dataset[bp + 'External'];
+		return !!wrap.dataset[bp + 'Src'];
 	}
 
 	/**
 	 * Find the active breakpoint, walking up/down the fallback chain
 	 * if the exact matched breakpoint has no video configured.
 	 */
-	function getActiveBreakpoint( wrap ) {
-		var bp = getBreakpoint( wrap );
+	function getActiveBreakpoint(wrap) {
+		var bp = getBreakpoint(wrap);
 
-		if ( bp === 'mobile' ) {
-			if ( hasData( wrap, 'mobile' ) ) return 'mobile';
-			if ( hasData( wrap, 'tablet' ) ) return 'tablet';
+		if (bp === 'mobile') {
+			if (hasData(wrap, 'mobile')) return 'mobile';
+			if (hasData(wrap, 'tablet')) return 'tablet';
 			return 'desktop';
 		}
-		if ( bp === 'tablet' ) {
-			if ( hasData( wrap, 'tablet' ) ) return 'tablet';
-			if ( hasData( wrap, 'desktop' ) ) return 'desktop';
+		if (bp === 'tablet') {
+			if (hasData(wrap, 'tablet')) return 'tablet';
+			if (hasData(wrap, 'desktop')) return 'desktop';
 			return 'mobile';
 		}
 		// desktop
-		if ( hasData( wrap, 'desktop' ) ) return 'desktop';
-		if ( hasData( wrap, 'tablet' ) ) return 'tablet';
+		if (hasData(wrap, 'desktop')) return 'desktop';
+		if (hasData(wrap, 'tablet')) return 'tablet';
 		return 'mobile';
 	}
 
-	function parseExternalUrl( url ) {
-		var ytMatch = url.match( /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/ );
-		if ( ytMatch ) return { type: 'youtube', id: ytMatch[1] };
+	function parseExternalUrl(url) {
+		var ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&]{11})/);
+		if (ytMatch) return { type: 'youtube', id: ytMatch[1] };
 
-		var viMatch = url.match( /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/ );
-		if ( viMatch ) return { type: 'vimeo', id: viMatch[1] };
+		var viMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/);
+		if (viMatch) return { type: 'vimeo', id: viMatch[1] };
 
 		return null;
 	}
 
-	function guessVideoType( url ) {
-		var ext = url.split( '?' )[0].split( '.' ).pop().toLowerCase();
+	function guessVideoType(url) {
+		var ext = url.split('?')[0].split('.').pop().toLowerCase();
 		var map = { mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', ogg: 'video/ogg', ogv: 'video/ogg', mov: 'video/quicktime' };
-		return map[ ext ] || '';
+		return map[ext] || '';
 	}
 
-	function buildIframeUrl( parsed, attrsStr ) {
-		var autoplay    = attrsStr.indexOf( 'autoplay' ) !== -1;
-		var muted       = attrsStr.indexOf( 'muted' ) !== -1;
-		var loop        = attrsStr.indexOf( 'loop' ) !== -1;
-		var controls    = attrsStr.indexOf( 'controls' ) !== -1;
-		var playsinline = attrsStr.indexOf( 'playsinline' ) !== -1;
+	function buildIframeUrl(parsed, attrsStr) {
+		var autoplay = attrsStr.indexOf('autoplay') !== -1;
+		var muted = attrsStr.indexOf('muted') !== -1;
+		var loop = attrsStr.indexOf('loop') !== -1;
+		var controls = attrsStr.indexOf('controls') !== -1;
+		var playsinline = attrsStr.indexOf('playsinline') !== -1;
 
-		if ( parsed.type === 'youtube' ) {
+		if (parsed.type === 'youtube') {
 			var url = 'https://www.youtube-nocookie.com/embed/' + parsed.id + '?rel=0';
-			if ( autoplay )    url += '&autoplay=1';
-			if ( muted )       url += '&mute=1';
-			if ( loop )        url += '&loop=1&playlist=' + parsed.id;
-			if ( ! controls )  url += '&controls=0';
-			if ( playsinline ) url += '&playsinline=1';
+			if (autoplay) url += '&autoplay=1';
+			if (muted) url += '&mute=1';
+			if (loop) url += '&loop=1&playlist=' + parsed.id;
+			if (!controls) url += '&controls=0';
+			if (playsinline) url += '&playsinline=1';
 			return url;
 		}
 
-		if ( parsed.type === 'vimeo' ) {
+		if (parsed.type === 'vimeo') {
 			var vUrl = 'https://player.vimeo.com/video/' + parsed.id + '?dnt=1';
-			if ( autoplay )    vUrl += '&autoplay=1';
-			if ( muted )       vUrl += '&muted=1';
-			if ( loop )        vUrl += '&loop=1';
-			if ( ! controls )  vUrl += '&background=1'; // Vimeo hides controls entirely in background mode
-			if ( playsinline ) vUrl += '&playsinline=1';
+			if (autoplay) vUrl += '&autoplay=1';
+			if (muted) vUrl += '&muted=1';
+			if (loop) vUrl += '&loop=1';
+			if (!controls) vUrl += '&background=1'; // Vimeo hides controls entirely in background mode
+			if (playsinline) vUrl += '&playsinline=1';
 			return vUrl;
 		}
 
@@ -100,31 +100,31 @@
 
 	/* ── per-widget apply ──────────────────────────────────────────────── */
 
-	function applySource( wrap ) {
-		var container = wrap.querySelector( '.nmj-rv-media-container' );
-		if ( ! container ) return;
+	function applySource(wrap) {
+		var container = wrap.querySelector('.nmj-rv-media-container');
+		if (!container) return;
 
-		var bp          = getActiveBreakpoint( wrap );
-		var newType     = wrap.dataset[ bp + 'Type' ] || 'hosted';
-		var newSrc      = wrap.dataset[ bp + 'Src' ] || '';
-		var newFallback = wrap.dataset[ bp + 'Fallback' ] || '';
-		var newExternal = wrap.dataset[ bp + 'External' ] || '';
-		var newPoster   = wrap.dataset[ bp + 'Poster' ] || '';
+		var bp = getActiveBreakpoint(wrap);
+		var newType = wrap.dataset[bp + 'Type'] || 'hosted';
+		var newSrc = wrap.dataset[bp + 'Src'] || '';
+		var newFallback = wrap.dataset[bp + 'Fallback'] || '';
+		var newExternal = wrap.dataset[bp + 'External'] || '';
+		var newPoster = wrap.dataset[bp + 'Poster'] || '';
 
-		var curType     = container.getAttribute( 'data-nmj-type' ) || '';
-		var curSrc      = container.getAttribute( 'data-nmj-src' ) || '';
-		var curFallback = container.getAttribute( 'data-nmj-fallback' ) || '';
-		var curExternal = container.getAttribute( 'data-nmj-external' ) || '';
+		var curType = container.getAttribute('data-nmj-type') || '';
+		var curSrc = container.getAttribute('data-nmj-src') || '';
+		var curFallback = container.getAttribute('data-nmj-fallback') || '';
+		var curExternal = container.getAttribute('data-nmj-external') || '';
 
 		// If nothing structural changed, bail out (or just update poster)
-		if ( newType === curType && newSrc === curSrc && newFallback === curFallback && newExternal === curExternal ) {
-			if ( newType === 'hosted' ) {
-				var existingVideo = container.querySelector( 'video' );
-				if ( existingVideo ) {
-					var curPoster = existingVideo.getAttribute( 'poster' ) || '';
-					if ( newPoster !== curPoster ) {
-						if ( newPoster ) existingVideo.setAttribute( 'poster', newPoster );
-						else existingVideo.removeAttribute( 'poster' );
+		if (newType === curType && newSrc === curSrc && newFallback === curFallback && newExternal === curExternal) {
+			if (newType === 'hosted') {
+				var existingVideo = container.querySelector('video');
+				if (existingVideo) {
+					var curPoster = existingVideo.getAttribute('poster') || '';
+					if (newPoster !== curPoster) {
+						if (newPoster) existingVideo.setAttribute('poster', newPoster);
+						else existingVideo.removeAttribute('poster');
 					}
 				}
 			}
@@ -132,106 +132,105 @@
 		}
 
 		// Save state
-		container.setAttribute( 'data-nmj-type', newType );
-		container.setAttribute( 'data-nmj-src', newSrc );
-		container.setAttribute( 'data-nmj-fallback', newFallback );
-		container.setAttribute( 'data-nmj-external', newExternal );
+		container.setAttribute('data-nmj-type', newType);
+		container.setAttribute('data-nmj-src', newSrc);
+		container.setAttribute('data-nmj-fallback', newFallback);
+		container.setAttribute('data-nmj-external', newExternal);
 
 		// Remove existing video/iframe to stop playback, but keep poster fallback
-		var oldMedia = container.querySelectorAll( 'video, iframe' );
-		for ( var k = 0; k < oldMedia.length; k++ ) {
-			oldMedia[ k ].parentNode.removeChild( oldMedia[ k ] );
+		var oldMedia = container.querySelectorAll('video, iframe');
+		for (var k = 0; k < oldMedia.length; k++) {
+			oldMedia[k].parentNode.removeChild(oldMedia[k]);
 		}
 
 		// Helper: remove poster fallback image
 		function removePoster() {
-			var poster = container.querySelector( '.nmj-rv-poster-fallback' );
-			if ( poster && poster.parentNode ) {
-				poster.parentNode.removeChild( poster );
+			var poster = container.querySelector('.nmj-rv-poster-fallback');
+			if (poster && poster.parentNode) {
+				poster.parentNode.removeChild(poster);
 			}
 		}
 
-		if ( newType === 'hosted' ) {
-			if ( ! newSrc && ! newFallback ) return;
+		if (newType === 'hosted') {
+			if (!newSrc && !newFallback) return;
 
-			var video = document.createElement( 'video' );
+			var video = document.createElement('video');
 			video.className = 'nmj-rv-video';
 
-			var preload = container.getAttribute( 'data-preload' ) || 'none';
-			video.setAttribute( 'preload', preload );
+			var preload = container.getAttribute('data-preload') || 'none';
+			video.setAttribute('preload', preload);
 
-			if ( newPoster ) video.setAttribute( 'poster', newPoster );
+			if (newPoster) video.setAttribute('poster', newPoster);
 
-			var attrsStr = container.getAttribute( 'data-attrs' ) || '';
-			var attrsArr = attrsStr.split( ' ' );
-			for ( var j = 0; j < attrsArr.length; j++ ) {
-				if ( attrsArr[ j ] ) video.setAttribute( attrsArr[ j ], '' );
+			var attrsStr = container.getAttribute('data-attrs') || '';
+			var attrsArr = attrsStr.split(' ');
+			for (var j = 0; j < attrsArr.length; j++) {
+				if (attrsArr[j]) video.setAttribute(attrsArr[j], '');
 			}
 
 			// Browsers check the .muted PROPERTY (not just attribute) for autoplay policy.
 			// setAttribute('muted','') alone doesn't reliably sync the property on
 			// dynamically created elements — always set both.
-			if ( video.hasAttribute( 'autoplay' ) ) {
+			if (video.hasAttribute('autoplay')) {
 				video.muted = true;
-				if ( ! video.hasAttribute( 'muted' ) ) {
-					video.setAttribute( 'muted', '' );
+				if (!video.hasAttribute('muted')) {
+					video.setAttribute('muted', '');
 				}
-			} else if ( video.hasAttribute( 'muted' ) ) {
+			} else if (video.hasAttribute('muted')) {
 				video.muted = true;
 			}
 
-			if ( newSrc ) {
-				var s1 = document.createElement( 'source' );
+			if (newSrc) {
+				var s1 = document.createElement('source');
 				s1.src = newSrc;
-				var t1 = guessVideoType( newSrc );
-				if ( t1 ) s1.type = t1;
-				video.appendChild( s1 );
+				var t1 = guessVideoType(newSrc);
+				if (t1) s1.type = t1;
+				video.appendChild(s1);
 			}
-			if ( newFallback ) {
-				var s2 = document.createElement( 'source' );
+			if (newFallback) {
+				var s2 = document.createElement('source');
 				s2.src = newFallback;
-				var t2 = guessVideoType( newFallback );
-				if ( t2 ) s2.type = t2;
-				video.appendChild( s2 );
+				var t2 = guessVideoType(newFallback);
+				if (t2) s2.type = t2;
+				video.appendChild(s2);
 			}
 
-			container.appendChild( video );
-			video.load();
+			container.appendChild(video);
 
 			// Remove poster only once video actually starts playing
-			video.addEventListener( 'playing', removePoster, { once: true } );
+			video.addEventListener('playing', removePoster, { once: true });
 
 			// Safety net: if the browser doesn't honour the autoplay attribute
 			// on this dynamically-created element, retry once data is ready.
-			if ( video.hasAttribute( 'autoplay' ) ) {
-				video.addEventListener( 'canplay', function () {
-					if ( video.paused ) {
-						video.play().catch( function () {} );
+			if (video.hasAttribute('autoplay')) {
+				video.addEventListener('canplay', function () {
+					if (video.paused) {
+						video.play().catch(function () { });
 					}
-				}, { once: true } );
+				}, { once: true });
 			}
 
-		} else if ( newType === 'external' ) {
-			if ( ! newExternal ) return;
+		} else if (newType === 'external') {
+			if (!newExternal) return;
 
-			var parsed = parseExternalUrl( newExternal );
-			if ( ! parsed ) return;
+			var parsed = parseExternalUrl(newExternal);
+			if (!parsed) return;
 
-			var iframeUrl = buildIframeUrl( parsed, container.getAttribute( 'data-attrs' ) || '' );
-			if ( ! iframeUrl ) return;
+			var iframeUrl = buildIframeUrl(parsed, container.getAttribute('data-attrs') || '');
+			if (!iframeUrl) return;
 
-			var iframe = document.createElement( 'iframe' );
+			var iframe = document.createElement('iframe');
 			iframe.className = 'nmj-rv-video';
 			iframe.src = iframeUrl;
-			iframe.setAttribute( 'frameborder', '0' );
-			iframe.setAttribute( 'allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture' );
-			iframe.setAttribute( 'allowfullscreen', '1' );
-			iframe.setAttribute( 'loading', 'lazy' );
+			iframe.setAttribute('frameborder', '0');
+			iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+			iframe.setAttribute('allowfullscreen', '1');
+			iframe.setAttribute('loading', 'lazy');
 
-			container.appendChild( iframe );
+			container.appendChild(iframe);
 
 			// Remove poster once iframe loads
-			iframe.addEventListener( 'load', removePoster, { once: true } );
+			iframe.addEventListener('load', removePoster, { once: true });
 		}
 	}
 
@@ -239,45 +238,62 @@
 
 	var resizeTimer;
 	function onResize() {
-		clearTimeout( resizeTimer );
-		resizeTimer = setTimeout( function () {
-			var wraps = document.querySelectorAll( '.nmj-rv-wrap' );
-			for ( var i = 0; i < wraps.length; i++ ) {
-				applySource( wraps[ i ] );
+		clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(function () {
+			var wraps = document.querySelectorAll('.nmj-rv-wrap');
+			for (var i = 0; i < wraps.length; i++) {
+				applySource(wraps[i]);
 			}
-		}, 150 );
+		}, 150);
 	}
 
 	/* ── init ──────────────────────────────────────────────────────────── */
 
 	function init() {
-		var wraps = document.querySelectorAll( '.nmj-rv-wrap' );
-		for ( var i = 0; i < wraps.length; i++ ) {
-			applySource( wraps[ i ] );
-		}
-		window.addEventListener( 'resize', onResize );
-	}
+		var wraps = document.querySelectorAll('.nmj-rv-wrap');
 
-	if ( document.readyState === 'loading' ) {
-		document.addEventListener( 'DOMContentLoaded', init );
+		if ('IntersectionObserver' in window) {
+			var observer = new IntersectionObserver(function (entries) {
+				entries.forEach(function (entry) {
+					if (entry.isIntersecting) {
+						applySource(entry.target);
+						observer.unobserve(entry.target); // load once, then stop watching
+					}
+				});
+			}, { rootMargin: '200px' }); // start loading 200px before it enters the viewport
+
+			for (var i = 0; i < wraps.length; i++) {
+				observer.observe(wraps[i]);
+			}
+		} else {
+			// Fallback for old browsers
+			for (var i = 0; i < wraps.length; i++) {
+				applySource(wraps[i]);
+			}
+		}
+
+		window.addEventListener('resize', onResize);
+	}
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
 	} else {
 		init();
 	}
 
 	/* ── Elementor editor live preview ─────────────────────────────────── */
 
-	if ( typeof jQuery !== 'undefined' ) {
-		jQuery( window ).on( 'elementor/frontend/init', function () {
-			if ( window.elementorFrontend && window.elementorFrontend.hooks ) {
+	if (typeof jQuery !== 'undefined') {
+		jQuery(window).on('elementor/frontend/init', function () {
+			if (window.elementorFrontend && window.elementorFrontend.hooks) {
 				elementorFrontend.hooks.addAction(
 					'frontend/element_ready/nmj-responsive-video.default',
-					function ( $scope ) {
-						$scope.find( '.nmj-rv-wrap' ).each( function () {
-							applySource( this );
-						} );
+					function ($scope) {
+						$scope.find('.nmj-rv-wrap').each(function () {
+							applySource(this);
+						});
 					}
 				);
 			}
-		} );
+		});
 	}
-} )();
+})();
