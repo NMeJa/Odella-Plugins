@@ -1,0 +1,23 @@
+/* ──────────────────────────────────────────────────────────────────────────────
+   Product Price Widget
+   ────────────────────────────────────────────────────────────────────────────── */
+
+/* Override theme loading animations on .price elements inside this widget.
+   Many themes fade-in or skeleton-load .price nodes; when JS swaps the HTML on
+   a variation change, the new nodes restart in the "loading" state and get
+   stuck there because whatever class toggle the theme uses never re-fires. */
+.nmj-price-in-stock .price,
+.nmj-price-in-stock .price * {
+	opacity: 1 !important;
+	visibility: visible !important;
+	animation: none !important;
+	transition: none !important;
+}
+
+/* Both the in-stock and out-of-stock nodes are always rendered so the JS
+   variation handlers have somewhere to write in either direction. The inactive
+   one carries this modifier. */
+.nmj-price-in-stock.nmj-price--hidden,
+.nmj-price-oos.nmj-price--hidden {
+	display: none !important;
+}

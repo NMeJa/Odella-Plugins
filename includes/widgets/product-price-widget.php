@@ -46,7 +46,27 @@ class Product_Price_Widget extends Widget_Base
 
     public function get_script_depends(): array
     {
-        return ['nmj-add-to-cart'];
+        // wc-add-to-cart-variation fires the `found_variation` / `reset_data`
+        // events this widget's live price swapping depends on. It must be
+        // declared here — it is NOT a dependency of nmj-add-to-cart, and it is
+        // not guaranteed to be present in loop templates or quick-view popups.
+        return ['wc-add-to-cart-variation', 'nmj-add-to-cart'];
+    }
+
+    public function get_style_depends(): array
+    {
+        return ['nmj-product-price'];
+    }
+
+    /**
+     * Never cache this widget's HTML. The rendered price depends on live
+     * product/stock data, so a cached copy goes stale as soon as a price
+     * changes. Widgets are dynamic by default in Elementor; declaring it
+     * explicitly documents the requirement.
+     */
+    protected function is_dynamic_content(): bool
+    {
+        return true;
     }
 
     // ── Controls ───────────────────────────────────────────────────────────────
@@ -89,7 +109,7 @@ class Product_Price_Widget extends Widget_Base
         ]);
 
         $this->add_control('price_tag', [
-            'label' => esc_html__('HTML Tag', 'cew'),
+            'label' => esc_html__('HTML Tag', 'nmj'),
             'type' => Controls_Manager::SELECT,
             'default' => 'div',
             'options' => [
@@ -229,28 +249,30 @@ class Product_Price_Widget extends Widget_Base
         $allowed_tags = ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span'];
         $tag = in_array($settings['price_tag'], $allowed_tags, true) ? $settings['price_tag'] : 'div';
         $in_stock = $product->is_in_stock();
+        $price_html = $product->get_price_html();
 
-        // Print once per page: override theme loading animations on .price
-        // elements inside this widget. Many themes fade-in or skeleton-load
-        // .price nodes; when JS swaps the HTML the new nodes restart in the
-        // "loading" state and get stuck there.
-        static $css_printed = false;
-        if (!$css_printed) {
-            echo '<style>.nmj-price-in-stock .price,.nmj-price-in-stock .price *{opacity:1!important;visibility:visible!important;animation:none!important;transition:none!important}</style>';
-            $css_printed = true;
-        }
+        // Both nodes are always rendered; the inactive one is hidden with the
+        // --hidden modifier. The JS variation handlers toggle between them, so
+        // a product that starts out of stock can still show a price once an
+        // in-stock variation is chosen (and vice versa). Rendering only one of
+        // them left the handlers with nothing to write to.
+        $in_stock_hidden = $in_stock ? '' : ' nmj-price--hidden';
+        $oos_hidden = $in_stock ? ' nmj-price--hidden' : '';
         ?>
-        <div class="nmj-product-price-wrapper nmj-price-product-<?php echo esc_attr($product_id); ?>" data-product_id="<?php echo esc_attr($product_id); ?>">
-            <?php if ($in_stock): ?>
-                <?php $price_html = $product->get_price_html(); ?>
-                <<?php echo $tag; ?> class="nmj-price-in-stock" data-original-price="<?php echo esc_attr($price_html); ?>">
-                    <?php echo wp_kses_post($price_html); ?>
-                </<?php echo $tag; ?>>
-            <?php else: ?>
-                <<?php echo $tag; ?> class="nmj-price-oos">
-                    <?php echo esc_html($settings['out_of_stock_text']); ?>
-                </<?php echo $tag; ?>>
-            <?php endif; ?>
+        <div class="nmj-product-price-wrapper nmj-price-product-<?php echo esc_attr($product_id); ?>"
+            data-product_id="<?php echo esc_attr($product_id); ?>"
+            <?php // Lets `reset_data` restore the presentation the server chose,
+                  // rather than assuming in-stock. ?>
+            <?php echo $in_stock ? '' : ' data-server-oos="1"'; ?>>
+            <?php // data-original-price is a render-time snapshot and is only a
+                  // last-resort fallback — the JS captures the live rendered
+                  // markup on first swap and resets from that instead. ?>
+            <<?php echo $tag; ?> class="nmj-price-in-stock<?php echo esc_attr($in_stock_hidden); ?>" data-original-price="<?php echo esc_attr($price_html); ?>">
+                <?php echo wp_kses_post($price_html); ?>
+            </<?php echo $tag; ?>>
+            <<?php echo $tag; ?> class="nmj-price-oos<?php echo esc_attr($oos_hidden); ?>">
+                <?php echo esc_html($settings['out_of_stock_text']); ?>
+            </<?php echo $tag; ?>>
         </div>
         <?php
     }

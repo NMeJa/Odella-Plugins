@@ -491,10 +491,15 @@ class Gallery_Grid_Widget extends Widget_Base
         $img_index = 0;
         $row_number = 0;
 
+        // Resolved once for the whole render. The kit is null during some AJAX
+        // renders (no active kit is loaded outside a normal page request), so
+        // it has to be checked before get_settings() — calling into null is a
+        // fatal, not a notice.
+        $kit = \Elementor\Plugin::$instance->kit;
+        $is_lightbox = 'yes' === $open_lightbox
+            || ('default' === $open_lightbox && $kit && 'yes' === $kit->get_settings('global_image_lightbox'));
+
         if ($layout === 'product_gallery') {
-            // this changed: Added an isset check for \Elementor\Plugin::$instance->kit to ensure it is not null before calling get_settings() to prevent fatal errors during AJAX rendering.
-            $kit = \Elementor\Plugin::$instance->kit;
-            $is_lightbox = 'yes' === $open_lightbox || ('default' === $open_lightbox && $kit && 'yes' === $kit->get_settings('global_image_lightbox'));
 ?>
             <div id="nmj-gg-<?php echo esc_attr($widget_id); ?>" class="nmj-product-gallery">
                 <div class="nmj-pg-main-wrap">
@@ -554,7 +559,10 @@ class Gallery_Grid_Widget extends Widget_Base
                                 continue;
                             }
                         ?>
-                            <div class="nmj-pg-thumb <?php echo $index === 0 ? 'nmj-pg-thumb-active' : ''; ?>" tabindex="0">
+                            <?php // Keyboard-operable: the JS handler binds click + Enter/Space,
+                                  // so the element needs a button role to match its behaviour. ?>
+                            <div class="nmj-pg-thumb <?php echo $index === 0 ? 'nmj-pg-thumb-active' : ''; ?>" tabindex="0"
+                                role="button" aria-label="<?php echo esc_attr(sprintf(__('Show image %d', 'nmj'), $index + 1)); ?>">
                                 <?php echo $thumb_html; ?>
                             </div>
                         <?php endforeach; ?>
@@ -631,10 +639,6 @@ class Gallery_Grid_Widget extends Widget_Base
                             }
 
                             $item_html = $img_html;
-
-                            // this changed: Added an isset check for \Elementor\Plugin::$instance->kit to ensure it is not null before calling get_settings() to prevent fatal errors during AJAX rendering.
-                            $kit = \Elementor\Plugin::$instance->kit;
-                            $is_lightbox = 'yes' === $open_lightbox || ('default' === $open_lightbox && $kit && 'yes' === $kit->get_settings('global_image_lightbox'));
 
                             if ($is_lightbox && ! empty($full_img_url)) {
                                 $item_html = sprintf(

@@ -25,6 +25,13 @@
     transform: scale(1.3);
 }
 
+.nmj-fps-dot svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+    max-width: 100%;
+}
+
 .nmj-fps-dot::before {
     content: attr(title);
     position: absolute;

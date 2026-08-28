@@ -64,6 +64,15 @@ class Variation_Selector_Widget extends Widget_Base
         return ['nmj-variation-selector'];
     }
 
+    /**
+     * Never cache this widget's HTML — the embedded data-product_variations
+     * payload carries live prices and stock state for every variation.
+     */
+    protected function is_dynamic_content(): bool
+    {
+        return true;
+    }
+
     // ── Controls ───────────────────────────────────────────────────────────────
 
     protected function register_controls(): void
@@ -534,12 +543,10 @@ class Variation_Selector_Widget extends Widget_Base
             ob_start();
             ?>
             <div class="nmj-reset-variation-wrapper">
-                <a class="reset_variations nmj-reset-variation" href="#"
-                    style="display:none; align-items:center; cursor:pointer; text-decoration:none;">
-                    <<?php echo esc_attr($clear_tag); ?> class="nmj-clear-inner" style="display:flex; align-items:center; gap:6px;
-                        flex-direction: <?php echo $icon_pos === 'right' ? 'row-reverse' : 'row'; ?>;">
+                <a class="reset_variations nmj-reset-variation" href="#">
+                    <<?php echo esc_attr($clear_tag); ?> class="nmj-clear-inner<?php echo $icon_pos === 'right' ? ' nmj-clear-inner--icon-right' : ''; ?>">
                         <?php if ($has_icon): ?>
-                            <span class="nmj-clear-icon" style="display:flex;">
+                            <span class="nmj-clear-icon">
                                 <?php \Elementor\Icons_Manager::render_icon($settings['clear_icon'], ['aria-hidden' => 'true']); ?>
                             </span>
                         <?php endif; ?>
@@ -570,32 +577,19 @@ class Variation_Selector_Widget extends Widget_Base
 
         $variation_attributes = $product->get_variation_attributes(); // [ 'pa_color' => [ 'red', 'blue' ] ]
 
+        // Presentation toggles ride on modifier classes resolved by
+        // assets/css/variation-selector.css, rather than a per-instance <style>
+        // block echoed into the body on every render.
+        $wrap_classes = 'nmj-variation-selector-wrap';
+        if (!$show_description) {
+            $wrap_classes .= ' nmj-variation-selector-wrap--no-description';
+        }
+        if (!$show_var_price) {
+            $wrap_classes .= ' nmj-variation-selector-wrap--no-price';
+        }
         ?>
-        <style>
-            <?php if (!$show_description): ?>
-                #nmj-vs-<?php echo esc_attr($widget_id); ?> .woocommerce-variation-description {
-                    display: none !important;
-                }
 
-            <?php endif; ?>
-            <?php if (!$show_var_price): ?>
-                #nmj-vs-<?php echo esc_attr($widget_id); ?> .woocommerce-variation-price {
-                    display: none !important;
-                }
-
-            <?php endif; ?>
-            #nmj-vs-<?php echo esc_attr($widget_id); ?> .nmj-clear-icon svg {
-                width: 1em;
-                height: 1em;
-                fill: currentColor;
-            }
-
-            #nmj-vs-<?php echo esc_attr($widget_id); ?> .nmj-clear-icon i {
-                color: currentColor;
-            }
-        </style>
-
-        <div class="nmj-variation-selector-wrap" id="nmj-vs-<?php echo esc_attr($widget_id); ?>">
+        <div class="<?php echo esc_attr($wrap_classes); ?>" id="nmj-vs-<?php echo esc_attr($widget_id); ?>">
 
             <form class="variations_form cart nmj-variations-form" action="<?php echo esc_url($product->add_to_cart_url()); ?>"
                 method="post" enctype="multipart/form-data" data-product_id="<?php echo esc_attr($product_id); ?>"
@@ -610,20 +604,18 @@ class Variation_Selector_Widget extends Widget_Base
                 <?php else: ?>
 
                     <?php
-                    $layout_style = '';
-                    $table_style = '';
-                    if ($clear_pos === 'infront' || $clear_pos === 'after') {
-                        $layout_style = 'display:flex; align-items:center; flex-direction:row;';
-                    } else {
-                        $layout_style = 'display:flex; flex-direction:column;';
-                    }
+                    // 'infront'/'after' sit the clear link beside the attribute
+                    // rows; 'ontop'/'onbottom' stack it above or below.
+                    $layout_modifier = ($clear_pos === 'infront' || $clear_pos === 'after')
+                        ? 'nmj-variations-layout--inline'
+                        : 'nmj-variations-layout--stacked';
                     ?>
-                    <div class="nmj-variations-layout" style="<?php echo esc_attr($layout_style); ?>">
+                    <div class="nmj-variations-layout <?php echo esc_attr($layout_modifier); ?>">
 
                         <?php if ($clear_pos === 'infront' || $clear_pos === 'ontop')
                             echo $clear_html; ?>
 
-                        <div class="variations nmj-variations-table" style="<?php echo esc_attr($table_style); ?>">
+                        <div class="variations nmj-variations-table">
                             <?php foreach ($variation_attributes as $attribute_name => $options): ?>
                                 <div class="nmj-variation-row">
 
@@ -695,7 +687,7 @@ class Variation_Selector_Widget extends Widget_Base
                                 // custom ATC widget can take over.
                                 ?>
                                 <button type="submit" class="single_add_to_cart_button button alt nmj-hidden-atc-btn"
-                                    style="display:none!important;" aria-hidden="true" tabindex="-1">
+                                    aria-hidden="true" tabindex="-1">
                                     <?php echo esc_html($product->single_add_to_cart_text()); ?>
                                 </button>
                             <?php endif; ?>

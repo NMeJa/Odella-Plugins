@@ -104,6 +104,10 @@
 		var container = wrap.querySelector('.nmj-rv-media-container');
 		if (!container) return;
 
+		// Marks this wrap as activated, so the resize handler knows it is
+		// allowed to re-evaluate it.
+		wrap.setAttribute('data-nmj-active', '1');
+
 		var bp = getActiveBreakpoint(wrap);
 		var newType = wrap.dataset[bp + 'Type'] || 'hosted';
 		var newSrc = wrap.dataset[bp + 'Src'] || '';
@@ -240,7 +244,12 @@
 	function onResize() {
 		clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(function () {
-			var wraps = document.querySelectorAll('.nmj-rv-wrap');
+			// Only re-evaluate wraps the observer has already activated.
+			// Walking every wrap here would bypass the IntersectionObserver
+			// gate and eagerly load offscreen videos it deliberately deferred —
+			// and on mobile the address bar collapsing counts as a resize, so
+			// a single scroll could trigger a page-wide video load.
+			var wraps = document.querySelectorAll('.nmj-rv-wrap[data-nmj-active="1"]');
 			for (var i = 0; i < wraps.length; i++) {
 				applySource(wraps[i]);
 			}

@@ -50,11 +50,19 @@ final class Plugin
             wp_send_json_error('Missing data');
         }
 
-        // Verify nonce — prevents unauthenticated rendering of arbitrary templates.
-        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'nmj_ajax')) {
-            wp_send_json_error('Invalid nonce');
-        }
-
+        // No nonce check by design.
+        //
+        // This endpoint is public, read-only and idempotent: it renders an
+        // already-published Elementor template against an already-published
+        // product and changes no state, so there is no CSRF surface for a nonce
+        // to protect. It previously verified one, but the nonce was localized
+        // into the page HTML — behind a full-page cache serving markup older
+        // than the 12–24h nonce lifetime, every logged-out visitor got
+        // "Invalid nonce" and quick view simply stopped working.
+        //
+        // Authorization is enforced below instead, on the two things that
+        // actually matter: the product and the template must both exist, be of
+        // the expected post type, and be publicly viewable.
         $product_id = absint($_POST['product_id']);
         $template_id = absint($_POST['template_id']);
 
@@ -158,10 +166,12 @@ final class Plugin
         // get_style_depends() so Elementor enqueues it lazily on pages that
         // actually contain the widget.
         foreach ([
-            'nmj-add-to-cart'       => 'assets/css/add-to-cart.css',
-            'nmj-full-page-scroll'  => 'assets/css/full-page-scroll.css',
-            'nmj-gallery-grid'      => 'assets/css/gallery-grid.css',
-            'nmj-responsive-video'  => 'assets/css/responsive-video.css',
+            'nmj-add-to-cart'          => 'assets/css/add-to-cart.css',
+            'nmj-full-page-scroll'     => 'assets/css/full-page-scroll.css',
+            'nmj-gallery-grid'         => 'assets/css/gallery-grid.css',
+            'nmj-responsive-video'     => 'assets/css/responsive-video.css',
+            'nmj-product-price'        => 'assets/css/product-price.css',
+            'nmj-variation-selector'   => 'assets/css/variation-selector.css',
         ] as $handle => $rel_path) {
             $abs = NMJ_PATH . $rel_path;
             wp_register_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
@@ -170,12 +180,16 @@ final class Plugin
         // JS — register only; lazy-enqueued via get_script_depends().
         wp_register_script('nmj-add-to-cart', NMJ_URL . 'assets/js/add-to-cart.js', ['jquery', 'wc-add-to-cart'], $this->get_asset_version($js_path), true);
 
+        // No nonce here — see load_quick_view_template() for why. A nonce baked
+        // into cached page HTML expires and breaks quick view for every
+        // logged-out visitor served from the cache.
         wp_localize_script('nmj-add-to-cart', 'nmj_params', [
-            'nonce' => wp_create_nonce('nmj_ajax'),
             'ajax_url' => admin_url('admin-ajax.php'),
         ]);
 
-        wp_register_script('nmj-full-page-scroll', NMJ_URL . 'assets/js/full-page-scroll.js', [], $this->get_asset_version($fps_js_path), true);
+        // jquery + elementor-frontend: the script hooks frontend/element_ready
+        // so instances arriving via AJAX (popups, filtered loops) initialise.
+        wp_register_script('nmj-full-page-scroll', NMJ_URL . 'assets/js/full-page-scroll.js', ['jquery', 'elementor-frontend'], $this->get_asset_version($fps_js_path), true);
 
         wp_register_script('nmj-gallery-grid', NMJ_URL . 'assets/js/gallery-grid.js', ['jquery', 'elementor-frontend'], $this->get_asset_version($gg_js_path), true);
 
@@ -188,10 +202,12 @@ final class Plugin
         // Load every widget CSS inside the Elementor editor iframe so that
         // selector-based controls and prefix_class take effect in live preview.
         foreach ([
-            'nmj-add-to-cart'       => 'assets/css/add-to-cart.css',
-            'nmj-full-page-scroll'  => 'assets/css/full-page-scroll.css',
-            'nmj-gallery-grid'      => 'assets/css/gallery-grid.css',
-            'nmj-responsive-video'  => 'assets/css/responsive-video.css',
+            'nmj-add-to-cart'          => 'assets/css/add-to-cart.css',
+            'nmj-full-page-scroll'     => 'assets/css/full-page-scroll.css',
+            'nmj-gallery-grid'         => 'assets/css/gallery-grid.css',
+            'nmj-responsive-video'     => 'assets/css/responsive-video.css',
+            'nmj-product-price'        => 'assets/css/product-price.css',
+            'nmj-variation-selector'   => 'assets/css/variation-selector.css',
         ] as $handle => $rel_path) {
             $abs = NMJ_PATH . $rel_path;
             wp_enqueue_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));

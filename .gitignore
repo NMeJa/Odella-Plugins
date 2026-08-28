@@ -1,0 +1,14 @@
+# Build output
+.build_temp/
+*.zip
+
+# Dependencies
+node_modules/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

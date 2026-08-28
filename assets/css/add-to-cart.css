@@ -52,6 +52,9 @@
 
 .nmj-atc-icon svg {
     display: block;
+    width: 1em;
+    height: 1em;
+    max-width: 100%;
     fill: currentColor;
     stroke: currentColor;
 }

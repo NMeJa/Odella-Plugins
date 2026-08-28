@@ -1,12 +1,57 @@
 (function ($) {
     'use strict';
 
+    // ── Scoping Helper ────────────────────────────────────────────────────────
+    // Widgets are matched to a variation form by product ID, but a product ID
+    // is NOT unique on a page: the same product can appear in a loop card and
+    // again inside a quick-view popup rendered over it. A document-wide lookup
+    // therefore lets one form rewrite widgets belonging to another — and after
+    // the popup closes, nothing ever resets what it changed.
+    //
+    // Resolve inside the form's own subtree first and only fall back to the
+    // document when the form and the target genuinely aren't nested together
+    // (e.g. an ATC widget in a separate Elementor container from the selector).
+    // Boundaries are listed innermost-outermost by intent; .closest() returns
+    // whichever is nearest. A loop item is the tightest useful scope — it is
+    // what keeps one card in a filtered product grid from rewriting another.
+    var NMJ_SCOPES = '.e-loop-item, .elementor-loop-item, .nmj-qv-content, .elementor';
+
+    function nmjScopedFind($origin, selector) {
+        var inPopup = $origin.closest('.nmj-qv-content').length > 0;
+        var $scope = $origin.closest(NMJ_SCOPES);
+
+        if ($scope.length) {
+            var $local = $scope.find(selector);
+            if ($local.length) return $local;
+        }
+
+        // Inside a quick view popup, never reach back out to the page behind
+        // it — those widgets belong to a different form and nothing will ever
+        // reset what we change here once the popup closes.
+        if (inPopup) return $();
+
+        // Outside a popup, exclude anything living inside one.
+        return $(selector).not('.nmj-qv-content ' + selector);
+    }
+
     // ── State Machine Helper ──────────────────────────────────────────────────
     function nmjSetState($wrap, state) {
         var $btn = $wrap.find('.nmj-atc-btn');
         var $text = $btn.find('.nmj-atc-text');
         var $icon = $btn.find('.nmj-atc-icon');
         var stTexts = {};
+
+        // The server only renders these spans when the INITIAL state has
+        // content for them, so a button that starts with (say) an empty
+        // "Select options" label has no .nmj-atc-text to write into and would
+        // stay blank forever once a variation is chosen. Create whatever is
+        // missing, respecting the configured icon position.
+        if (!$icon.length) {
+            $icon = $('<span class="nmj-atc-icon"></span>').prependTo($btn);
+        }
+        if (!$text.length) {
+            $text = $('<span class="nmj-atc-text"></span>').appendTo($btn);
+        }
 
         try { stTexts = JSON.parse($btn.attr('data-state-texts') || '{}'); } catch (e) { }
 
@@ -96,6 +141,18 @@
         clearTimeout(nmjTimers.get(wrap));
         $btn.removeClass('loading');
 
+        // Keep the in-cart variation list current so re-selecting this
+        // variation later resolves to "added" without a page reload.
+        var addedVariation = parseInt($btn.attr('data-variation_id'), 10);
+        if (addedVariation) {
+            var known = [];
+            try { known = JSON.parse($btn.attr('data-cart-variations') || '[]'); } catch (err) { }
+            if ($.inArray(addedVariation, known) === -1) {
+                known.push(addedVariation);
+                $btn.attr('data-cart-variations', JSON.stringify(known));
+            }
+        }
+
         if (lock) {
             nmjTimers.set(wrap, setTimeout(function () { nmjSetState($wrap, 'added'); }, 800));
         } else {
@@ -109,7 +166,11 @@
         e.preventDefault();
         var $btn = $(this);
         var $wrap = $btn.closest('.nmj-atc-wrap');
-        var productId = $btn.data('product_id');
+        // .attr(), not .data(): jQuery's data cache is populated on first read
+        // and never sees a later .attr() write. This file mutates
+        // data-variation_id and data-quantity, so the two APIs must not be
+        // mixed on these elements.
+        var productId = $btn.attr('data-product_id');
         var variationId = $btn.attr('data-variation_id');
         var qty = parseInt($btn.attr('data-quantity'), 10) || 1;
 
@@ -118,7 +179,12 @@
         // Cancel any pending state-transition timer from a previous click
         clearTimeout(nmjTimers.get($wrap[0]));
 
-        var $form = $('.nmj-variations-form[data-product_id="' + productId + '"]');
+        // .serializeArray() on a multi-element set concatenates the fields of
+        // EVERY matched form. With the same product in a quick-view popup and
+        // also behind it, the attribute_* keys appear twice and the last one
+        // silently wins — adding a variation the visitor never selected.
+        // Scope to this button's own form, and take a single element.
+        var $form = nmjScopedFind($btn, '.nmj-variations-form[data-product_id="' + productId + '"]').first();
         var formData = $form.length ? $form.serializeArray() : [];
 
         var data = {
@@ -150,7 +216,7 @@
         });
     });
 
-    // ── Price Update Helper ───────────────────────────────────────────────────
+    // ── Price Update Helpers ──────────────────────────────────────────────────
     // After swapping price HTML, the new .price DOM nodes lack whatever
     // "loaded/ready" state the theme's CSS expects (many themes fade-in prices
     // via class toggle or transition). Force visibility so the price never
@@ -160,54 +226,125 @@
         $el.find('.price').css({ opacity: 1, visibility: 'visible', animation: 'none' });
     }
 
+    // Remember the price markup each widget was actually rendered with, keyed
+    // on the element itself.
+    //
+    // data-original-price is a server-side snapshot taken when the HTML was
+    // GENERATED, which is not the same moment the visitor loaded the page: a
+    // full-page cache, an AJAX-filtered loop fragment or a bfcache restore all
+    // hand back markup whose attribute predates the current price. Capturing
+    // the live DOM before the first swap gives us a reset value that at least
+    // matches what this visitor actually saw, and falls back to the attribute
+    // only when there is nothing rendered to capture.
+    var nmjOriginalPrice = new WeakMap();
+
+    function nmjRememberPrice($el) {
+        var el = $el[0];
+        if (!el || nmjOriginalPrice.has(el)) return;
+
+        var live = $.trim($el.html());
+        nmjOriginalPrice.set(el, live || $el.attr('data-original-price') || '');
+    }
+
+    function nmjRestorePrice($el) {
+        var el = $el[0];
+        if (!el) return;
+
+        var original = nmjOriginalPrice.has(el)
+            ? nmjOriginalPrice.get(el)
+            : ($el.attr('data-original-price') || '');
+
+        if (original) nmjUpdatePrice($el, original);
+    }
+
+    // Toggle a price widget between its in-stock and out-of-stock presentation.
+    // Both nodes are always rendered (see product-price-widget.php) so this can
+    // move in either direction.
+    function nmjSetPriceStock($wrapper, inStock) {
+        $wrapper.find('.nmj-price-in-stock').toggleClass('nmj-price--hidden', !inStock);
+        $wrapper.find('.nmj-price-oos').toggleClass('nmj-price--hidden', !!inStock);
+    }
+
     // ── Variation Selector Integration (inline behavior) ──────────────────────
     $(document.body).on('found_variation', function (e, variation) {
         var $form = $(e.target);
-        var productId = $form.data('product_id');
+        var productId = $form.attr('data-product_id');
 
         // --- Product Price Widget Integration ---
-        // Defer with setTimeout(0) so this runs after any theme/WC handlers
-        // that also listen to found_variation and might override prices.
-        var $priceWrap = $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock');
-        if ($priceWrap.length) {
+        var $priceWidget = nmjScopedFind($form, '.nmj-product-price-wrapper[data-product_id="' + productId + '"]');
+        var $priceWrap = $priceWidget.find('.nmj-price-in-stock');
+
+        if ($priceWidget.length) {
+            nmjRememberPrice($priceWrap);
+
+            // Defer with setTimeout(0) so this runs after any theme/WC handlers
+            // that also listen to found_variation and might override prices.
             setTimeout(function () {
+                // An out-of-stock variation has to show the widget's own
+                // out-of-stock text, not a price — otherwise it contradicts the
+                // Add to Cart button sitting next to it, which does flip.
+                nmjSetPriceStock($priceWidget, !!variation.is_in_stock);
+
+                if (!variation.is_in_stock) return;
+
+                // price_html is empty whenever WooCommerce decides the
+                // variation price is indistinguishable from the parent range
+                // (all variations priced the same) — restore rather than blank.
                 if (variation.price_html) {
                     nmjUpdatePrice($priceWrap, variation.price_html);
-                } else if ($priceWrap.attr('data-original-price')) {
-                    nmjUpdatePrice($priceWrap, $priceWrap.attr('data-original-price'));
+                } else {
+                    nmjRestorePrice($priceWrap);
                 }
             }, 0);
         }
 
         // Find all ATC widgets for this product with inline behavior
-        $('.nmj-atc-btn[data-product_id="' + productId + '"].nmj--variable-inline, ' +
+        nmjScopedFind($form,
+            '.nmj-atc-btn[data-product_id="' + productId + '"].nmj--variable-inline, ' +
             '.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
                 var $btn = $(this);
                 var $wrap = $btn.closest('.nmj-atc-wrap');
 
-                if (variation.is_in_stock) {
-                    $btn.attr('data-variation_id', variation.variation_id);
-                    nmjSetState($wrap, 'in-stock');
-                } else {
+                if (!variation.is_in_stock) {
                     $btn.removeAttr('data-variation_id');
                     nmjSetState($wrap, 'oos');
+                    return;
                 }
+
+                $btn.attr('data-variation_id', variation.variation_id);
+
+                // Lock only if THIS variation is already in the cart. The
+                // server can't decide this at render time — no variation is
+                // selected yet — so it ships the list and we resolve it here.
+                var inCart = [];
+                try { inCart = JSON.parse($btn.attr('data-cart-variations') || '[]'); } catch (err) { }
+
+                var locked = $btn.attr('data-lock-after-add') === '1'
+                    && $.inArray(parseInt(variation.variation_id, 10), inCart) !== -1;
+
+                nmjSetState($wrap, locked ? 'added' : 'in-stock');
             });
     });
 
     $(document.body).on('reset_data', function (e) {
         var $form = $(e.target);
-        var productId = $form.data('product_id');
+        var productId = $form.attr('data-product_id');
 
         // --- Product Price Widget Integration ---
-        var $priceWrap = $('.nmj-product-price-wrapper[data-product_id="' + productId + '"] .nmj-price-in-stock');
-        if ($priceWrap.length && $priceWrap.attr('data-original-price')) {
+        var $priceWidget = nmjScopedFind($form, '.nmj-product-price-wrapper[data-product_id="' + productId + '"]');
+        var $priceWrap = $priceWidget.find('.nmj-price-in-stock');
+
+        if ($priceWidget.length) {
+            nmjRememberPrice($priceWrap);
             setTimeout(function () {
-                nmjUpdatePrice($priceWrap, $priceWrap.attr('data-original-price'));
+                // Back to the parent price range, and back to whichever
+                // in-stock/out-of-stock presentation the server rendered.
+                nmjSetPriceStock($priceWidget, !$priceWidget.attr('data-server-oos'));
+                nmjRestorePrice($priceWrap);
             }, 0);
         }
 
-        $('.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
+        nmjScopedFind($form, '.nmj-atc-btn[data-product_id="' + productId + '"][data-variable-behavior="inline"]').each(function () {
             var $btn = $(this);
             var $wrap = $btn.closest('.nmj-atc-wrap');
 
@@ -323,8 +460,7 @@
             data: {
                 action: 'nmj_load_quick_view',
                 product_id: productId,
-                template_id: popupId,
-                nonce: (typeof nmj_params !== 'undefined') ? nmj_params.nonce : ''
+                template_id: popupId
             },
             success: function (r) {
                 nmjQvXHR = null;

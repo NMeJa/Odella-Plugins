@@ -50,6 +50,16 @@ class Add_To_Cart_Widget extends Widget_Base
         return ['nmj-add-to-cart'];
     }
 
+    /**
+     * Never cache this widget's HTML. The rendered state depends on live stock
+     * data and on the current visitor's cart, so a cached copy would show one
+     * visitor's "Added" state to everyone else.
+     */
+    protected function is_dynamic_content(): bool
+    {
+        return true;
+    }
+
     protected function register_controls(): void
     {
         $this->register_content_controls();
@@ -71,6 +81,32 @@ class Add_To_Cart_Widget extends Widget_Base
             return true;
         }
         return false;
+    }
+
+    /**
+     * Variation IDs of this product currently in the cart.
+     *
+     * At page-load time a variable product has no variation selected, so the
+     * lock state can only be resolved once the visitor picks one. Shipping the
+     * list lets the found_variation handler decide per variation instead of
+     * locking every variation because one of them is in the cart.
+     *
+     * @return int[]
+     */
+    private function get_cart_variation_ids(int $pid): array
+    {
+        if (!function_exists('WC') || is_null(WC()->cart) || !did_action('woocommerce_cart_loaded_from_session'))
+            return [];
+
+        $ids = [];
+        foreach (WC()->cart->get_cart() as $item) {
+            if ((int) $item['product_id'] !== $pid)
+                continue;
+            $variation_id = (int) ($item['variation_id'] ?? 0);
+            if ($variation_id > 0)
+                $ids[] = $variation_id;
+        }
+        return array_values(array_unique($ids));
     }
 
     private function capture_icon(array $settings, string $key): string
@@ -130,11 +166,12 @@ class Add_To_Cart_Widget extends Widget_Base
             $state = 'oos';
             $interact = false;
             $hide_qty = true;
-        } elseif ($lock && $this->is_product_in_cart($pid)) {
-            // Already in cart + lock enabled — show added before checking variable
-            // branches so variable products that have been added also lock correctly.
-            // Note: for inline-variable the variation_id isn't known at page-load
-            // time, so we match on parent product_id only (conservative).
+        } elseif ($lock && !$is_var && $this->is_product_in_cart($pid)) {
+            // Already in cart + lock enabled. Simple products only: a variable
+            // product has no variation selected at page-load, so locking on the
+            // parent ID alone would lock every variation because one of them is
+            // in the cart. Variable products resolve this client-side instead,
+            // from data-cart-variations on found_variation.
             $state = 'added';
             $interact = false;
             $hide_qty = true;
@@ -211,6 +248,12 @@ class Add_To_Cart_Widget extends Widget_Base
         if ($is_var) {
             $data['data-is-variable'] = '1';
             $data['data-variable-behavior'] = $var_beh;
+            // Which variations of this product are already in the cart, so the
+            // found_variation handler can lock per variation rather than for
+            // the whole product.
+            if ($lock) {
+                $data['data-cart-variations'] = wp_json_encode($this->get_cart_variation_ids($pid));
+            }
         }
         if ($is_var && $var_beh === 'quick_view') {
             $data['data-popup-id'] = absint($s['quick_view_popup_id'] ?? 0);
@@ -258,13 +301,16 @@ class Add_To_Cart_Widget extends Widget_Base
 
             <?php echo $tag_open; ?>
 
-            <?php if (!empty($icons[$state])): ?>
-                <span class="nmj-atc-icon"><?php echo $icons[$state]; ?></span>
-            <?php endif; ?>
-
-            <?php if ('' !== $cur_text): ?>
-                <span class="nmj-atc-text"><?php echo esc_html($cur_text); ?></span>
-            <?php endif; ?>
+            <?php
+            // Both spans are always emitted, even when empty for the current
+            // state. Rendering them conditionally meant a button that starts
+            // with (say) no "Select options" label had no .nmj-atc-text node,
+            // so nmjSetState() had nothing to write into and the button stayed
+            // blank forever once a variation was picked. Empty inline-flex
+            // children collapse to zero width, so this costs no layout.
+            ?>
+            <span class="nmj-atc-icon"><?php echo $icons[$state]; ?></span>
+            <span class="nmj-atc-text"><?php echo esc_html($cur_text); ?></span>
 
             <?php echo $tag_close; ?>
 

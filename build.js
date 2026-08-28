@@ -69,6 +69,23 @@ updatedContent = updatedContent.replace(constantVersionRegex, `$1${newVersion}$3
 fs.writeFileSync(pluginFilePath, updatedContent, 'utf8');
 console.log(`✅ Saved updated version to ${PLUGIN_FILE}`);
 
+// Keep package.json in step. It is not the source of truth — the PHP constant
+// is — but leaving it behind makes `npm version`, changelogs and any tooling
+// that reads it report a version the plugin never shipped.
+const packageJsonPath = path.join(workspaceDir, 'package.json');
+if (fs.existsSync(packageJsonPath)) {
+    try {
+        const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        if (pkg.version !== newVersion) {
+            pkg.version = newVersion;
+            fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+            console.log(`✅ Synced package.json to ${newVersion}`);
+        }
+    } catch (pkgError) {
+        console.warn('⚠️ Warning: Could not update package.json:', pkgError.message);
+    }
+}
+
 // 2. Prepare staging directory
 try {
     if (fs.existsSync(tempDir)) {
@@ -100,19 +117,42 @@ try {
         fs.mkdirSync(parentDir, { recursive: true });
     }
 
-    // Try compressing using tar first (very fast, natively available on Windows 10/11)
+    // Resolve tar EXPLICITLY rather than trusting PATH.
+    //
+    // A bare `tar` resolves differently per shell. From PowerShell it finds
+    // Windows' bundled bsdtar, which writes real ZIPs. From Git Bash it finds
+    // Git's GNU tar, which (a) cannot write ZIP archives at all and (b) reads
+    // "C:\path" as a remote host spec and dies with
+    // "Cannot connect to C: resolve failed". The old code swallowed that error
+    // and silently fell through to Compress-Archive, so which shell you built
+    // from decided whether the release ZIP was valid.
+    const bsdTar = process.platform === 'win32'
+        ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe')
+        : 'tar';
+
     let compressed = false;
-    try {
-        console.log('   Trying compression with native tar...');
-        execSync(`tar -caf "${zipPath}" -C "${tempDir}" odella-elementor-widgets`, { stdio: 'ignore' });
-        compressed = true;
-    } catch (tarError) {
-        console.warn('   ⚠️ Native tar failed or not found. Falling back to PowerShell Compress-Archive...');
+
+    if (process.platform !== 'win32' || fs.existsSync(bsdTar)) {
+        try {
+            console.log('   Compressing with bsdtar...');
+            execSync(`"${bsdTar}" -caf "${zipPath}" -C "${tempDir}" odella-elementor-widgets`, { stdio: 'pipe' });
+            compressed = true;
+        } catch (tarError) {
+            const detail = tarError.stderr ? tarError.stderr.toString().trim() : tarError.message;
+            console.warn(`   ⚠️ bsdtar failed: ${detail}`);
+        }
+    } else {
+        console.warn(`   ⚠️ bsdtar not found at ${bsdTar}`);
     }
 
     if (!compressed) {
         try {
-            // Fallback to PowerShell Compress-Archive
+            // Last resort. Windows PowerShell 5.1's Compress-Archive writes
+            // BACKSLASH path separators, which violates the ZIP spec
+            // (APPNOTE 4.4.17.1 requires forward slashes). Some extractors
+            // cope; on Linux many produce one flat file per entry with
+            // literal backslashes in the name. Verified below either way.
+            console.warn('   ⚠️ Falling back to PowerShell Compress-Archive — see separator check below.');
             execSync(`powershell -NoProfile -Command "Compress-Archive -Path '${stagingDir}' -DestinationPath '${zipPath}' -Force"`, { stdio: 'inherit' });
             compressed = true;
         } catch (psError) {
@@ -121,6 +161,20 @@ try {
         }
     }
 
+    // Verify the archive stores POSIX separators. A ZIP with backslashes
+    // extracts as garbage on the Linux host this plugin is deployed to, and it
+    // is not obvious from looking at the file — so fail the build rather than
+    // hand over a release that looks fine locally.
+    const zipText = fs.readFileSync(zipPath, 'latin1');
+    const backslashEntries = (zipText.match(/odella-elementor-widgets\\/g) || []).length;
+    if (backslashEntries > 0) {
+        console.error(`❌ Error: ZIP stores ${backslashEntries} backslash path separators and would not extract correctly on Linux.`);
+        console.error('   Build from PowerShell, or ensure C:\\Windows\\System32\\tar.exe is present.');
+        fs.rmSync(zipPath, { force: true });
+        cleanupAndExit(1);
+    }
+
+    console.log('✅ Path separators verified (POSIX).');
     console.log(`🎉 Success! ZIP file created at: ${zipPath}`);
     cleanupAndExit(0);
 

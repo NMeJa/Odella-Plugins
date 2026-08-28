@@ -177,16 +177,32 @@ class Full_Page_Scroll_Widget extends Widget_Base
             return;
         }
 
-        // Clean up IDs (ensure no hashes are passed to JS)
-        $clean_sections = array_map(function ($item) {
+        // Clean up IDs (ensure no hashes are passed to JS).
+        // Repeater rows saved before a control existed simply omit its key, so
+        // every read needs a default — in PHP 8 ltrim(null, '#') is also a
+        // deprecation on top of the undefined-key warning.
+        $clean_sections = array_map(static function ($item) {
             return [
-                'id' => ltrim($item['section_id'], '#'),
-                'tooltip' => $item['tooltip_text']
+                'id' => ltrim((string) ($item['section_id'] ?? ''), '#'),
+                'tooltip' => (string) ($item['tooltip_text'] ?? ''),
             ];
         }, $sections);
 
+        // Rows with no CSS ID have nothing to scroll to.
+        $clean_sections = array_values(array_filter(
+            $clean_sections,
+            static fn($item) => '' !== $item['id']
+        ));
+
+        if (empty($clean_sections)) {
+            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                echo '<p style="color:orange;">⚠ <em>Full Page Scroll: Every section row needs a CSS ID.</em></p>';
+            }
+            return;
+        }
+
         $offset = absint($settings['header_offset'] ?? 0);
-        $show_dots = $settings['show_dots'] === 'yes';
+        $show_dots = ($settings['show_dots'] ?? 'yes') === 'yes';
         $allow_past = ($settings['allow_scroll_past'] ?? 'no') === 'yes';
 
         // Pre-render the chosen SVG/Icon
