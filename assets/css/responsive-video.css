@@ -11,7 +11,10 @@
 	position: relative;
 	width: 100%;
 	overflow: hidden;
-	/* aspect-ratio injected by Elementor selector control */
+	/* Fallback so the container never collapses to zero height before
+	   Elementor's per-page CSS (which sets the configured ratio) loads.
+	   Matches the widget's own aspect_ratio control default. */
+	aspect-ratio: 16/9;
 }
 
 .nmj-rv-media-container {
