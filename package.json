@@ -1,6 +1,6 @@
 {
   "name": "odella-elementor-widgets",
-  "version": "1.0.50",
+  "version": "1.0.51",
   "description": "A growing library of custom Elementor widgets with WooCommerce support.",
   "main": "odella-elementor-widgets.php",
   "scripts": {

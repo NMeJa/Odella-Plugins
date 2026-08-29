@@ -29,14 +29,40 @@
 	/* object-fit injected by Elementor selector control */
 }
 
-/* Server-rendered poster — overlays the video until playback begins */
+/* Server-rendered poster. Overlays the video until playback begins, and IS the
+   content — not a placeholder — on breakpoints where Show Video is off.
+   This is a <picture>, so object-fit has to go on the inner <img>: it does
+   nothing on the <picture> wrapper itself. */
 .nmj-rv-poster-fallback {
 	position: absolute;
 	inset: 0;
 	z-index: 1;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.nmj-rv-poster-fallback img {
+	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+}
+
+/* Hidden, not removed — resizing into a poster-only breakpoint has to be able
+   to bring it back after playback hid it. */
+.nmj-rv-poster-fallback.nmj-rv-poster--hidden {
+	display: none;
+}
+
+/* Editor-only warning for a breakpoint in use with no poster set */
+.nmj-rv-notice {
+	background: #fff3cd;
+	color: #856404;
+	padding: 10px 14px;
+	font-size: 13px;
+	border-radius: 4px;
+	margin: 0 0 10px;
 }
 
 /* Editor placeholder shown when no video is configured */

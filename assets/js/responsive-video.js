@@ -23,7 +23,23 @@
 		return 'desktop';
 	}
 
+	// 'poster' = show the poster image only; no video is loaded for this
+	// breakpoint and it must not borrow another breakpoint's footage.
+	function getMode(wrap, bp) {
+		return wrap.dataset[bp + 'Mode'] === 'poster' ? 'poster' : 'video';
+	}
+
 	function hasData(wrap, bp) {
+		// Poster mode always counts as configured, even with no poster set for
+		// this specific breakpoint — the server-rendered <picture> already falls
+		// back to another breakpoint's image on its own.
+		//
+		// Deliberately unconditional: "Show Video: off" has to be a guarantee,
+		// not a preference. Returning false on a missing poster would send the
+		// fallback chain looking for a video and land mobile on the desktop
+		// cut — the exact outcome the switch exists to prevent.
+		if (getMode(wrap, bp) === 'poster') return true;
+
 		var type = wrap.dataset[bp + 'Type'];
 		if (type === 'external') return !!wrap.dataset[bp + 'External'];
 		return !!wrap.dataset[bp + 'Src'];
@@ -109,6 +125,34 @@
 		wrap.setAttribute('data-nmj-active', '1');
 
 		var bp = getActiveBreakpoint(wrap);
+		var newMode = getMode(wrap, bp);
+
+		// Poster-only: tear down any media left from a wider viewport and stop.
+		// Nothing is downloaded, and the server-rendered <picture> — which has
+		// already chosen the right poster for this viewport on its own — is the
+		// finished output rather than a placeholder, so it is never removed.
+		if (newMode === 'poster') {
+			container.setAttribute('data-nmj-type', 'poster');
+			container.removeAttribute('data-nmj-src');
+			container.removeAttribute('data-nmj-fallback');
+			container.removeAttribute('data-nmj-external');
+
+			// Bring the poster back if a wider viewport had played a video and
+			// hidden it.
+			var posterEl = container.querySelector('.nmj-rv-poster-fallback');
+			if (posterEl) posterEl.classList.remove('nmj-rv-poster--hidden');
+
+			var stale = container.querySelectorAll('video, iframe');
+			for (var m = 0; m < stale.length; m++) {
+				var node = stale[m];
+				// Pause before detaching: removing a playing <video> from the
+				// DOM does not reliably stop its audio in every browser.
+				if (node.tagName === 'VIDEO') { try { node.pause(); } catch (e) { } }
+				node.parentNode.removeChild(node);
+			}
+			return;
+		}
+
 		var newType = wrap.dataset[bp + 'Type'] || 'hosted';
 		var newSrc = wrap.dataset[bp + 'Src'] || '';
 		var newFallback = wrap.dataset[bp + 'Fallback'] || '';
@@ -147,12 +191,12 @@
 			oldMedia[k].parentNode.removeChild(oldMedia[k]);
 		}
 
-		// Helper: remove poster fallback image
+		// Hide, never remove. Resizing from a video breakpoint into a
+		// poster-only one has to be able to bring the poster back, and it
+		// cannot do that if playback destroyed the node.
 		function removePoster() {
 			var poster = container.querySelector('.nmj-rv-poster-fallback');
-			if (poster && poster.parentNode) {
-				poster.parentNode.removeChild(poster);
-			}
+			if (poster) poster.classList.add('nmj-rv-poster--hidden');
 		}
 
 		if (newType === 'hosted') {

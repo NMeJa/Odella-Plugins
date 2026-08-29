@@ -102,6 +102,21 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 				]);
 			}
 
+			// Per-breakpoint kill switch. Off means this breakpoint renders the
+			// poster image and nothing else — no <video>, no iframe, and no
+			// falling through to another breakpoint's video. Use it where you
+			// have no footage for that shape (e.g. no portrait cut for mobile),
+			// or to spare mobile visitors the download.
+			$this->add_control("{$device}_show_video", [
+				'label' => esc_html__('Show Video', 'nmj'),
+				'description' => esc_html__('Off = show the poster image only on this breakpoint. No video is loaded or downloaded.', 'nmj'),
+				'type' => \Elementor\Controls_Manager::SWITCHER,
+				'label_on' => esc_html__('Video', 'nmj'),
+				'label_off' => esc_html__('Poster', 'nmj'),
+				'return_value' => 'yes',
+				'default' => 'yes',
+			]);
+
 			$this->add_control("{$device}_source_type", [
 				'label' => esc_html__('Video Source', 'nmj'),
 				'type' => \Elementor\Controls_Manager::SELECT,
@@ -110,6 +125,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 					'hosted' => esc_html__('Self Hosted', 'nmj'),
 					'external' => esc_html__('YouTube / Vimeo', 'nmj'),
 				],
+				'condition' => ["{$device}_show_video" => 'yes'],
 			]);
 
 			$this->add_control("{$device}_video", [
@@ -117,7 +133,10 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 				'type' => \Elementor\Controls_Manager::MEDIA,
 				'media_types' => ['video'],
 				'dynamic' => ['active' => true],
-				'condition' => ["{$device}_source_type" => 'hosted'],
+				'condition' => [
+					"{$device}_show_video" => 'yes',
+					"{$device}_source_type" => 'hosted',
+				],
 			]);
 
 			$this->add_control("{$device}_fallback_video", [
@@ -126,7 +145,10 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 				'type' => \Elementor\Controls_Manager::MEDIA,
 				'media_types' => ['video'],
 				'dynamic' => ['active' => true],
-				'condition' => ["{$device}_source_type" => 'hosted'],
+				'condition' => [
+					"{$device}_show_video" => 'yes',
+					"{$device}_source_type" => 'hosted',
+				],
 			]);
 
 			$this->add_control("{$device}_external_url", [
@@ -135,14 +157,22 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 				'type' => \Elementor\Controls_Manager::TEXT,
 				'dynamic' => ['active' => true],
 				'label_block' => true,
-				'condition' => ["{$device}_source_type" => 'external'],
+				'condition' => [
+					"{$device}_show_video" => 'yes',
+					"{$device}_source_type" => 'external',
+				],
 			]);
 
+			// Unconditional. The poster is required in every mode: it is the
+			// entire output when Show Video is off, and the placeholder that
+			// prevents an empty box while the video loads when it is on. It was
+			// previously hidden for the YouTube/Vimeo source type, which left
+			// external embeds with no placeholder at all.
 			$this->add_control("{$device}_poster", [
 				'label' => esc_html__('Poster Image', 'nmj'),
+				'description' => esc_html__('Required. Shown on its own when Show Video is off, and while the video loads when it is on.', 'nmj'),
 				'type' => \Elementor\Controls_Manager::MEDIA,
 				'dynamic' => ['active' => true],
-				'condition' => ["{$device}_source_type" => 'hosted'],
 			]);
 		}
 
@@ -375,18 +405,62 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 		$tablet_poster = !empty($s['tablet_poster']['url']) ? $s['tablet_poster']['url'] : '';
 		$mobile_poster = !empty($s['mobile_poster']['url']) ? $s['mobile_poster']['url'] : '';
 
-		// Bail early when no video is configured
-		$has_desktop = ('hosted' === $desktop_type && $desktop_src) || ('external' === $desktop_type && $desktop_external);
-		$has_tablet = ('hosted' === $tablet_type && $tablet_src) || ('external' === $tablet_type && $tablet_external);
-		$has_mobile = ('hosted' === $mobile_type && $mobile_src) || ('external' === $mobile_type && $mobile_external);
+		// Per-breakpoint mode. 'poster' means this breakpoint renders the poster
+		// and nothing else — it must NOT fall through to another breakpoint's
+		// video, which is the whole point of the switch.
+		$modes = [];
+		foreach (['desktop', 'tablet', 'mobile'] as $device) {
+			$modes[$device] = (($s["{$device}_show_video"] ?? 'yes') === 'yes') ? 'video' : 'poster';
+		}
 
-		if (!$has_desktop && !$has_tablet && !$has_mobile) {
+		$posters = ['desktop' => $desktop_poster, 'tablet' => $tablet_poster, 'mobile' => $mobile_poster];
+
+		// Any poster at all is enough for a poster-mode breakpoint — the
+		// <picture> below falls back across breakpoints on its own.
+		$any_poster = $desktop_poster || $tablet_poster || $mobile_poster;
+
+		// A breakpoint is configured if it has what its own mode requires.
+		$has = [
+			'desktop' => 'poster' === $modes['desktop']
+				? (bool) $any_poster
+				: (('hosted' === $desktop_type && $desktop_src) || ('external' === $desktop_type && $desktop_external)),
+			'tablet' => 'poster' === $modes['tablet']
+				? (bool) $any_poster
+				: (('hosted' === $tablet_type && $tablet_src) || ('external' === $tablet_type && $tablet_external)),
+			'mobile' => 'poster' === $modes['mobile']
+				? (bool) $any_poster
+				: (('hosted' === $mobile_type && $mobile_src) || ('external' === $mobile_type && $mobile_external)),
+		];
+
+		if (!$has['desktop'] && !$has['tablet'] && !$has['mobile']) {
 			if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
 				echo '<div class="nmj-rv-placeholder"><span>'
-					. esc_html__('Set a Desktop or Mobile video in the widget settings.', 'nmj')
+					. esc_html__('Set a video, or switch a breakpoint to Poster and set a poster image.', 'nmj')
 					. '</span></div>';
 			}
 			return;
+		}
+
+		// The poster is required. Warn in the editor only — the front end still
+		// renders whatever it can rather than showing visitors an error.
+		if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+			$missing = [];
+			foreach ($modes as $device => $mode) {
+				// Only complain about a breakpoint that is actually in use.
+				if ($has[$device] && empty($posters[$device])) {
+					$missing[] = ucfirst($device);
+				}
+			}
+			if ($missing) {
+				printf(
+					'<div class="nmj-rv-notice">%s</div>',
+					esc_html(sprintf(
+						/* translators: %s: comma-separated breakpoint names. */
+						__('Poster image missing for: %s. It will fall back to another breakpoint’s poster.', 'nmj'),
+						implode(', ', $missing)
+					))
+				);
+			}
 		}
 
 		$mobile_bp = absint($s['mobile_breakpoint'] ?? 767);
@@ -407,10 +481,18 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			}
 		}
 
-		// Resolve server-side poster so the browser's preload scanner can
-		// discover it during HTML parsing — avoids waiting for JS execution.
-		// Desktop is the safe default; JS swaps for the matched breakpoint.
-		$server_poster = $desktop_poster ?: $tablet_poster ?: $mobile_poster;
+		// Resolve one poster per breakpoint, each falling back to whatever is
+		// set. These go into a <picture> below so the browser's preload scanner
+		// picks the right one during HTML parsing — the correct poster is on
+		// screen before any JS runs, which matters most in poster-only mode
+		// where the poster is the entire content.
+		$fallback_poster = $desktop_poster ?: $tablet_poster ?: $mobile_poster;
+		$poster_for = [
+			'desktop' => $desktop_poster ?: $fallback_poster,
+			'tablet' => $tablet_poster ?: $fallback_poster,
+			'mobile' => $mobile_poster ?: $fallback_poster,
+		];
+		$server_poster = $poster_for['desktop'];
 
 		// Preload attribute — validated against a known-safe allowlist.
 		$preload = $s['preload'] ?? 'none';
@@ -432,17 +514,37 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			data-desktop-poster="<?php echo esc_url($desktop_poster); ?>"
 			data-tablet-poster="<?php echo esc_url($tablet_poster); ?>"
 			data-mobile-poster="<?php echo esc_url($mobile_poster); ?>" data-mobile-bp="<?php echo esc_attr($mobile_bp); ?>"
-			data-tablet-bp="<?php echo esc_attr($tablet_bp); ?>">
+			data-tablet-bp="<?php echo esc_attr($tablet_bp); ?>"
+			data-desktop-mode="<?php echo esc_attr($modes['desktop']); ?>"
+			data-tablet-mode="<?php echo esc_attr($modes['tablet']); ?>"
+			data-mobile-mode="<?php echo esc_attr($modes['mobile']); ?>">
 			<div class="nmj-rv-inner">
 				<?php
-				// We render an empty container here. 
-				// JavaScript will inject either a <video> or <iframe> natively based on the breakpoint type.
-				// This guarantees that we don't accidentally play two videos simultaneously.
+				// The media container starts empty. JavaScript injects a <video>
+				// or an <iframe> for breakpoints in video mode, and injects
+				// nothing at all for breakpoints in poster mode — where the
+				// <picture> below is the finished output, not a placeholder.
 				?>
 				<div class="nmj-rv-media-container" data-preload="<?php echo esc_attr($preload); ?>"
 					data-attrs="<?php echo esc_attr(trim($bool_attrs)); ?>">
 					<?php if ($server_poster): ?>
-						<img class="nmj-rv-poster-fallback" src="<?php echo esc_url($server_poster); ?>" alt="" />
+						<?php
+						// <picture> rather than a single <img>: the browser picks
+						// the poster matching the viewport before JS runs, so
+						// mobile never briefly shows the desktop still.
+						// Source order matters — narrowest first, first match wins.
+						?>
+						<picture class="nmj-rv-poster-fallback">
+							<?php if ($poster_for['mobile'] && $poster_for['mobile'] !== $server_poster): ?>
+								<source media="(max-width: <?php echo esc_attr($mobile_bp); ?>px)"
+									srcset="<?php echo esc_url($poster_for['mobile']); ?>" />
+							<?php endif; ?>
+							<?php if ($poster_for['tablet'] && $poster_for['tablet'] !== $server_poster): ?>
+								<source media="(max-width: <?php echo esc_attr($tablet_bp); ?>px)"
+									srcset="<?php echo esc_url($poster_for['tablet']); ?>" />
+							<?php endif; ?>
+							<img src="<?php echo esc_url($server_poster); ?>" alt="" />
+						</picture>
 					<?php endif; ?>
 				</div>
 			</div>
@@ -468,12 +570,16 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			mobileExternal=settings.mobile_external_url || '' ; var desktopPoster=settings.desktop_poster &&
 			settings.desktop_poster.url ? settings.desktop_poster.url : '' ; var tabletPoster=settings.tablet_poster &&
 			settings.tablet_poster.url ? settings.tablet_poster.url : '' ; var mobilePoster=settings.mobile_poster &&
-			settings.mobile_poster.url ? settings.mobile_poster.url : '' ; var hasDesktop=(desktopType==='hosted' && desktopSrc)
-			|| (desktopType==='external' && desktopExternal); var hasTablet=(tabletType==='hosted' && tabletSrc) ||
-			(tabletType==='external' && tabletExternal); var hasMobile=(mobileType==='hosted' && mobileSrc) ||
-			(mobileType==='external' && mobileExternal); if ( ! hasDesktop && ! hasTablet && ! hasMobile ) { #>
+			settings.mobile_poster.url ? settings.mobile_poster.url : '' ;
+			var desktopMode=(settings.desktop_show_video==='yes' || settings.desktop_show_video===undefined) ? 'video' : 'poster' ;
+			var tabletMode=(settings.tablet_show_video==='yes' || settings.tablet_show_video===undefined) ? 'video' : 'poster' ;
+			var mobileMode=(settings.mobile_show_video==='yes' || settings.mobile_show_video===undefined) ? 'video' : 'poster' ;
+			var hasDesktop=desktopMode==='poster' ? !!desktopPoster : ((desktopType==='hosted' && desktopSrc)
+			|| (desktopType==='external' && desktopExternal)); var hasTablet=tabletMode==='poster' ? !!tabletPoster : ((tabletType==='hosted' && tabletSrc) ||
+			(tabletType==='external' && tabletExternal)); var hasMobile=mobileMode==='poster' ? !!mobilePoster : ((mobileType==='hosted' && mobileSrc) ||
+			(mobileType==='external' && mobileExternal)); if ( ! hasDesktop && ! hasTablet && ! hasMobile ) { #>
 			<div class="nmj-rv-placeholder">
-				<span><?php echo esc_js(__('Set a Desktop or Mobile video in the widget settings.', 'nmj')); ?></span>
+				<span><?php echo esc_js(__('Set a video, or switch a breakpoint to Poster and set a poster image.', 'nmj')); ?></span>
 			</div>
 			<# } else { var boolAttrs='' ; if ( settings.autoplay==='yes' ) boolAttrs +=' autoplay' ; if (
 				settings.muted==='yes' ) boolAttrs +=' muted' ; if ( settings.loop==='yes' ) boolAttrs +=' loop' ; if (
@@ -487,12 +593,25 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 					data-mobile-external="{{ mobileExternal }}" data-desktop-poster="{{ desktopPoster }}"
 					data-tablet-poster="{{ tabletPoster }}" data-mobile-poster="{{ mobilePoster }}"
 					data-mobile-bp="{{ settings.mobile_breakpoint || 767 }}"
-					data-tablet-bp="{{ settings.tablet_breakpoint || 1024 }}">
+					data-tablet-bp="{{ settings.tablet_breakpoint || 1024 }}" data-desktop-mode="{{ desktopMode }}"
+					data-tablet-mode="{{ tabletMode }}" data-mobile-mode="{{ mobileMode }}">
 					<div class="nmj-rv-inner">
 						<div class="nmj-rv-media-container" data-preload="{{ settings.preload || 'none' }}"
 							data-attrs="{{ boolAttrs }}">
-							<# var serverPoster=desktopPoster || tabletPoster || mobilePoster; if ( serverPoster ) { #>
-								<img class="nmj-rv-poster-fallback" src="{{ serverPoster }}" alt="" />
+							<# var fallbackPoster=desktopPoster || tabletPoster || mobilePoster;
+							   var serverPoster=fallbackPoster;
+							   var mobileP=mobilePoster || fallbackPoster;
+							   var tabletP=tabletPoster || fallbackPoster;
+							   if ( serverPoster ) { #>
+								<picture class="nmj-rv-poster-fallback">
+									<# if ( mobileP && mobileP !== serverPoster ) { #>
+										<source media="(max-width: {{ settings.mobile_breakpoint || 767 }}px)" srcset="{{ mobileP }}" />
+									<# } #>
+									<# if ( tabletP && tabletP !== serverPoster ) { #>
+										<source media="(max-width: {{ settings.tablet_breakpoint || 1024 }}px)" srcset="{{ tabletP }}" />
+									<# } #>
+									<img src="{{ serverPoster }}" alt="" />
+								</picture>
 								<# } #>
 						</div>
 					</div>
