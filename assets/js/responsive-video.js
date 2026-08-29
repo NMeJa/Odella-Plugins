@@ -23,9 +23,20 @@
 		return 'desktop';
 	}
 
+	function isPortrait() {
+		if (window.matchMedia) return window.matchMedia('(orientation: portrait)').matches;
+		return window.innerHeight >= window.innerWidth;
+	}
+
 	// 'poster' = show the poster image only; no video is loaded for this
 	// breakpoint and it must not borrow another breakpoint's footage.
 	function getMode(wrap, bp) {
+		// Orientation wins over the width breakpoints. A phone in landscape can
+		// be 992px wide — inside the tablet band — so a mobile-only poster rule
+		// never reaches it, and widening the mobile band to catch it would take
+		// real tablets with it. Shape is the axis that actually separates them.
+		if (wrap.dataset.portraitPoster === '1' && isPortrait()) return 'poster';
+
 		return wrap.dataset[bp + 'Mode'] === 'poster' ? 'poster' : 'video';
 	}
 
@@ -326,6 +337,12 @@
 		}
 
 		window.addEventListener('resize', onResize);
+
+		// Rotating a phone fires resize in current browsers, but not always
+		// before the new dimensions settle. orientationchange is cheap
+		// insurance for the Portrait: Poster Only rule, which is the one
+		// setting that flips purely on rotation.
+		window.addEventListener('orientationchange', onResize);
 	}
 	if (document.readyState === 'loading') {
 		document.addEventListener('DOMContentLoaded', init);

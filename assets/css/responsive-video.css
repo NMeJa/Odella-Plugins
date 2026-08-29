@@ -17,12 +17,21 @@
 	aspect-ratio: 16/9;
 }
 
+/* Relative, not absolute, so the in-flow poster inside it can give the widget
+   its height when Aspect Ratio is set to Auto. With a fixed ratio, height:100%
+   resolves against .nmj-rv-inner as before. */
 .nmj-rv-media-container {
-	position: absolute;
-	inset: 0;
+	position: relative;
+	width: 100%;
+	height: 100%;
 }
 
+/* The video sits BENEATH the poster and fills whatever height is in play —
+   the fixed aspect ratio, or the poster's own height under Auto. */
 .nmj-rv-video {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -33,9 +42,11 @@
    content — not a placeholder — on breakpoints where Show Video is off.
    This is a <picture>, so object-fit has to go on the inner <img>: it does
    nothing on the <picture> wrapper itself. */
+/* IN FLOW, deliberately. Under Aspect Ratio: Auto the poster is what gives the
+   widget its height, so it cannot be taken out of the flow. It also stacks
+   above the video, which is what makes it a placeholder until playback. */
 .nmj-rv-poster-fallback {
-	position: absolute;
-	inset: 0;
+	position: relative;
 	z-index: 1;
 	display: block;
 	width: 100%;
@@ -45,14 +56,19 @@
 .nmj-rv-poster-fallback img {
 	display: block;
 	width: 100%;
+	/* height:100% fills a fixed aspect ratio; under Auto it resolves to auto and
+	   the image keeps its own proportions — a portrait poster stays portrait. */
 	height: 100%;
 	object-fit: cover;
 }
 
-/* Hidden, not removed — resizing into a poster-only breakpoint has to be able
-   to bring it back after playback hid it. */
+/* Hidden with opacity, NOT display:none. Removing it from the flow would
+   collapse the widget to zero height under Aspect Ratio: Auto the moment
+   playback started. Keeping it in flow also lets a resize into a poster-only
+   breakpoint bring it straight back. */
 .nmj-rv-poster-fallback.nmj-rv-poster--hidden {
-	display: none;
+	opacity: 0;
+	pointer-events: none;
 }
 
 /* Editor-only warning for a breakpoint in use with no poster set */

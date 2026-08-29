@@ -272,6 +272,30 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			'max' => 2560,
 		]);
 
+		// Orientation override.
+		//
+		// Width alone cannot separate a phone held sideways from a tablet held
+		// upright — a Pixel 8 Pro in landscape is 992px, squarely inside the
+		// tablet band, so a mobile-only poster rule never reaches it. Widening
+		// the mobile band to catch it would sweep in real tablets instead.
+		//
+		// "I have no portrait footage" is a statement about SHAPE, not width,
+		// so it gets its own axis. Portrait phones and portrait tablets match;
+		// the same phone in landscape does not, and keeps the video it has.
+		$this->add_control('portrait_divider', [
+			'type' => \Elementor\Controls_Manager::DIVIDER,
+		]);
+
+		$this->add_control('portrait_poster_only', [
+			'label' => esc_html__('Portrait: Poster Only', 'nmj'),
+			'description' => esc_html__('Show the poster image on any portrait viewport, whatever its width — including a phone whose landscape width lands in the Tablet band. Use when you have no portrait-oriented video. Landscape is unaffected.', 'nmj'),
+			'type' => \Elementor\Controls_Manager::SWITCHER,
+			'label_on' => esc_html__('On', 'nmj'),
+			'label_off' => esc_html__('Off', 'nmj'),
+			'return_value' => 'yes',
+			'default' => 'no',
+		]);
+
 		$this->end_controls_section();
 	}
 
@@ -289,6 +313,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			'label' => esc_html__('Aspect Ratio', 'nmj'),
 			'type' => \Elementor\Controls_Manager::SELECT,
 			'default' => '16/9',
+			'description' => esc_html__('Auto takes its height from the poster image, so a portrait poster is never cropped to a landscape box. Set it per device.', 'nmj'),
 			'options' => [
 				'16/9' => '16:9 — Widescreen',
 				'9/16' => '9:16 — Portrait',
@@ -296,6 +321,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 				'3/2' => '3:2',
 				'1/1' => '1:1 — Square',
 				'21/9' => '21:9 — Ultrawide',
+				'auto' => esc_html__('Auto — match poster image', 'nmj'),
 			],
 			'selectors' => [
 				'{{WRAPPER}} .nmj-rv-inner' => 'aspect-ratio: {{VALUE}};',
@@ -413,6 +439,9 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			$modes[$device] = (($s["{$device}_show_video"] ?? 'yes') === 'yes') ? 'video' : 'poster';
 		}
 
+		// Evaluated client-side — orientation is not knowable at render time.
+		$portrait_poster_only = ($s['portrait_poster_only'] ?? 'no') === 'yes';
+
 		$posters = ['desktop' => $desktop_poster, 'tablet' => $tablet_poster, 'mobile' => $mobile_poster];
 
 		// Any poster at all is enough for a poster-mode breakpoint — the
@@ -517,7 +546,8 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 			data-tablet-bp="<?php echo esc_attr($tablet_bp); ?>"
 			data-desktop-mode="<?php echo esc_attr($modes['desktop']); ?>"
 			data-tablet-mode="<?php echo esc_attr($modes['tablet']); ?>"
-			data-mobile-mode="<?php echo esc_attr($modes['mobile']); ?>">
+			data-mobile-mode="<?php echo esc_attr($modes['mobile']); ?>"
+			data-portrait-poster="<?php echo $portrait_poster_only ? '1' : '0'; ?>">
 			<div class="nmj-rv-inner">
 				<?php
 				// The media container starts empty. JavaScript injects a <video>
@@ -594,7 +624,8 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 					data-tablet-poster="{{ tabletPoster }}" data-mobile-poster="{{ mobilePoster }}"
 					data-mobile-bp="{{ settings.mobile_breakpoint || 767 }}"
 					data-tablet-bp="{{ settings.tablet_breakpoint || 1024 }}" data-desktop-mode="{{ desktopMode }}"
-					data-tablet-mode="{{ tabletMode }}" data-mobile-mode="{{ mobileMode }}">
+					data-tablet-mode="{{ tabletMode }}" data-mobile-mode="{{ mobileMode }}"
+					data-portrait-poster="{{ settings.portrait_poster_only === 'yes' ? '1' : '0' }}">
 					<div class="nmj-rv-inner">
 						<div class="nmj-rv-media-container" data-preload="{{ settings.preload || 'none' }}"
 							data-attrs="{{ boolAttrs }}">
