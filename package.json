@@ -4,7 +4,9 @@
   "description": "A growing library of custom Elementor widgets with WooCommerce support.",
   "main": "odella-elementor-widgets.php",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "check": "python deploy.py --check",
+    "deploy": "python deploy.py"
   },
   "author": "NMJ",
   "license": "GPL-2.0-or-later"
