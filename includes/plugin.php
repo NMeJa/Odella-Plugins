@@ -153,7 +153,7 @@ final class Plugin
 
     private function get_asset_version(string $path): string
     {
-        return (defined('WP_DEBUG') && WP_DEBUG && file_exists($path)) ? (string) filemtime($path) : NMJ_VERSION;
+        return file_exists($path) ? (string) filemtime($path) : NMJ_VERSION;
     }
 
     public function enqueue_frontend_assets(): void

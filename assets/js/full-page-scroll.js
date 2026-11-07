@@ -1,22 +1,19 @@
 /**
- * Full Page Scroll Widget – front-end controller
+ * Full Page Scroll Widget – Front-End Controller
  *
- * Each widget instance owns its own sections, dots and observer. Instances are
- * discovered per element rather than via document-wide queries, so two widgets
- * on one page no longer merge into each other.
+ * Features:
+ * • Full-viewport section layout with sticky header offset compensation.
+ * • Native CSS scroll-snap (`y mandatory`) combined with debounced mouse-wheel,
+ *   trackpad, and keyboard section-to-section smooth scrolling.
+ * • Side dot navigation with smooth multi-section transitions and real-time active tracking.
  */
 (function () {
     'use strict';
 
-    // Every initialised instance, so the global snap state can be recomputed
-    // from all of them rather than clobbered by whichever ran last.
     var instances = [];
     var htmlEl = document.documentElement;
-
-    // The page's own scroll-snap value, captured before we touch it, so it can
-    // be restored when the last instance goes away (e.g. a widget inside an
-    // Elementor popup that has since closed).
     var originalSnap = null;
+    var globalListenersAttached = false;
 
     function setSnap(value) {
         if (originalSnap === null) {
@@ -33,9 +30,6 @@
 
     /**
      * Recompute the document snap mode from all live instances.
-     *
-     * Instances whose sections have been removed from the DOM are dropped —
-     * this is what stops a closed popup leaving the whole page snap-scrolling.
      */
     function refreshSnap() {
         instances = instances.filter(function (inst) {
@@ -47,20 +41,225 @@
             return;
         }
 
-        // Proximity only when every live instance wants to release; any
-        // instance still holding mandatory wins.
+        // Suspend CSS scroll-snap while a programmatic smooth scroll is in flight
+        // so `scroll-snap-stop: always` on intermediate sections never blocks multi-section jumps.
+        var anyAnimating = instances.some(function (inst) { return inst.isAnimating; });
+        if (anyAnimating) {
+            htmlEl.style.scrollSnapType = 'none';
+            return;
+        }
+
         var mandatory = instances.some(function (inst) { return !inst.released; });
         setSnap(mandatory ? 'y mandatory' : 'y proximity');
     }
 
-    /* ── per-widget init ───────────────────────────────────────────────── */
+    function setActive(inst, index) {
+        if (index < 0 || index >= inst.sections.length) return;
+        inst.activeIndex = index;
+        inst.dots.forEach(function (dot, i) {
+            dot.classList.toggle('active', i === index);
+        });
+    }
+
+    function getSectionTargetY(inst, index) {
+        if (index <= 0) return 0;
+        var el = inst.sections[index];
+        if (!el) return 0;
+        var scrollY = window.pageYOffset || htmlEl.scrollTop || 0;
+        return Math.max(0, Math.round(el.getBoundingClientRect().top + scrollY));
+    }
+
+    function scrollToSection(inst, index) {
+        if (index < 0 || index >= inst.sections.length) return;
+
+        inst.released = false;
+        inst.isAnimating = true;
+        setActive(inst, index);
+        refreshSnap();
+
+        var targetY = getSectionTargetY(inst, index);
+        window.scrollTo({
+            top: targetY,
+            behavior: 'smooth'
+        });
+
+        if (inst.animTimer) clearTimeout(inst.animTimer);
+        inst.animTimer = setTimeout(function () {
+            inst.isAnimating = false;
+            refreshSnap();
+            updateActiveFromScroll(inst);
+        }, 680);
+    }
+
+    function updateActiveFromScroll(inst) {
+        if (inst.isAnimating || !inst.sections.length) return;
+
+        var scrollY = window.pageYOffset || htmlEl.scrollTop || 0;
+        var vh = window.innerHeight || htmlEl.clientHeight;
+        var probeY = scrollY + (vh * 0.42);
+
+        var bestIndex = 0;
+        for (var i = 0; i < inst.sections.length; i++) {
+            var secTop = inst.sections[i].getBoundingClientRect().top + scrollY;
+            if (secTop <= probeY) {
+                bestIndex = i;
+            }
+        }
+
+        // If scrolled to the very bottom of the document, activate last section
+        var docHeight = Math.max(
+            document.body.scrollHeight, htmlEl.scrollHeight,
+            document.body.offsetHeight, htmlEl.offsetHeight
+        );
+        if (scrollY + vh >= docHeight - 20) {
+            bestIndex = inst.sections.length - 1;
+        }
+
+        if (bestIndex !== inst.activeIndex) {
+            setActive(inst, bestIndex);
+        }
+
+        if (inst.allowPast && inst.activeIndex < inst.sections.length - 1 && inst.released) {
+            inst.released = false;
+            refreshSnap();
+        }
+    }
+
+    function attachGlobalListeners() {
+        if (globalListenersAttached) return;
+        globalListenersAttached = true;
+
+        var lastWheelTrigger = 0;
+        var lastWheelEventTime = 0;
+
+        window.addEventListener('wheel', function (e) {
+            if (!instances.length) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            // Ignore horizontal-dominant gestures (e.g. Swiper carousel trackpad swiping)
+            if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return;
+            if (Math.abs(e.deltaY) < 6) return;
+
+            // Ignore wheel events inside open modals, slide-out cart drawers, or dropdowns
+            if (e.target && e.target.closest && e.target.closest('.moderncart-slide-out-modal, #moderncart-slide-out, .elementor-popup-modal, .dialog-widget-content, .elementor-nav-menu--dropdown')) {
+                return;
+            }
+
+            var inst = instances[instances.length - 1];
+            if (!inst || !inst.sections.length) return;
+
+            var now = Date.now();
+            var timeSincePrevEvent = now - lastWheelEventTime;
+            lastWheelEventTime = now;
+
+            // If currently animating a section transition, swallow wheel momentum
+            if (inst.isAnimating) {
+                e.preventDefault();
+                return;
+            }
+
+            // Cooldown guard against continuous trackpad inertia after a transition
+            if (now - lastWheelTrigger < 750 && timeSincePrevEvent < 120) {
+                e.preventDefault();
+                return;
+            }
+
+            updateActiveFromScroll(inst);
+
+            var dir = e.deltaY > 0 ? 1 : -1;
+            var currentSec = inst.sections[inst.activeIndex];
+
+            if (currentSec) {
+                var rect = currentSec.getBoundingClientRect();
+                var vh = window.innerHeight || htmlEl.clientHeight;
+
+                // If the current section is taller than the viewport, allow natural scrolling inside it
+                // until the visitor reaches its top or bottom boundary.
+                if (rect.height > vh + 20) {
+                    if (dir > 0 && rect.bottom > vh + 12) {
+                        return;
+                    }
+                    if (dir < 0 && rect.top < -12) {
+                        return;
+                    }
+                }
+            }
+
+            var nextIndex = inst.activeIndex + dir;
+
+            if (nextIndex < 0) {
+                if ((window.pageYOffset || htmlEl.scrollTop || 0) > 5) {
+                    e.preventDefault();
+                    lastWheelTrigger = now;
+                    scrollToSection(inst, 0);
+                }
+                return;
+            }
+
+            if (nextIndex >= inst.sections.length) {
+                if (inst.allowPast && !inst.released) {
+                    inst.released = true;
+                    refreshSnap();
+                }
+                return;
+            }
+
+            e.preventDefault();
+            lastWheelTrigger = now;
+            scrollToSection(inst, nextIndex);
+        }, { passive: false });
+
+        // Keyboard navigation (ArrowDown, ArrowUp, PageDown, PageUp, Home, End)
+        window.addEventListener('keydown', function (e) {
+            if (!instances.length) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            var tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
+                return;
+            }
+
+            var inst = instances[instances.length - 1];
+            if (!inst || !inst.sections.length || inst.isAnimating) return;
+
+            if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                if (inst.activeIndex < inst.sections.length - 1) {
+                    e.preventDefault();
+                    scrollToSection(inst, inst.activeIndex + 1);
+                }
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                if (inst.activeIndex > 0) {
+                    e.preventDefault();
+                    scrollToSection(inst, inst.activeIndex - 1);
+                }
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                scrollToSection(inst, 0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                scrollToSection(inst, inst.sections.length - 1);
+            }
+        });
+
+        // Real-time scroll tracking for touch swipes and scrollbar dragging
+        var ticking = false;
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                window.requestAnimationFrame(function () {
+                    for (var i = 0; i < instances.length; i++) {
+                        updateActiveFromScroll(instances[i]);
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    }
 
     function initInstance(dataEl) {
         if (dataEl.dataset.nmjFpsReady === '1') return;
         dataEl.dataset.nmjFpsReady = '1';
 
-        // A malformed attribute used to throw here and take the whole file
-        // down with it, disabling every other instance on the page.
         var sectionsData;
         try {
             sectionsData = JSON.parse(dataEl.getAttribute('data-sections') || '[]');
@@ -75,8 +274,6 @@
         var offset = parseInt(dataEl.getAttribute('data-offset'), 10) || 0;
         var allowPast = dataEl.getAttribute('data-allow-past') === '1';
 
-        // Scoped to this widget's own root, not the document. Both the data
-        // node and the dots live inside the same widget wrapper.
         var root = dataEl.parentNode || document;
         var navDots = Array.prototype.slice.call(root.querySelectorAll('.nmj-fps-dot'));
 
@@ -84,84 +281,70 @@
             sections: [],
             dots: navDots,
             activeIndex: 0,
-            released: false
+            offset: offset,
+            allowPast: allowPast,
+            released: false,
+            isAnimating: false,
+            animTimer: null
         };
 
-        sectionsData.forEach(function (sec) {
+        sectionsData.forEach(function (sec, idx) {
             if (!sec || !sec.id) return;
             var el = document.getElementById(sec.id);
             if (!el) return;
 
-            el.style.minHeight = '100vh';
-            el.style.scrollMarginTop = '0px';
-            el.style.paddingTop = offset + 'px';
-            el.style.boxSizing = 'border-box';
-            el.style.scrollSnapAlign = 'start';
-            el.style.scrollSnapStop = 'always';
+            if (idx === 0) {
+                // First section sits directly below the sticky header in normal flow:
+                // scroll-margin-top = offset keeps its snap point at scrollY = 0 with zero layout shift.
+                el.style.setProperty('min-height', 'calc(100vh - ' + offset + 'px)', 'important');
+                el.style.setProperty('scroll-margin-top', offset + 'px', 'important');
+                el.style.setProperty('padding-top', '0px', 'important');
+                var rvInner = el.querySelector('.nmj-rv-inner');
+                if (rvInner) {
+                    rvInner.style.maxHeight = 'calc(100vh - ' + offset + 'px)';
+                }
+            } else {
+                el.style.setProperty('min-height', '100vh', 'important');
+                el.style.setProperty('scroll-margin-top', '0px', 'important');
+                el.style.setProperty('padding-top', offset + 'px', 'important');
+            }
+            el.style.setProperty('box-sizing', 'border-box', 'important');
+            el.style.setProperty('scroll-snap-align', 'start', 'important');
+            el.style.setProperty('scroll-snap-stop', 'always', 'important');
 
             inst.sections.push(el);
         });
 
         if (!inst.sections.length) return;
 
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (!entry.isIntersecting) return;
-
-                inst.activeIndex = inst.sections.indexOf(entry.target);
-                inst.dots.forEach(function (dot, i) {
-                    dot.classList.toggle('active', i === inst.activeIndex);
-                });
-
-                // Re-engage snapping as soon as a non-last section is in view.
-                if (allowPast && inst.activeIndex < inst.sections.length - 1) {
-                    inst.released = false;
-                    refreshSnap();
-                }
-            });
-        }, {
-            root: null,
-            rootMargin: '-' + offset + 'px 0px 0px 0px',
-            threshold: 0.5
-        });
-
-        inst.sections.forEach(function (el) { observer.observe(el); });
-
         inst.dots.forEach(function (dot, index) {
-            dot.addEventListener('click', function () {
-                if (!inst.sections[index]) return;
-                inst.released = false;
-                refreshSnap();
-                inst.sections[index].scrollIntoView({ behavior: 'smooth' });
+            dot.addEventListener('click', function (e) {
+                e.preventDefault();
+                scrollToSection(inst, index);
             });
         });
 
-        // Allow-past: release snapping when the visitor scrolls down from the
-        // last section, so the footer stays reachable.
         if (allowPast) {
-            var release = function () {
-                if (inst.activeIndex !== inst.sections.length - 1) return;
-                if (inst.released) return;
-                inst.released = true;
-                refreshSnap();
-            };
-
-            window.addEventListener('wheel', function (e) {
-                if (e.deltaY > 0) release();
-            }, { passive: true });
-
             var touchStartY = 0;
             window.addEventListener('touchstart', function (e) {
-                touchStartY = e.touches[0].clientY;
+                if (e.touches && e.touches.length) {
+                    touchStartY = e.touches[0].clientY;
+                }
             }, { passive: true });
 
             window.addEventListener('touchmove', function (e) {
-                if (touchStartY - e.touches[0].clientY > 30) release();
+                if (!e.touches || !e.touches.length) return;
+                if (touchStartY - e.touches[0].clientY > 30 && inst.activeIndex === inst.sections.length - 1 && !inst.released) {
+                    inst.released = true;
+                    refreshSnap();
+                }
             }, { passive: true });
         }
 
         instances.push(inst);
+        attachGlobalListeners();
         refreshSnap();
+        updateActiveFromScroll(inst);
     }
 
     function init(scope) {
@@ -172,19 +355,12 @@
         }
     }
 
-    /* ── boot ──────────────────────────────────────────────────────────── */
-
-    // readyState guard: the script is loaded in the footer and may be deferred
-    // by an optimisation plugin, in which case DOMContentLoaded has already
-    // fired and a listener would never run.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { init(); });
     } else {
         init();
     }
 
-    // Elementor editor preview + widgets arriving via AJAX (popups, filtered
-    // loops), which DOMContentLoaded alone never covers.
     if (typeof jQuery !== 'undefined') {
         jQuery(window).on('elementor/frontend/init', function () {
             if (!window.elementorFrontend || !window.elementorFrontend.hooks) return;

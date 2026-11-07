@@ -573,7 +573,7 @@ class Responsive_Video_Widget extends \Elementor\Widget_Base
 								<source media="(max-width: <?php echo esc_attr($tablet_bp); ?>px)"
 									srcset="<?php echo esc_url($poster_for['tablet']); ?>" />
 							<?php endif; ?>
-							<img src="<?php echo esc_url($server_poster); ?>" alt="" />
+							<img src="<?php echo esc_url($server_poster); ?>" alt="Odella" fetchpriority="high" decoding="async" />
 						</picture>
 					<?php endif; ?>
 				</div>

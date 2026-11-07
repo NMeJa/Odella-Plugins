@@ -22,7 +22,7 @@
 }
 
 .nmj-fps-dot.active {
-    transform: scale(1.3);
+    transform: scale(1.3) !important;
 }
 
 .nmj-fps-dot svg {

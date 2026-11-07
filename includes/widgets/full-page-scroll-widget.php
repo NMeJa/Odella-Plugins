@@ -156,7 +156,7 @@ class Full_Page_Scroll_Widget extends Widget_Base
             'type' => Controls_Manager::COLOR,
             'default' => '#7f54b3',
             'selectors' => [
-                '{{WRAPPER}} .nmj-fps-dot.active' => 'color: {{VALUE}}; fill: {{VALUE}}; transform: scale(1.3);',
+                '{{WRAPPER}} .nmj-fps-dot.active' => 'color: {{VALUE}}; fill: {{VALUE}};',
             ],
         ]);
         $this->end_controls_tab();
