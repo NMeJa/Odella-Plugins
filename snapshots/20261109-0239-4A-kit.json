@@ -1,0 +1,851 @@
+{
+  "posts": {
+    "16": {
+      "post_status": "publish",
+      "_elementor_data": "[]",
+      "_elementor_page_settings": {
+        "page_title_selector": "h1.entry-title",
+        "active_breakpoints": [
+          "viewport_mobile",
+          "viewport_mobile_extra",
+          "viewport_tablet",
+          "viewport_laptop"
+        ],
+        "viewport_mobile": 767,
+        "viewport_md": 768,
+        "viewport_mobile_extra": 991,
+        "viewport_tablet": 1279,
+        "viewport_lg": 1280,
+        "viewport_laptop": 1599,
+        "system_colors": [
+          {
+            "_id": "primary",
+            "title": "Primary"
+          },
+          {
+            "_id": "secondary",
+            "title": "Secondary"
+          },
+          {
+            "_id": "text",
+            "title": "Text"
+          },
+          {
+            "_id": "accent",
+            "title": "Accent"
+          }
+        ],
+        "system_typography": [
+          {
+            "_id": "primary",
+            "title": "Primary",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans"
+          },
+          {
+            "_id": "secondary",
+            "title": "Secondary",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans"
+          },
+          {
+            "_id": "text",
+            "title": "Text",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans"
+          },
+          {
+            "_id": "accent",
+            "title": "Accent",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans"
+          }
+        ],
+        "custom_colors": [
+          {
+            "_id": "9333735",
+            "title": "OdellaGreen",
+            "color": "#00A79D"
+          },
+          {
+            "_id": "357c029",
+            "title": "OdellaPurple",
+            "color": "#7966B1"
+          },
+          {
+            "_id": "256943e",
+            "title": "OdellaSilver",
+            "color": "#8A8D8F"
+          },
+          {
+            "_id": "a33bc50",
+            "title": "OdellaLightBlue",
+            "color": "#80C7C7"
+          },
+          {
+            "_id": "c06ceed",
+            "title": "OdellaWhite",
+            "color": "#FFFFFF"
+          },
+          {
+            "_id": "532b0c5",
+            "title": "OdellaTransparent",
+            "color": "#00000000"
+          },
+          {
+            "_id": "b220cb5",
+            "title": "OdellaOverlay",
+            "color": "#000000CC"
+          }
+        ],
+        "custom_typography": [
+          {
+            "_id": "7fabfe3",
+            "title": "H1",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 32,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 28,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 24,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 22,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 22,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "71fd946",
+            "title": "H2",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 28,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 24,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 22,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 20,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 20,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": -0.5,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "57e6e14",
+            "title": "H3",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 24,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.3,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 22,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 20,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 18,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 18,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.3,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.3,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.3,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.3,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "6271470",
+            "title": "H4",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 20,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.4,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 18,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 16,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 16,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 16,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.4,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.4,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.4,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.4,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "87d6faf",
+            "title": "H5",
+            "typography_typography": "custom",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 16,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 14,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 14,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 14,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 14,
+              "sizes": []
+            },
+            "typography_font_family": "Noto Sans",
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "18c7f5d",
+            "title": "H6",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.5,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": 0,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "7778499",
+            "title": "Body",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": "",
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            }
+          },
+          {
+            "_id": "77fde2e",
+            "title": "Paragraph",
+            "typography_typography": "custom",
+            "typography_font_family": "Noto Sans",
+            "typography_font_size": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_font_size_laptop": {
+              "unit": "px",
+              "size": 12,
+              "sizes": []
+            },
+            "typography_font_size_tablet": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_font_size_mobile_extra": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_font_size_mobile": {
+              "unit": "px",
+              "size": 11,
+              "sizes": []
+            },
+            "typography_line_height": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_laptop": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_tablet": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_mobile_extra": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_line_height_mobile": {
+              "unit": "em",
+              "size": 1.6,
+              "sizes": []
+            },
+            "typography_letter_spacing": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_laptop": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_tablet": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile_extra": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            },
+            "typography_letter_spacing_mobile": {
+              "unit": "px",
+              "size": 0.2,
+              "sizes": []
+            }
+          }
+        ],
+        "default_generic_fonts": "sans-serif",
+        "site_name": "Odella",
+        "activeItemIndex": 1,
+        "woocommerce_purchase_summary_page_id": "16119",
+        "site_logo": {
+          "url": "https://odella.ge/wp-content/uploads/Odella-Full-Logo.png",
+          "id": 15225,
+          "size": "",
+          "alt": "",
+          "source": "library"
+        },
+        "site_favicon": {
+          "url": "https://odella.ge/wp-content/uploads/FaviconOdella.png",
+          "id": 15226,
+          "size": "",
+          "alt": "",
+          "source": "library"
+        },
+        "woocommerce_cart_page_id": "4083",
+        "woocommerce_checkout_page_id": "15559",
+        "woocommerce_myaccount_page_id": "4085",
+        "woocommerce_terms_page_id": "",
+        "woocommerce_shop_page_id": "16217",
+        "hello_footer_copyright_text": "All rights reserved",
+        "site_description": "asd",
+        "body_background_background": "classic",
+        "global_image_lightbox": "",
+        "lightbox_enable_counter": "",
+        "lightbox_enable_fullscreen": "",
+        "lightbox_enable_zoom": "",
+        "lightbox_enable_share": "",
+        "lightbox_title_src": "",
+        "lightbox_description_src": "",
+        "settings_page_transitions_entrance_animation": "",
+        "settings_page_transitions_exit_animation": "",
+        "settings_page_transitions_animation_duration": {
+          "unit": "ms",
+          "size": 250,
+          "sizes": []
+        },
+        "settings_page_transitions_preloader_type": "",
+        "settings_page_transitions_preloader_animation_type": "bouncing-dots",
+        "settings_page_transitions_preloader_animation": "eicon-spin",
+        "settings_page_transitions_preloader_size": {
+          "unit": "px",
+          "size": 50,
+          "sizes": []
+        },
+        "settings_page_transitions_preloader_size_laptop": {
+          "unit": "px",
+          "size": 40,
+          "sizes": []
+        },
+        "settings_page_transitions_preloader_size_tablet": {
+          "unit": "px",
+          "size": 30,
+          "sizes": []
+        },
+        "settings_page_transitions_preloader_size_mobile_extra": {
+          "unit": "px",
+          "size": 20,
+          "sizes": []
+        },
+        "settings_page_transitions_preloader_size_mobile": {
+          "unit": "px",
+          "size": 20,
+          "sizes": []
+        },
+        "__globals__": {
+          "body_color": "globals/colors?id=256943e",
+          "link_normal_color": "globals/colors?id=256943e",
+          "h1_color": "globals/colors?id=256943e",
+          "h2_color": "globals/colors?id=256943e",
+          "h3_color": "globals/colors?id=256943e",
+          "h4_color": "globals/colors?id=256943e",
+          "h5_color": "globals/colors?id=256943e",
+          "h6_color": "globals/colors?id=256943e",
+          "h1_typography_typography": "globals/typography?id=7fabfe3",
+          "h2_typography_typography": "globals/typography?id=71fd946",
+          "h3_typography_typography": "globals/typography?id=57e6e14",
+          "h4_typography_typography": "globals/typography?id=6271470",
+          "h5_typography_typography": "globals/typography?id=87d6faf",
+          "h6_typography_typography": "globals/typography?id=18c7f5d",
+          "body_typography_typography": "globals/typography?id=7778499",
+          "link_normal_typography_typography": "globals/typography?id=7778499",
+          "link_hover_color": "globals/colors?id=a33bc50",
+          "link_hover_typography_typography": "globals/typography?id=7778499",
+          "body_background_color": "globals/colors?id=c06ceed",
+          "mobile_browser_background": "globals/colors?id=c06ceed",
+          "settings_page_transitions_background_color": "globals/colors?id=9333735",
+          "settings_page_transitions_preloader_color": "globals/colors?id=357c029"
+        },
+        "typography_enable_styleguide_preview": "yes",
+        "colors_enable_styleguide_preview": "yes"
+      }
+    }
+  },
+  "options": [],
+  "label": "4A-kit",
+  "saved_at": "2026-11-09T02:39:37"
+}
