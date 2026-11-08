@@ -21,7 +21,8 @@
 ## 3. Tech Stack & Key Plugins
 * **Core**: WordPress + WooCommerce (over 200 published products).
 * **Page Builder**: Elementor & Elementor Pro.
-  * **CSS Print Method**: Configured to **Internal** (`elementor_css_print_method: internal`) to prevent 404 race conditions with Hostinger’s Edge CDN cache.
+  * **CSS Print Method**: **External** (`elementor_css_print_method: external`). The mu-plugin inlines a local stylesheet only when the file is ≤ 2 KB. Purge order is Elementor, then LiteSpeed, then the Hostinger CDN, and `tools/probe_css.py` checks for 404s.
+  * **Page transitions**: custom. A click fades to white with the O'Della logo (200 ms out, 250 ms in, no minimum wait). Elementor Pro page transitions in kit 16 are off. Logged-out pages prefetch links at eagerness `moderate`, excluding cart, checkout, and account.
 * **Custom Widgets**: `odella-elementor-widgets` plugin (provides custom widgets: `nmj-gallery-grid`, `nmj-add-to-cart`, `nmj-product-price`, `nmj-variation-selector`).
 * **Product Filters**: `woocommerce-products-filter` (WOOF / Husky).
 * **Multilingual**: `polylang` + `connect-polylang-elementor`.
@@ -48,3 +49,4 @@
 * **Local-first owned code**: Edit the plugin in [`Odella-Plugins/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins), the mu-plugin in [`site/mu-plugins/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/mu-plugins), and the child theme in [`site/theme-child/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/theme-child). Deploy with `python tools\deploy.py --target plugin|mu|theme` (`--check`, `--no-bump`, `--rollback`). Never edit those trees on the server. Exit **2** purge failed, **3** drift, **4** smoke test failed. Remote copies of each deploy live in `~/odella-deploy-backups`.
 * All responsive layout overrides, SVG constrainers, and custom fixes are kept clean and organized in the child theme's `style.css`.
 * After updating template data or options, flush the WP object cache using `wp_cache_flush()` or `\Elementor\Plugin::$instance->files_manager->clear_cache()`.
+* **Measurement tools** (owner-run for the two that hit the live site hard): `python tools\deploy.py`, `python tools\snapshot.py`, `python tools\probe_css.py`, `python tools\warm_cache.py`, `python tools\psi.py`. PageSpeed reports go to `reports/psi-YYYYMMDD-HHMM.md`. Raw JSON stays in `reports/raw/` and is gitignored.

@@ -4,10 +4,25 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 ## Decisions
 
+### 2026-11-08 — Page transitions are custom, prefetch is moderate
+**Decision:** Logged-out pages prefetch with WordPress speculation rules at eagerness `moderate`. Cart, checkout, and account URLs stay excluded. A click fades the screen to white with the O'Della logo over 200 ms, and the next page fades in over 250 ms, with no minimum wait. Elementor Pro page transitions in kit 16 are off.  
+**Why:** Elementor's own transition added layout shift and delayed LCP. A short overlay does not wait for the next page, and a prefetched product can open from cache.  
+**Trade-off:** `prefers-reduced-motion` disables the fade. Logged-in visitors keep WordPress's own speculation setting.
+
 ### 2026-11-08 — Elementor CSS is external, small-file inline threshold is 2 KB
 **Decision:** `elementor_css_print_method` is `external`. The mu-plugin inlines a local stylesheet only when the file is ≤ 2 KB. This supersedes the 2026-11-07 decision to print Elementor CSS internally.  
 **Why:** Internal CSS repeated 270–400 KB on every page and could not be reused on the next navigation. External files are cached by the browser. The old 404 risk is guarded by the purge order (Elementor cache, then LiteSpeed, then the Hostinger CDN) and by `tools/probe_css.py`.  
 **Trade-off:** A stylesheet that is missing from the CDN 404s until the purge finishes. Generated files stay on disk after a rollback of the option.
+
+### 2026-11-08 — Product images use the six catalog sizes, capped at 2560 px
+**Decision:** Perfect Images generates thumbnail, medium_large, large, woocommerce_thumbnail, woocommerce_single, and woocommerce_gallery_thumbnail. New uploads are capped at 2560 px. The product gallery uses `woocommerce_single` and `woocommerce_gallery_thumbnail`. Store cards use the Odella Product Card size (600×900).  
+**Why:** Those sizes were disabled, so cards and the gallery fell back to originals.  
+**Trade-off:** Regenerating the library adds files on disk. Medium, 1536, 2048, and the variation-swatch sizes stay disabled.
+
+### 2026-11-08 — The homepage footer is reachable, and tall 2K screens do not snap back
+**Decision:** Full-page scroll keeps Video, Categories, Products, and Instagram as snap sections. One more scroll from Instagram reaches the footer. On a viewport at least 2000 px wide and taller than 1080 px, snap is turned off once the visitor is past Instagram.  
+**Why:** Proximity snap treated the short footer as near Instagram and pulled a tall 2K screen back up. Shorter viewports already stayed put.  
+**Trade-off:** That tall 2K case has no snap on the footer. The cart drawer and the filter drawer still scroll on their own.
 
 ### 2026-11-08 — Live Elementor is 4.3.6 / Pro 4.3.3
 **Decision:** The live site runs Elementor 4.3.6 and Elementor Pro 4.3.3. The 2026-11-07 note that Elementor was pinned at 4.2.3 / Pro 4.2.2 is historical.  
