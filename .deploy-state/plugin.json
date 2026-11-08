@@ -1,5 +1,5 @@
 {
-  "deployed_at": "2026-11-08T22:47:56Z",
+  "deployed_at": "2026-11-08T22:56:27Z",
   "hashes": {
     "assets/css/add-to-cart.css": "593a279382f591b9985b9b3c86573fff9ad5e594816b550bafdd75ae5f2fdb44",
     "assets/css/full-page-scroll.css": "e8bdc22d9ee96291fe601e280522f6af7d3b5ba51e72e7711445643b69a34fc4",
@@ -15,9 +15,10 @@
     "assets/js/page-transition.js": "b9667c068f5bcac3283dfb1eecf27988ce7554a20be2066990355d693522fc3a",
     "assets/js/product-filter.js": "9d1187126cbd5ea0850a4d7642236ab5380b70673587fc8f99e1fe83cd011093",
     "assets/js/responsive-video.js": "b10712fe40137993bc32768083acc6de867b11eb578a98d5431097d75a485be3",
+    "includes/checkout.php": "02a84fabf004bb22cc12ece09c395bbea5369569e34989cf1f601a50a2156bcd",
     "includes/filter-query.php": "0205efb475b6824ac06deaae03f6875ee59dee570a235bdda0158a4792e21a82",
-    "includes/i18n.php": "6f76498c94892eebc5cb8eaafa9820d779db8cd18822ad341159d13f7c46092c",
-    "includes/plugin.php": "109b87d5216c4d72824eb409783104f7f4b5fb29e71b894ad5a5aa9dad8e4181",
+    "includes/i18n.php": "5f434293a56d0296cee4eece3bfb9459bcf01394f19c68e1774284e549c49a56",
+    "includes/plugin.php": "87a053fe2407873c17188a8fb49b76e7e9b8d66494dde8eb5a4fbe46643e02f9",
     "includes/product-index.php": "1bf30d43e9c1a32ed1a1eca9dd169f7164a351467aacbc20ff7c62697ab031ba",
     "includes/related-products.php": "de802d7c752cedf23026387d943d709048a6fd85a7655ba71eae804b4704e85f",
     "includes/widgets/add-to-cart-widget.php": "69b7ed8cb6fa8f807568da4bc5f3a56df8bad42bf8cdf700d57dabf41e9f9bfe",
@@ -29,7 +30,7 @@
     "includes/widgets/traits/atc-content-controls.php": "00fba93feda8c09402f5e0470e469fc48b10172e9cdc0c3c69ac24baf21f9be5",
     "includes/widgets/traits/atc-style-controls.php": "e22a20b99f22decb46abb1ce768c70f077a55d720953bcb326f508d8859c2b6f",
     "includes/widgets/variation-selector-widget.php": "4594d6bf2702e51299c4de55f9b9eb060a65e84c40b7e64dd20b7a54eacae71f",
-    "odella-elementor-widgets.php": "30cfd7797e2a644ca1b9a3645e71e651589c9c3fdc1c76d599272a8f75792bc9"
+    "odella-elementor-widgets.php": "42ca13bf366145adeafe37ddbee962e036f14dcb2e692a6b3e9179475ca53967"
   },
   "target": "plugin"
 }

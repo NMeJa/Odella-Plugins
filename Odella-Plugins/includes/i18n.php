@@ -31,6 +31,10 @@ function nmj_catalog(): array
         'sort_price_desc'  => ['ka' => 'ფასი: კლებადობით',        'en' => 'Price: high to low'],
         'all_products'     => ['ka' => 'ყველა პროდუქტი',          'en' => 'All products'],
         'products_count'   => ['ka' => '%d პროდუქტი',             'en' => '%d products'],
+        'phone_ge_invalid' => [
+            'ka' => 'შეიყვანეთ სწორი მობილურის ნომერი: 9 ციფრი, იწყება 5-ით',
+            'en' => 'Enter a valid Georgian mobile number: 9 digits starting with 5',
+        ],
     ];
 }
 

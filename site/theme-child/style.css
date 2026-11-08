@@ -843,3 +843,27 @@ button.e-911c107-cd191c2 svg {
 .elementor-element-c490a4e.e-load-more-pagination-end .e-load-more-message:empty {
     display: none !important;
 }
+
+/* ==========================================================================
+   Checkout phone (intl-tel-input)
+   ========================================================================== */
+
+/* Hello Elementor's global <button> styles break intl-tel-input's country button */
+.iti .iti__selected-country,
+.iti .iti__selected-country:hover,
+.iti .iti__selected-country:focus {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+  white-space: nowrap;
+}
+.iti .iti__selected-country-primary { padding: 0 6px 0 12px; }
+.iti .iti__selected-dial-code { margin-left: 4px; color: var(--e-global-color-256943e); }
+.iti .iti__selected-country:focus-visible { outline: 2px solid var(--e-global-color-9333735); outline-offset: -2px; }
