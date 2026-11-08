@@ -133,6 +133,7 @@ final class Plugin
         'gallery-grid-widget' => \NMJ\Widgets\Gallery_Grid_Widget::class,
         'variation-selector-widget' => \NMJ\Widgets\Variation_Selector_Widget::class,
         'responsive-video-widget' => \NMJ\Widgets\Responsive_Video_Widget::class,
+        'product-filter-widget' => \NMJ\Widgets\Product_Filter_Widget::class,
     ];
 
     public function register_widgets(\Elementor\Widgets_Manager $manager): void
@@ -178,6 +179,7 @@ final class Plugin
             'nmj-responsive-video'     => 'assets/css/responsive-video.css',
             'nmj-product-price'        => 'assets/css/product-price.css',
             'nmj-variation-selector'   => 'assets/css/variation-selector.css',
+            'nmj-product-filter'       => 'assets/css/product-filter.css',
         ] as $handle => $rel_path) {
             $abs = NMJ_PATH . $rel_path;
             wp_register_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
@@ -201,6 +203,16 @@ final class Plugin
 
         $rv_js_path = NMJ_PATH . 'assets/js/responsive-video.js';
         wp_register_script('nmj-responsive-video', NMJ_URL . 'assets/js/responsive-video.js', [], $this->get_asset_version($rv_js_path), true);
+
+        $pf_js_path = NMJ_PATH . 'assets/js/product-filter.js';
+        wp_register_script('nmj-product-filter', NMJ_URL . 'assets/js/product-filter.js', ['elementor-frontend'], $this->get_asset_version($pf_js_path), true);
+        wp_localize_script('nmj-product-filter', 'nmjPf', [
+            'showing' => nmj_t('showing_x_of_y'),
+            'showing_ka' => nmj_catalog()['showing_x_of_y']['ka'],
+            'showing_en' => nmj_catalog()['showing_x_of_y']['en'],
+            'nothingFound' => nmj_t('nothing_found'),
+            'searchAll' => nmj_t('search_all_store'),
+        ]);
 
         if ($this->skip_page_transition()) {
             return;
@@ -263,6 +275,7 @@ final class Plugin
             'nmj-responsive-video'     => 'assets/css/responsive-video.css',
             'nmj-product-price'        => 'assets/css/product-price.css',
             'nmj-variation-selector'   => 'assets/css/variation-selector.css',
+            'nmj-product-filter'       => 'assets/css/product-filter.css',
         ] as $handle => $rel_path) {
             $abs = NMJ_PATH . $rel_path;
             wp_enqueue_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
