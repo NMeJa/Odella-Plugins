@@ -246,6 +246,13 @@ class Product_Price_Widget extends Widget_Base
             return;
         }
 
+        if ($product->get_price() === '') {
+            if (\Elementor\Plugin::$instance->editor->is_edit_mode()) {
+                echo '<div class="nmj-product-price-wrapper"><p style="color:orange;font-size:13px;">No price, so this box is hidden.</p></div>';
+            }
+            return;
+        }
+
         $allowed_tags = ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span'];
         $tag = in_array($settings['price_tag'], $allowed_tags, true) ? $settings['price_tag'] : 'div';
         $in_stock = $product->is_in_stock();

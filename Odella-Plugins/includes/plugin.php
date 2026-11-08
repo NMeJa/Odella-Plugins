@@ -101,6 +101,9 @@ final class Plugin
         //     because wp_die() in the catch block prevents finally from running.
         $html = '';
         try {
+            // The template's add-to-cart and price widgets call
+            // nmj_product_offers_purchase() and render nothing when this
+            // product cannot be bought.
             $html = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display($template_id);
         } catch (\Throwable $e) {
             wp_reset_postdata();
@@ -285,4 +288,26 @@ final class Plugin
             wp_enqueue_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
         }
     }
+}
+
+/**
+ * Whether the storefront may offer this product for purchase.
+ *
+ * Simple products follow WooCommerce. A variable product stays available
+ * when at least one variation is purchasable; the chosen variation still
+ * decides the button. A parent with no purchasable variation is hidden.
+ */
+function nmj_product_offers_purchase(\WC_Product $product): bool
+{
+    if ($product->is_type('variable')) {
+        foreach ($product->get_children() as $child_id) {
+            $variation = wc_get_product($child_id);
+            if ($variation instanceof \WC_Product && $variation->is_purchasable()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    return $product->is_purchasable();
 }

@@ -147,6 +147,11 @@ class Add_To_Cart_Widget extends Widget_Base
             return;
         }
 
+        if (!\NMJ\nmj_product_offers_purchase($product)) {
+            $this->editor_notice('This product cannot be purchased, so the button is hidden.');
+            return;
+        }
+
         // Settings
         $in_stock = $product->is_in_stock();
         $is_var = $product->is_type('variable');
