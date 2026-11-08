@@ -189,13 +189,14 @@ class Add_To_Cart_Widget extends Widget_Base
         }
 
         // ── Resolve current text ──────────────────────────────────────────
+        // Empty or English-default labels follow nmj_t(). A custom label stays.
         $text_map = [
             'in-stock' => $s['in_stock_text'] ?? '',
             'added' => $s['added_text'] ?? '',
-            'oos' => $s['out_of_stock_text'] ?? '',
+            'oos' => nmj_setting_text((string) ($s['out_of_stock_text'] ?? ''), 'out_of_stock'),
             'awaiting' => ($is_var && $var_beh === 'quick_view')
-                ? ($s['quick_view_text'] ?? '')
-                : ($s['awaiting_text'] ?? ''),
+                ? nmj_setting_text((string) ($s['quick_view_text'] ?? ''), 'quick_view')
+                : nmj_setting_text((string) ($s['awaiting_text'] ?? ''), 'select_option'),
         ];
         $cur_text = $text_map[$state];
 

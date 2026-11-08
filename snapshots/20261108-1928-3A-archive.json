@@ -1,0 +1,14 @@
+{
+  "posts": {
+    "15580": {
+      "post_status": "publish",
+      "_elementor_data": "[{\"id\":\"5c6bb48\",\"elType\":\"container\",\"settings\":{\"width\":{\"unit\":\"%\",\"size\":\"\"},\"_flex_size\":\"none\",\"_element_width\":\"initial\",\"flex_gap\":{\"column\":\"\",\"row\":\"\",\"isLinked\":true,\"unit\":\"px\",\"size\":null},\"presetTitle\":\"Container\",\"presetIcon\":\"eicon-container\"},\"elements\":[{\"id\":\"c490a4e\",\"elType\":\"widget\",\"settings\":{\"template_id\":\"14786\",\"alternate_templates\":[{\"template_id\":null,\"_id\":\"dac60e9\"}],\"post_query_post_type\":\"current_query\",\"post_query_query_id\":\"products-loop\",\"pagination_page_limit\":\"5\",\"pagination_prev_label\":\"Previous\",\"pagination_next_label\":\"Next\",\"text\":\"Load More\",\"load_more_no_posts_custom_message\":\"No more posts to show\",\"nothing_found_message_text\":\"It seems we can\\u2019t find what you\\u2019re looking for.\",\"_title\":\"Product Archive\",\"_skin\":\"product\",\"equal_height\":\"yes\",\"_jsf_no_result_text\":\"Sorry, nothing to see here...\",\"columns\":4,\"posts_per_page\":24,\"_jsf_filterable\":\"yes\",\"product_query_post_type\":\"current_query\",\"_css_classes\":\"page-content\",\"pagination_type\":\"load_more_on_click\",\"columns_mobile\":2},\"elements\":[],\"widgetType\":\"loop-grid\"},{\"id\":\"816677c\",\"elType\":\"widget\",\"settings\":{\"shortcode\":\" [woof_slideout image=https:\\/\\/odella.ge\\/wp-content\\/uploads\\/Filter-Hover.svg image_h=50 image_w=50 location=left speed=100 action=click offset=30% onloadslideout=false width=300px ][\\/woof_slideout] \"},\"elements\":[],\"widgetType\":\"shortcode\"}],\"isInner\":false}]",
+      "_elementor_page_settings": {
+        "page_template": "elementor_header_footer"
+      }
+    }
+  },
+  "options": [],
+  "label": "3A-archive",
+  "saved_at": "2026-11-08T19:28:20"
+}

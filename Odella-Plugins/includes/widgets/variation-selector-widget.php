@@ -531,7 +531,7 @@ class Variation_Selector_Widget extends Widget_Base
         $widget_id = $this->get_id();
 
         $clear_pos = $settings['clear_position'] ?? 'onbottom';
-        $clear_text = $settings['clear_text'] ?? 'Clear';
+        $clear_text = nmj_setting_text((string) ($settings['clear_text'] ?? ''), 'clear');
         $clear_tag = $settings['clear_tag'] ?? 'span';
         $icon_pos = $settings['clear_icon_position'] ?? 'left';
 

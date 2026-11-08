@@ -250,6 +250,7 @@ class Product_Price_Widget extends Widget_Base
         $tag = in_array($settings['price_tag'], $allowed_tags, true) ? $settings['price_tag'] : 'div';
         $in_stock = $product->is_in_stock();
         $price_html = $product->get_price_html();
+        $oos_text = nmj_setting_text((string) ($settings['out_of_stock_text'] ?? ''), 'out_of_stock');
 
         // Both nodes are always rendered; the inactive one is hidden with the
         // --hidden modifier. The JS variation handlers toggle between them, so
@@ -271,7 +272,7 @@ class Product_Price_Widget extends Widget_Base
                 <?php echo wp_kses_post($price_html); ?>
             </<?php echo $tag; ?>>
             <<?php echo $tag; ?> class="nmj-price-oos<?php echo esc_attr($oos_hidden); ?>">
-                <?php echo esc_html($settings['out_of_stock_text']); ?>
+                <?php echo esc_html($oos_text); ?>
             </<?php echo $tag; ?>>
         </div>
         <?php

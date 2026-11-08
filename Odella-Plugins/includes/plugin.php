@@ -9,6 +9,8 @@ namespace NMJ;
 
 defined('ABSPATH') || exit;
 
+require_once NMJ_PATH . 'includes/i18n.php';
+
 final class Plugin
 {
 

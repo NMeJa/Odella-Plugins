@@ -1,5 +1,5 @@
 {
-  "deployed_at": "2026-11-08T12:07:59Z",
+  "deployed_at": "2026-11-08T15:29:30Z",
   "hashes": {
     "assets/css/add-to-cart.css": "593a279382f591b9985b9b3c86573fff9ad5e594816b550bafdd75ae5f2fdb44",
     "assets/css/full-page-scroll.css": "e8bdc22d9ee96291fe601e280522f6af7d3b5ba51e72e7711445643b69a34fc4",
@@ -13,16 +13,17 @@
     "assets/js/gallery-grid.js": "82ab91b83f67722290e2af55d9fcb5dff20b5cdc5982b9eb27ee43e5eda4fe25",
     "assets/js/page-transition.js": "b9667c068f5bcac3283dfb1eecf27988ce7554a20be2066990355d693522fc3a",
     "assets/js/responsive-video.js": "b10712fe40137993bc32768083acc6de867b11eb578a98d5431097d75a485be3",
-    "includes/plugin.php": "5ebd1f49e78407c265bdf5c06bf7cb0f8df53348d578d3c6a8bcac4ec73fe8c2",
-    "includes/widgets/add-to-cart-widget.php": "51e7ad7c2a5df7c369c621cff2af5a997a38af0526275ad722cec7304d47b152",
+    "includes/i18n.php": "6f76498c94892eebc5cb8eaafa9820d779db8cd18822ad341159d13f7c46092c",
+    "includes/plugin.php": "684087a421009dff3b92c3eea7fccacc1fb02c1e508246b9da882c7c46bc668b",
+    "includes/widgets/add-to-cart-widget.php": "977ae96b938761f984e83e183c637e64abefc409b1dcdb859e9f1537c895a58e",
     "includes/widgets/full-page-scroll-widget.php": "d994a971992b976b687b04879779fda326d9b3ba87a0bfb31bdcac57e9ce8072",
     "includes/widgets/gallery-grid-widget.php": "e3a39de7b8b529511647ad5aa2bc3ef3c86d087955214fae919457b0e804594f",
-    "includes/widgets/product-price-widget.php": "f1d356f53c71dddf12fa15eaf59bad6f995ee23fadddd907cb98e9e7a8e1a3b8",
+    "includes/widgets/product-price-widget.php": "7cdcfc5fd7a10f90f2bbcd1e3cef79c6da362ad1fa7465ac0657ddd3d4d57778",
     "includes/widgets/responsive-video-widget.php": "785a1b5714cbdaa946b18a8e31e6eacefcf3dee272f99caaba2e060574290fb1",
     "includes/widgets/traits/atc-content-controls.php": "00fba93feda8c09402f5e0470e469fc48b10172e9cdc0c3c69ac24baf21f9be5",
     "includes/widgets/traits/atc-style-controls.php": "e22a20b99f22decb46abb1ce768c70f077a55d720953bcb326f508d8859c2b6f",
-    "includes/widgets/variation-selector-widget.php": "b83480046313c1b03bbd55e08ef56da4781506785b965636c587430718882a33",
-    "odella-elementor-widgets.php": "b242bde8909c5233b41725e517fbbf8e3dec49e8e9b76712b62cac948eee2584"
+    "includes/widgets/variation-selector-widget.php": "4594d6bf2702e51299c4de55f9b9eb060a65e84c40b7e64dd20b7a54eacae71f",
+    "odella-elementor-widgets.php": "dcedfee05c4d2121d802534da1a5344b0ad482b19e59ac3e4a1363ee4115b34e"
   },
   "target": "plugin"
 }

@@ -740,3 +740,106 @@ button.e-911c107-cd191c2 svg {
     border-color: #212121 !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
 }
+
+/* ==========================================================================
+   Phase 3A — archive Load More (element c490a4e)
+   The block above uses !important, so these overrides do too.
+   ========================================================================== */
+.elementor-element-c490a4e > .elementor-widget-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.elementor-element-c490a4e > .elementor-widget-container > .elementor-loop-container {
+    flex: 1 0 100%;
+    order: 0;
+}
+
+.elementor-element-c490a4e .e-load-more-anchor {
+    flex: 1 0 100%;
+    order: 1;
+    height: 0;
+}
+
+.elementor-element-c490a4e .e-load-more-spinner {
+    display: none !important;
+    order: 2;
+}
+
+.elementor-element-c490a4e .e-loop__load-more {
+    order: 3;
+    width: auto !important;
+    margin: 40px 0 60px !important;
+}
+
+.elementor-element-c490a4e .e-load-more-message {
+    flex: 1 0 100%;
+    order: 4;
+}
+
+.elementor-element-c490a4e .e-loop__load-more .elementor-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px;
+    background: transparent !important;
+    color: var(--e-global-color-9333735) !important;
+    border: 1.5px solid var(--e-global-color-9333735) !important;
+    border-radius: 999px !important;
+    padding: 12px 32px !important;
+    font-family: "Noto Sans", sans-serif !important;
+    font-weight: 500 !important;
+    transition: background-color .2s, color .2s !important;
+    box-shadow: none !important;
+}
+
+.elementor-element-c490a4e .e-loop__load-more .elementor-button:hover,
+.elementor-element-c490a4e .e-loop__load-more .elementor-button:focus-visible {
+    background: var(--e-global-color-9333735) !important;
+    color: #fff !important;
+    border-color: var(--e-global-color-9333735) !important;
+    box-shadow: none !important;
+}
+
+.elementor-element-c490a4e.e-load-more-pagination-loading > .elementor-widget-container > .e-loop__load-more .elementor-button-content-wrapper {
+    visibility: visible !important;
+}
+
+.elementor-element-c490a4e .e-loop__load-more .elementor-button > .e-load-more-spinner {
+    order: -1;
+    flex: 0 0 16px;
+    margin: 0 !important;
+}
+
+.elementor-element-c490a4e.e-load-more-pagination-loading .e-load-more-spinner {
+    position: static !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+.elementor-element-c490a4e.e-load-more-pagination-loading .e-load-more-spinner svg {
+    display: block !important;
+    width: 16px;
+    height: 16px;
+    fill: var(--e-global-color-9333735);
+}
+
+.elementor-element-c490a4e.e-load-more-pagination-loading .e-load-more-spinner svg path {
+    fill: var(--e-global-color-9333735);
+}
+
+.elementor-element-c490a4e.e-load-more-pagination-end .e-loop__load-more,
+.elementor-element-c490a4e.e-load-more-pagination-end .e-load-more-spinner {
+    display: none !important;
+}
+
+.elementor-element-c490a4e.e-load-more-pagination-end .e-load-more-message:empty {
+    display: none !important;
+}
