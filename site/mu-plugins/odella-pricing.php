@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Odella Pricing Guards (MU)
- * Description: Hides published products that have no GEL price from the catalog and search, and reveals them again when a price is saved.
+ * Description: Hides published products that have no GEL price from the catalog and search, reveals them when a price is saved, and keeps newly unpriced products as drafts.
  * Version: 1.0.0
  */
 
@@ -103,10 +103,21 @@ function odella_pricing_queue( int $product_id = 0, bool $take = false ): array 
 }
 
 /**
+ * True while this plugin is writing a product, so those writes are not processed again.
+ */
+function odella_pricing_recursion( $value = null ): bool {
+    static $flag = false;
+    if ( is_bool( $value ) ) {
+        $flag = $value;
+    }
+    return $flag;
+}
+
+/**
  * Queue a product. Variation writes are tracked on the parent.
  */
 function odella_pricing_collect( int $post_id ): void {
-    if ( $post_id <= 0 ) {
+    if ( $post_id <= 0 || odella_pricing_recursion() ) {
         return;
     }
     $post = get_post( $post_id );
@@ -135,8 +146,101 @@ function odella_pricing_rebuild_price_if_needed( int $product_id ): void {
     }
     $product = wc_get_product( $product_id );
     if ( $product instanceof WC_Product ) {
-        $product->save();
+        odella_pricing_recursion( true );
+        try {
+            $product->save();
+        } finally {
+            odella_pricing_recursion( false );
+        }
     }
+}
+
+/**
+ * A product published with no price in this request goes back to Draft.
+ * Products already marked `_odella_auto_hidden` are the legacy unpriced
+ * catalog and stay published.
+ */
+function odella_pricing_keep_unpriced_as_draft( int $product_id ): void {
+    $post = get_post( $product_id );
+    if ( ! $post || 'product' !== $post->post_type || 'publish' !== $post->post_status ) {
+        return;
+    }
+    if ( get_post_meta( $product_id, '_odella_auto_hidden', true ) ) {
+        return;
+    }
+    $product = wc_get_product( $product_id );
+    if ( ! $product instanceof WC_Product || odella_product_has_price( $product ) ) {
+        return;
+    }
+
+    odella_pricing_recursion( true );
+    try {
+        $result = wp_update_post(
+            array(
+                'ID'          => $product_id,
+                'post_status' => 'draft',
+            ),
+            true
+        );
+    } finally {
+        odella_pricing_recursion( false );
+    }
+    if ( is_wp_error( $result ) || ! $result ) {
+        return;
+    }
+
+    $user_id = (int) get_current_user_id();
+    if ( $user_id <= 0 ) {
+        return;
+    }
+    $key = 'odella_unpriced_drafted_' . $user_id;
+    $ids = get_transient( $key );
+    if ( ! is_array( $ids ) ) {
+        $ids = array();
+    }
+    $ids[] = $product_id;
+    set_transient( $key, array_values( array_unique( array_map( 'intval', $ids ) ) ), DAY_IN_SECONDS );
+}
+
+/**
+ * Yellow notice on every wp-admin screen. One view, then the transient is gone.
+ */
+function odella_pricing_admin_notice(): void {
+    $user_id = (int) get_current_user_id();
+    if ( $user_id <= 0 ) {
+        return;
+    }
+    $key = 'odella_unpriced_drafted_' . $user_id;
+    $ids = get_transient( $key );
+    if ( ! is_array( $ids ) || ! $ids ) {
+        return;
+    }
+    delete_transient( $key );
+
+    $label = 0 === strpos( (string) get_user_locale(), 'ka' )
+        ? 'შენახულია მონახაზად, რადგან ფასი არ აქვს:'
+        : 'Kept as Draft because they have no price:';
+
+    $links = array();
+    foreach ( $ids as $id ) {
+        $id    = (int) $id;
+        $title = get_the_title( $id );
+        if ( ! is_string( $title ) || '' === $title ) {
+            $title = '#' . $id;
+        }
+        $text = $title . ' (' . $id . ')';
+        $url  = get_edit_post_link( $id, 'raw' );
+        if ( $url ) {
+            $links[] = '<a href="' . esc_url( $url ) . '">' . esc_html( $text ) . '</a>';
+        } else {
+            $links[] = esc_html( $text );
+        }
+    }
+    if ( ! $links ) {
+        return;
+    }
+
+    echo '<div class="notice notice-warning"><p>' . esc_html( $label ) . ' ' . implode( ', ', $links ) . '</p></div>';
 }
 
 /**
@@ -157,6 +261,7 @@ function odella_pricing_on_shutdown(): void {
         }
         foreach ( $ids as $product_id ) {
             odella_pricing_rebuild_price_if_needed( $product_id );
+            odella_pricing_keep_unpriced_as_draft( $product_id );
             odella_sync_unpriced_visibility( $product_id );
         }
         $guard++;
@@ -280,4 +385,5 @@ add_action(
 );
 
 add_action( 'shutdown', 'odella_pricing_on_shutdown' );
+add_action( 'admin_notices', 'odella_pricing_admin_notice' );
 add_filter( 'rank_math/frontend/robots', 'odella_pricing_robots' );
