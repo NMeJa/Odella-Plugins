@@ -36,6 +36,11 @@ function hello_elementor_child_scripts_styles() {
 add_action( 'wp_enqueue_scripts', 'hello_elementor_child_scripts_styles', 999 );
 
 /**
+ * Pages show their own Georgian headings; Hello's automatic (often English) title is not used.
+ */
+add_filter( 'hello_elementor_page_title', '__return_false' );
+
+/**
  * Shortcode to display the current year [odella_current_year]
  */
 add_shortcode('odella_current_year', function() {
