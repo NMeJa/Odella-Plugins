@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
  * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, conditionally dequeues heavy filter assets on non-catalog pages, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.1.0
+ * Version: 1.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -115,7 +115,7 @@ function odella_is_catalog_filter_page(): bool {
 
 /**
  * 5. Preload LCP Hero Banner & Pre-Apply Full-Page-Scroll Section Geometry on Homepage.
- *    Pre-applying #video/#categories/#products/#instagram/#footer-id geometry in <head> prevents
+ *    Pre-applying #video/#categories/#products/#instagram geometry in <head> prevents
  *    full-page-scroll.js from shifting .nmj-rv-inner down by 60-122px on DOMContentLoaded (eliminates 0.066 CLS).
  */
 add_action( 'wp_head', function() {
@@ -130,7 +130,8 @@ add_action( 'wp_head', function() {
            . 'html{scroll-snap-type:y mandatory}'
            . '#video{min-height:calc(100vh - 60px)!important;scroll-margin-top:60px!important;padding-top:0px!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}'
            . '#video .nmj-rv-inner{max-height:calc(100vh - 60px)}'
-           . '#categories,#products,#instagram,#footer-id{min-height:100vh!important;scroll-margin-top:0px!important;padding-top:60px!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}'
+           . '#categories,#products,#instagram{min-height:100vh!important;scroll-margin-top:0px!important;padding-top:60px!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}'
+           . '#footer-id{scroll-snap-align:end!important;scroll-snap-stop:normal!important}'
            . '</style>' . "\n";
     }
 }, 1 );

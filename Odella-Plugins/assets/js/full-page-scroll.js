@@ -69,6 +69,35 @@
         return Math.max(0, Math.round(el.getBoundingClientRect().top + scrollY));
     }
 
+    function isPastLastSection(inst) {
+        var lastTop = getSectionTargetY(inst, inst.sections.length - 1);
+        var scrollY = window.pageYOffset || htmlEl.scrollTop || 0;
+        return scrollY > lastTop + 24;
+    }
+
+    function documentEndY() {
+        var height = Math.max(
+            document.body.scrollHeight, htmlEl.scrollHeight,
+            document.body.offsetHeight, htmlEl.offsetHeight
+        );
+        var vh = window.innerHeight || htmlEl.clientHeight;
+        return Math.max(0, height - vh);
+    }
+
+    function scrollToDocumentEnd(inst) {
+        inst.released = true;
+        inst.isAnimating = true;
+        setActive(inst, inst.sections.length - 1);
+        refreshSnap();
+        window.scrollTo({ top: documentEndY(), behavior: 'smooth' });
+        if (inst.animTimer) clearTimeout(inst.animTimer);
+        inst.animTimer = setTimeout(function () {
+            inst.isAnimating = false;
+            refreshSnap();
+            updateActiveFromScroll(inst);
+        }, 680);
+    }
+
     function scrollToSection(inst, index) {
         if (index < 0 || index >= inst.sections.length) return;
 
@@ -185,6 +214,13 @@
                 }
             }
 
+            if (dir < 0 && inst.allowPast && isPastLastSection(inst)) {
+                e.preventDefault();
+                lastWheelTrigger = now;
+                scrollToSection(inst, inst.sections.length - 1);
+                return;
+            }
+
             var nextIndex = inst.activeIndex + dir;
 
             if (nextIndex < 0) {
@@ -197,9 +233,10 @@
             }
 
             if (nextIndex >= inst.sections.length) {
-                if (inst.allowPast && !inst.released) {
-                    inst.released = true;
-                    refreshSnap();
+                if (inst.allowPast && !isPastLastSection(inst)) {
+                    e.preventDefault();
+                    lastWheelTrigger = now;
+                    scrollToDocumentEnd(inst);
                 }
                 return;
             }
@@ -223,12 +260,19 @@
             if (!inst || !inst.sections.length || inst.isAnimating) return;
 
             if (e.key === 'ArrowDown' || e.key === 'PageDown') {
-                if (inst.activeIndex < inst.sections.length - 1) {
+                var gap = documentEndY() - (window.pageYOffset || htmlEl.scrollTop || 0);
+                if (inst.allowPast && inst.activeIndex >= inst.sections.length - 1 && gap > 24) {
+                    e.preventDefault();
+                    scrollToDocumentEnd(inst);
+                } else if (inst.activeIndex < inst.sections.length - 1) {
                     e.preventDefault();
                     scrollToSection(inst, inst.activeIndex + 1);
                 }
             } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
-                if (inst.activeIndex > 0) {
+                if (inst.allowPast && isPastLastSection(inst)) {
+                    e.preventDefault();
+                    scrollToSection(inst, inst.sections.length - 1);
+                } else if (inst.activeIndex > 0) {
                     e.preventDefault();
                     scrollToSection(inst, inst.activeIndex - 1);
                 }
@@ -337,6 +381,16 @@
                 if (touchStartY - e.touches[0].clientY > 30 && inst.activeIndex === inst.sections.length - 1 && !inst.released) {
                     inst.released = true;
                     refreshSnap();
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', function (e) {
+                if (!e.changedTouches || !e.changedTouches.length || inst.isAnimating) return;
+                var dy = touchStartY - e.changedTouches[0].clientY;
+                if (dy > 30 && inst.activeIndex === inst.sections.length - 1 && !isPastLastSection(inst)) {
+                    scrollToDocumentEnd(inst);
+                } else if (dy < -30 && isPastLastSection(inst)) {
+                    scrollToSection(inst, inst.sections.length - 1);
                 }
             }, { passive: true });
         }

@@ -1,5 +1,5 @@
 {
-  "deployed_at": "2026-11-08T09:28:52Z",
+  "deployed_at": "2026-11-08T10:01:57Z",
   "hashes": {
     "assets/css/add-to-cart.css": "593a279382f591b9985b9b3c86573fff9ad5e594816b550bafdd75ae5f2fdb44",
     "assets/css/full-page-scroll.css": "e8bdc22d9ee96291fe601e280522f6af7d3b5ba51e72e7711445643b69a34fc4",
@@ -8,7 +8,7 @@
     "assets/css/responsive-video.css": "f6efe29d98b9ceb4286e10cdffc6b78cccba954755fa415f5fd6b18a34bd609d",
     "assets/css/variation-selector.css": "d1d0fec70ddfdc4ee955a557207c8bbb12902f060e1edfc9d97f8ff9ea5fc538",
     "assets/js/add-to-cart.js": "0e4c824d36de9e4d95756887a8f744a5479f0e850527d821e62d649774830568",
-    "assets/js/full-page-scroll.js": "343cf25967912f5b03f10aacfa1f1f9765921860f12c12aac790043b4ec0034c",
+    "assets/js/full-page-scroll.js": "f77a6f7a3c2f99f3aea1696ca7df8dfbcbca33bae537a3a8e4ac93d7ce90bcfd",
     "assets/js/gallery-grid.js": "82ab91b83f67722290e2af55d9fcb5dff20b5cdc5982b9eb27ee43e5eda4fe25",
     "assets/js/responsive-video.js": "b10712fe40137993bc32768083acc6de867b11eb578a98d5431097d75a485be3",
     "includes/plugin.php": "58b87e344a566da8ad831f46f90d04c859803b0bf0c37a04742db17e54815047",
@@ -20,7 +20,7 @@
     "includes/widgets/traits/atc-content-controls.php": "00fba93feda8c09402f5e0470e469fc48b10172e9cdc0c3c69ac24baf21f9be5",
     "includes/widgets/traits/atc-style-controls.php": "e22a20b99f22decb46abb1ce768c70f077a55d720953bcb326f508d8859c2b6f",
     "includes/widgets/variation-selector-widget.php": "b83480046313c1b03bbd55e08ef56da4781506785b965636c587430718882a33",
-    "odella-elementor-widgets.php": "e4b44668bae1ef77fa5fc8c034983b16070e946df1ad00d4010557500908cc7d"
+    "odella-elementor-widgets.php": "1f924cdc7153e514c72023af7edb7128f5c08bd3e6b5c1316044b715bd041627"
   },
   "target": "plugin"
 }
