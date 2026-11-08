@@ -54,6 +54,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Why:** Eliminates ~600 ms of PHP plugin initialization overhead and removes 59 unnecessary CSS/JS HTTP requests from the homepage and single product pages without affecting `/wp-admin/` workflows or store catalog filtering.  
 **Trade-off:** If a WOOF filter widget is ever placed on a new custom page outside the standard WooCommerce shop/archive/store routes, its page ID/slug should be added to `odella_is_catalog_filter_page()` in `odella-performance.php`.
 
+### 2026-11-08 — WOOF is deactivated; delete it on 2026-11-22
+**Decision:** The store archive uses the Odella Product Filter widget. WOOF (`woocommerce-products-filter`) is deactivated and left installed. Delete it on 2026-11-22 if no rollback was needed (`wp plugin delete woocommerce-products-filter`), and delete popup `16255` then.  
+**Why:** The new filter uses real category URLs. WOOF stays installed for two weeks so it can be switched back on.  
+**Trade-off:** The plugin files remain on disk until 2026-11-22.
+
 ### 2026-11-07 — Plugin Suite Consolidation & Elementor Version Pinning
 **Decision:** Deactivated 6 unused active plugins (`bulk-edit-posts-on-frontend-premium`, `bulk-edit-custom-tables-premium`, `wp-sheet-editor-automations-premium`, `woo-orders-spreadsheet-table-premium`, `members`, `hostinger`), deleted 4 unused inactive plugins (`yellow-pencil-visual-theme-customizer`, `user-role-editor`, `hostinger-auto-updates-plugin-HJvuAkspeVr3jRxn`, `wp-sheet-editor-polylang`), and updated `seo-by-rank-math` to `1.0.281`. Elementor was held at 4.2.3 / Pro 4.2.2 on this date. That pin is no longer the live pair — see 2026-11-08.  
 **Why:** Updating Elementor Core without a matching Elementor Pro build introduces breaking Atomic Widget changes and risks overwriting the local license initialization fix.  

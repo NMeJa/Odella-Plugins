@@ -12,6 +12,7 @@ defined('ABSPATH') || exit;
 require_once NMJ_PATH . 'includes/i18n.php';
 require_once NMJ_PATH . 'includes/related-products.php';
 require_once NMJ_PATH . 'includes/filter-query.php';
+require_once NMJ_PATH . 'includes/product-index.php';
 
 final class Plugin
 {
@@ -212,6 +213,9 @@ final class Plugin
             'showing_en' => nmj_catalog()['showing_x_of_y']['en'],
             'nothingFound' => nmj_t('nothing_found'),
             'searchAll' => nmj_t('search_all_store'),
+            'countLabel' => nmj_t('products_count'),
+            'lang' => nmj_current_language(),
+            'index' => nmj_product_index_base_url(),
         ]);
 
         if ($this->skip_page_transition()) {

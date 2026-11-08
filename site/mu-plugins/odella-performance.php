@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
- * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, conditionally dequeues heavy filter assets on non-catalog pages, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.5.0
+ * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
+ * Version: 1.5.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -87,31 +87,6 @@ add_action( 'plugins_loaded', function() {
         }
     }
 }, 20 );
-
-/**
- * 4. Check if the current page is a catalog/archive page that actually uses the WOOF Product Filter.
- */
-function odella_is_catalog_filter_page(): bool {
-    if ( is_admin() || wp_doing_ajax() || isset( $_GET['elementor-preview'] ) || isset( $_GET['swoof'] ) || isset( $_GET['woof_text'] ) ) {
-        return true;
-    }
-    if ( function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() || is_product_category() || is_product_tag() || is_post_type_archive( 'product' ) ) ) {
-        return true;
-    }
-    if ( is_search() ) {
-        return true;
-    }
-    if ( is_page( 16217 ) || is_page( 'store' ) ) {
-        return true;
-    }
-    if ( function_exists( 'pll_get_post_translations' ) && is_page() ) {
-        $trans = pll_get_post_translations( 16217 );
-        if ( is_array( $trans ) && in_array( get_queried_object_id(), $trans, true ) ) {
-            return true;
-        }
-    }
-    return false;
-}
 
 /**
  * 5. Preload LCP Hero Banner & Pre-Apply Full-Page-Scroll Section Geometry on Homepage.
@@ -309,22 +284,8 @@ add_filter( 'elementor/widget/render_content', function( $content, $widget ) {
 }, 999, 2 );
 
 /**
- * 10. Conditionally unhook & dequeue WOOF (58 CSS/JS files) on non-catalog pages (Home, Single Product, About, Cart, Checkout).
+ * 10. Dequeue unused frontend assets.
  */
-add_action( 'wp', function() {
-    if ( is_admin() || odella_is_catalog_filter_page() ) {
-        return;
-    }
-    global $WOOF;
-    if ( is_object( $WOOF ) ) {
-        remove_action( 'wp_enqueue_scripts', [ $WOOF, 'enqueue_scripts_styles' ] );
-        remove_action( 'wp_head', [ $WOOF, 'wp_head' ], 999 );
-        remove_action( 'wp_head', [ $WOOF, 'wp_load_js' ], 999 );
-        remove_action( 'wp_footer', [ $WOOF, 'wp_load_js' ], 11 );
-        remove_action( 'wp_footer', [ $WOOF, 'wp_footer' ], 999 );
-    }
-}, 1 );
-
 function odella_dequeue_unused_frontend_assets() {
     if ( is_admin() || isset( $_GET['elementor-preview'] ) ) {
         return;
@@ -337,7 +298,7 @@ function odella_dequeue_unused_frontend_assets() {
     wp_dequeue_style( 'filebird-block-filebird-gallery-style' );
     wp_dequeue_style( 'fbv-elementor' );
 
-    global $wp_styles, $wp_scripts;
+    global $wp_styles;
     if ( isset( $wp_styles->registered ) && is_array( $wp_styles->registered ) ) {
         foreach ( $wp_styles->registered as $handle => $obj ) {
             if ( ! empty( $obj->src ) && strpos( $obj->src, 'filebird-pro' ) !== false ) {
@@ -346,34 +307,6 @@ function odella_dequeue_unused_frontend_assets() {
         }
     }
 
-    if ( ! odella_is_catalog_filter_page() ) {
-        if ( isset( $wp_styles->registered ) && is_array( $wp_styles->registered ) ) {
-            foreach ( $wp_styles->registered as $handle => $obj ) {
-                if ( ! empty( $obj->src ) && strpos( $obj->src, 'woocommerce-products-filter' ) !== false ) {
-                    wp_dequeue_style( $handle );
-                    wp_deregister_style( $handle );
-                }
-            }
-        }
-        if ( isset( $wp_scripts->registered ) && is_array( $wp_scripts->registered ) ) {
-            foreach ( $wp_scripts->registered as $handle => $obj ) {
-                if ( ! empty( $obj->src ) && strpos( $obj->src, 'woocommerce-products-filter' ) !== false ) {
-                    wp_dequeue_script( $handle );
-                    wp_deregister_script( $handle );
-                }
-            }
-        }
-        wp_dequeue_style( 'chosen-drop-down' );
-        wp_dequeue_script( 'chosen-drop-down' );
-        wp_dequeue_style( 'icheck-jquery-color-flat' );
-        wp_dequeue_style( 'icheck-jquery-color-square' );
-        wp_dequeue_style( 'icheck-jquery-color-minimal' );
-        wp_dequeue_script( 'icheck-jquery' );
-    } else {
-        // Even on catalog pages, dequeue duplicate unused iCheck skins
-        wp_dequeue_style( 'icheck-jquery-color-flat' );
-        wp_dequeue_style( 'icheck-jquery-color-minimal' );
-    }
 }
 add_action( 'wp_enqueue_scripts', 'odella_dequeue_unused_frontend_assets', 9999 );
 add_action( 'wp_print_styles', 'odella_dequeue_unused_frontend_assets', 9999 );
