@@ -1,19 +1,19 @@
 # Odella Workspace Rules
 
-## Odella Elementor Widgets (`Odella-Plugins`) — Local-First Policy
-1. **Local Source of Truth**: `c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins` is the single source of truth for the `odella-elementor-widgets` WordPress plugin.
-2. **No Direct Remote Edits**: Never manually edit, patch, or upload individual files into `/home/u981153228/domains/odella.ge/public_html/wp-content/plugins/odella-elementor-widgets` via ad-hoc `ssh` or `scp` commands.
-3. **Mandatory Deployment Script**:
-   - First check parity: `python "c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\deploy.py" --check`
-   - Make all code changes locally inside `c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins`.
-   - Deploy and replace the remote plugin using:
-     `python "c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\deploy.py"`
-     (or `python "c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\deploy.py" --no-bump` when re-deploying without a version bump).
-   - Activate and follow the `odella-plugin-deploy` skill (`.claude/skills/odella-plugin-deploy/SKILL.md`) whenever working on `Odella-Plugins`.
+## Owned code — local-first policy
+1. **Local source of truth**: `Odella-Plugins` (plugin), `site/mu-plugins` (mu-plugin), and `site/theme-child` (child theme).
+2. **No direct remote edits**: Never patch those trees on the server with ad-hoc `ssh` or `scp`.
+3. **Deploy**:
+   - Check: `python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --check --all`
+   - Deploy one target: `python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --target plugin|mu|theme` (`--no-bump` skips the plugin version bump).
+   - Roll back the newest remote backup: `python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --target plugin|mu|theme --rollback`
+   - Exit **2** purge failed, **3** drift, **4** smoke test failed.
+   - Follow `.claude/skills/odella-plugin-deploy/SKILL.md` whenever working on these trees.
 
 ## Skills
 All project skills live in `.claude/skills/` (Cursor and Claude Code both load this folder, so keep one copy only).
-- `odella-plugin-deploy`: local-first edit and deploy of `Odella-Plugins`.
+- `odella-plugin-deploy`: local-first edit and deploy of the plugin, mu-plugin, and child theme.
+- `odella-pagespeed`: owner-invoked only (`disable-model-invocation`). Do not run it unless the owner asks.
 - `wp-performance`, `wp-wpcli-and-ops`, `wp-plugin-development`, `wp-project-triage`: official WordPress/agent-skills, used for their reference docs.
 
 ## This host vs. the WordPress skills

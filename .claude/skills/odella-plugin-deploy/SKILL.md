@@ -1,48 +1,52 @@
 ---
 name: odella-plugin-deploy
 description: >-
-  Local-first development, comparison, packaging, and atomic deployment workflow
-  for the Odella Elementor Widgets plugin (`Odella-Plugins` / `odella-elementor-widgets`).
-  Use whenever inspecting, modifying, fixing, building, or deploying any widget,
-  PHP class, JS script, or CSS file in `Odella-Plugins` (`odella-elementor-widgets`).
+  Local-first edit and atomic deploy for Odella-owned code: the Elementor
+  widgets plugin (Odella-Plugins), the mu-plugin (site/mu-plugins), and the
+  child theme (site/theme-child). Use whenever inspecting, modifying, fixing,
+  building, or deploying any of those trees.
 ---
 
-# Odella Elementor Widgets — Local-First Development & Atomic Deployment Skill
+# Odella deploy — plugin, mu-plugin, and child theme
 
-Whenever a task touches `odella-elementor-widgets` (`c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins`), you **MUST** follow this local-first workflow. **Never** edit plugin files directly on the remote Hostinger server via ad-hoc SSH/SCP commands.
+Edit owned code only in this repo. Deploy with `tools/deploy.py`. Never patch the live plugin, mu-plugin, or child theme over ad-hoc `ssh` or `scp`.
 
-## Mandatory Workflow
-
-### Step 1: Verify Local vs. Remote Parity Before Editing
-Before making changes, check that local [`Odella-Plugins`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins) matches the live server:
+## Step 1: Check parity
 
 ```powershell
-python "c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\deploy.py" --check
+python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --check --all
 ```
 
-- If all 20 files report `[OK]`, proceed to Step 2.
-- If any file reports `[MODIFIED]`, `[LOCAL+]`, or `[REMOTE+]`, inspect and reconcile the difference locally before making edits.
+`--target plugin`, `--target mu`, or `--target theme` checks one tree. `[OK]` on every file means continue. `[MODIFIED]`, `[LOCAL+]`, or `[REMOTE+]` means reconcile that file locally before editing.
 
-### Step 2: Implement and Fix Changes Locally
-Apply all PHP, JS, and CSS edits strictly inside the local repository:
-- **Main plugin bootstrap**: [`c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\odella-elementor-widgets.php`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins/odella-elementor-widgets.php)
-- **Core loader & AJAX handlers**: [`c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\includes\plugin.php`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins/includes/plugin.php)
-- **Elementor widgets**: `c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\includes\widgets\*.php`
-- **Frontend JS & CSS**: `c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\assets\js\*.js` and `assets\css\*.css`
+## Step 2: Edit locally
 
-### Step 3: Deploy Atomically Using `deploy.py`
-Once local changes are ready, deploy them using [`deploy.py`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins/deploy.py) instead of manual `scp`/`ssh` commands:
+| `--target` | Local tree |
+|---|---|
+| `plugin` (default) | `Odella-Plugins/` — `odella-elementor-widgets.php`, `includes/`, `assets/` |
+| `mu` | `site/mu-plugins/odella-performance.php` |
+| `theme` | `site/theme-child/` |
+
+Leave `hostinger-auto-updates.php` alone.
+
+## Step 3: Deploy
 
 ```powershell
-python "c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\deploy.py"
+python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --target plugin
+python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --target mu
+python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --target theme
 ```
 
-*(Or pass `--no-bump` if you want to deploy without incrementing the patch version in `odella-elementor-widgets.php` and `package.json`.)*
+`--no-bump` deploys the plugin without incrementing `NMJ_VERSION`. `--all` deploys plugin, then mu, then theme. `Odella-Plugins/deploy.py` is a wrapper for `--target plugin`.
 
-### What `deploy.py` Does Automatically
-1. **Bumps Version & Builds Archive**: Runs [`build.js`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins/build.js) to increment `NMJ_VERSION` in `odella-elementor-widgets.php` and `package.json`, and builds `c:\Users\Nick\Projects\Hostinger-Connect\OdellaPlugins.zip` with verified POSIX path separators.
-2. **Normalizes Line Endings**: Converts `CRLF` to `LF` in memory for all text assets (`.php`, `.js`, `.css`, `.json`, `.svg`).
-3. **Stages & Lints on Remote Server**: Extracts the payload into a staging directory on the same filesystem (`/wp-content/plugins/.odella-widgets-stage-*`) and runs `php -l` syntax checks on every `.php` file before touching the live plugin directory.
-4. **Atomic Directory Replacement**: Swaps the validated staging directory into `/home/u981153228/domains/odella.ge/public_html/wp-content/plugins/odella-elementor-widgets` (with automatic rollback if any error occurs), ensuring zero stale or `.bak` files remain.
-5. **Flushes All Caches**: Clears the Elementor CSS cache, WordPress Object Cache, and LiteSpeed Cache (`wp litespeed-purge all`).
-6. **Post-Deploy SHA-256 Verification**: Re-computes SHA-256 checksums across all remote files and verifies 100% parity with local `Odella-Plugins`.
+Before the swap, the script copies the live target to `~/odella-deploy-backups/<target>/<UTC timestamp>/` (newest 5 kept). If the server does not match `.deploy-state/<target>.json`, it exits **3** unless `--force`.
+
+```powershell
+python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --target plugin --rollback
+```
+
+`--rollback` restores the newest backup of that target, purges caches, and rewrites the state file.
+
+Exit codes: **2** purge failed (the files stay as deployed; nothing rolls back by itself), **3** drift, **4** smoke test failed.
+
+After a deploy whose output says `CDN not purged by script — agent: purge via Hostinger MCP`, purge the CDN with Hostinger `hosting_cache_clear` for `odella.ge`, scope `cdn`.

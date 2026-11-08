@@ -4,6 +4,21 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 ## Decisions
 
+### 2026-11-08 — Live Elementor is 4.3.6 / Pro 4.3.3
+**Decision:** The live site runs Elementor 4.3.6 and Elementor Pro 4.3.3. The 2026-11-07 note that Elementor was pinned at 4.2.3 / Pro 4.2.2 is historical.  
+**Why:** The versions on the server are the pair that is actually installed.  
+**Trade-off:** None beyond recording the live pair so later work does not treat 4.2.3 as current.
+
+### 2026-11-08 — Local-first covers the mu-plugin and child theme
+**Decision:** `site/mu-plugins/odella-performance.php` and `site/theme-child/` are owned code, same as `Odella-Plugins`. Deploy them with `tools/deploy.py --target mu` and `--target theme`.  
+**Why:** Those files were being copied by hand. One deploy script can check, swap, and roll them back.  
+**Trade-off:** A theme or mu-plugin change is a deploy, not an SSH edit.
+
+### 2026-11-08 — Remote deploy backups live outside the web root
+**Decision:** Before each swap, `tools/deploy.py` copies the live target to `~/odella-deploy-backups/<target>/<UTC timestamp>/` and keeps the newest 5. `--rollback` restores the newest copy.  
+**Why:** The backup must not sit inside `public_html`, or WordPress would see a second plugin or theme.  
+**Trade-off:** Rollback restores code only. Database edits roll back from `snapshots/`, and a full-site rollback is still the hPanel backup.
+
 ### 2026-11-07 — Elementor CSS Print Method set to Internal
 **Decision:** Elementor CSS print method configured to Internal (`elementor_css_print_method: internal`).  
 **Why:** Prevents 404 race conditions with Hostinger's Edge CDN cache.  
@@ -20,9 +35,9 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Trade-off:** If a WOOF filter widget is ever placed on a new custom page outside the standard WooCommerce shop/archive/store routes, its page ID/slug should be added to `odella_is_catalog_filter_page()` in `odella-performance.php`.
 
 ### 2026-11-07 — Plugin Suite Consolidation & Elementor Version Pinning
-**Decision:** Deactivated 6 unused active plugins (`bulk-edit-posts-on-frontend-premium`, `bulk-edit-custom-tables-premium`, `wp-sheet-editor-automations-premium`, `woo-orders-spreadsheet-table-premium`, `members`, `hostinger`), deleted 4 unused inactive plugins (`yellow-pencil-visual-theme-customizer`, `user-role-editor`, `hostinger-auto-updates-plugin-HJvuAkspeVr3jRxn`, `wp-sheet-editor-polylang`), updated `seo-by-rank-math` to `1.0.281`, and kept `elementor` pinned at `4.2.3` alongside `elementor-pro` `4.2.2`.  
-**Why:** Updating Elementor Core to `4.3.6` without a matching Elementor Pro `4.3.x` build introduces breaking Atomic Widget changes and risks overwriting the local license initialization fix.  
-**Trade-off:** Elementor Core and Pro should be updated together when a matching `4.3.x` Pro package is available.
+**Decision:** Deactivated 6 unused active plugins (`bulk-edit-posts-on-frontend-premium`, `bulk-edit-custom-tables-premium`, `wp-sheet-editor-automations-premium`, `woo-orders-spreadsheet-table-premium`, `members`, `hostinger`), deleted 4 unused inactive plugins (`yellow-pencil-visual-theme-customizer`, `user-role-editor`, `hostinger-auto-updates-plugin-HJvuAkspeVr3jRxn`, `wp-sheet-editor-polylang`), and updated `seo-by-rank-math` to `1.0.281`. Elementor was held at 4.2.3 / Pro 4.2.2 on this date. That pin is no longer the live pair — see 2026-11-08.  
+**Why:** Updating Elementor Core without a matching Elementor Pro build introduces breaking Atomic Widget changes and risks overwriting the local license initialization fix.  
+**Trade-off:** Elementor Core and Pro should be updated together.
 
 ### 2026-11-07 — LCP Hero Image Preloading, Inlining Small CSS & Fast Server-Level Root Redirect
 **Decision:** (1) In `wp-content/plugins/odella-elementor-widgets/.../responsive-video-widget.php`, added `fetchpriority="high" decoding="async"` to the hero fallback poster `<img>` without forcing `width="1920" height="1080"` (so mobile portrait `Main-Mobile.jpg` `390x850` keeps its natural aspect ratio without layout shift). (2) In `odella-performance.php`, added preloading for `Main-PC.jpg` (desktop) and `Main-Mobile.jpg` (mobile) directly in `<head>`, and added a `style_loader_tag` filter to inline small local stylesheets (`<= 8 KB` with no relative URLs), reducing external `<link rel="stylesheet">` requests from 49 down to 15 (including all 12 of Elementor 4.3's new Atomic CSS files). (3) In `.htaccess`, added a server-level `301` redirect for the root `/` to `/ka/` to bypass Polylang's 326ms uncached PHP boot for root visits. (4) Disabled LiteSpeed `optm-css_min`, `optm-js_min`, `optm-js_defer`, and `optm-ggfonts_async`.  

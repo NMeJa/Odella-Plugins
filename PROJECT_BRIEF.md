@@ -45,6 +45,6 @@
 ---
 
 ## 5. Development Best Practices for This Site
-* **Local-First Plugin Workflow (`Odella-Plugins`)**: Always make changes to `odella-elementor-widgets` locally in [`Odella-Plugins/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins) and deploy using `python "c:\Users\Nick\Projects\Hostinger-Connect\Odella-Plugins\deploy.py"` (or `--check` / `--no-bump`). Never manually edit files inside `/wp-content/plugins/odella-elementor-widgets/` on the server.
+* **Local-first owned code**: Edit the plugin in [`Odella-Plugins/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/Odella-Plugins), the mu-plugin in [`site/mu-plugins/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/mu-plugins), and the child theme in [`site/theme-child/`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/theme-child). Deploy with `python tools\deploy.py --target plugin|mu|theme` (`--check`, `--no-bump`, `--rollback`). Never edit those trees on the server. Exit **2** purge failed, **3** drift, **4** smoke test failed. Remote copies of each deploy live in `~/odella-deploy-backups`.
 * All responsive layout overrides, SVG constrainers, and custom fixes are kept clean and organized in the child theme's `style.css`.
 * After updating template data or options, flush the WP object cache using `wp_cache_flush()` or `\Elementor\Plugin::$instance->files_manager->clear_cache()`.
