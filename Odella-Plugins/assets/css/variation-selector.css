@@ -1,0 +1,79 @@
+/* ──────────────────────────────────────────────────────────────────────────────
+   Variation Selector Widget
+
+   The widget declares this file via get_style_depends(), so Elementor enqueues
+   it only on pages that actually contain the widget.
+   ────────────────────────────────────────────────────────────────────────────── */
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+
+.nmj-variations-layout {
+	display: flex;
+}
+
+/* Clear link above or below the attribute rows */
+.nmj-variations-layout--stacked {
+	flex-direction: column;
+}
+
+/* Clear link beside the attribute rows */
+.nmj-variations-layout--inline {
+	flex-direction: row;
+	align-items: center;
+}
+
+/* ── Clear / reset link ──────────────────────────────────────────────────── */
+
+/* Hidden until WooCommerce's variation form reveals it on a selection.
+   wc-add-to-cart-variation.js toggles this with .show()/.hide(), which writes
+   an inline display, so the initial hide has to be a rule it can override. */
+.nmj-reset-variation {
+	display: none;
+	align-items: center;
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.nmj-clear-inner {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-direction: row;
+}
+
+.nmj-clear-inner--icon-right {
+	flex-direction: row-reverse;
+}
+
+.nmj-clear-icon {
+	display: flex;
+}
+
+.nmj-clear-icon svg {
+	width: 1em;
+	height: 1em;
+	fill: currentColor;
+}
+
+.nmj-clear-icon i {
+	color: currentColor;
+}
+
+/* ── Optional parts ──────────────────────────────────────────────────────── */
+
+/* Toggled by the "Show Description" / "Show Variation Price" controls.
+   Scoped to the wrap so a theme's own variation markup elsewhere on the page
+   is untouched. */
+.nmj-variation-selector-wrap--no-description .woocommerce-variation-description {
+	display: none !important;
+}
+
+.nmj-variation-selector-wrap--no-price .woocommerce-variation-price {
+	display: none !important;
+}
+
+/* WooCommerce needs .single_add_to_cart_button in the DOM to enable/disable on
+   found_variation, but the custom Add to Cart widget takes over the visuals. */
+.nmj-hidden-atc-btn {
+	display: none !important;
+}

@@ -1,0 +1,742 @@
+/* 
+Theme Name: Hello Elementor Child
+Theme URI: https://github.com/elementor/hello-theme-child/
+Description: Hello Elementor Child is a child theme of Hello Elementor, created by Elementor team
+Author: Elementor Team
+Author URI: https://elementor.com/
+Template: hello-elementor
+Version: 2.0.0
+Text Domain: hello-elementor-child
+License: GNU General Public License v3 or later.
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Tags: flexible-header, custom-colors, custom-menu, custom-logo, editor-style, featured-images, rtl-language-support, threaded-comments, translation-ready
+*/
+
+/* ==========================================================================
+   Permanent Global Variables (Colors, Typography & Icons Safety Net)
+   ========================================================================== */
+:root {
+    /* Custom Global Brand Colors */
+    --e-global-color-9333735: #00A79D; /* OdellaGreen */
+    --e-global-color-357c029: #7966B1; /* OdellaPurple */
+    --e-global-color-256943e: #8A8D8F; /* OdellaSilver */
+    --e-global-color-a33bc50: #80C7C7; /* OdellaLightBlue */
+    --e-global-color-c06ceed: #FFFFFF; /* OdellaWhite */
+    --e-global-color-532b0c5: #00000000; /* OdellaTransparent */
+    --e-global-color-b220cb5: rgba(0, 0, 0, 0.8); /* OdellaOverlay */
+    
+    /* Named Color Aliases */
+    --OdellaGreen: #00A79D;
+    --OdellaPurple: #7966B1;
+    --OdellaSilver: #8A8D8F;
+    --OdellaLightBlue: #80C7C7;
+    --OdellaWhite: #FFFFFF;
+    --OdellaBlack: #212121;
+
+    /* System Color Fallbacks (Prevents unwanted default/red fallbacks) */
+    --e-global-color-primary: #00A79D;
+    --e-global-color-secondary: #7966B1;
+    --e-global-color-text: #212121;
+    --e-global-color-accent: #7966B1;
+
+    /* Global Typography */
+    --e-global-typography-primary-font-family: "Noto Sans", sans-serif;
+    --e-global-typography-secondary-font-family: "Noto Sans", sans-serif;
+    --e-global-typography-text-font-family: "Noto Sans", sans-serif;
+    --e-global-typography-accent-font-family: "Noto Sans", sans-serif;
+    --e-global-typography-87d6faf-font-family: "Noto Sans", sans-serif;
+    --e-global-typography-87d6faf-font-size: 14px;
+    --e-global-typography-87d6faf-line-height: 1.6;
+}
+
+/* ==========================================================================
+   Global Viewport & Overflow Protection
+   ========================================================================== */
+html, body {
+    overflow-x: clip !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+
+/* ==========================================================================
+   Universal SVG Icon Constrainers (Site-wide Protection)
+   ========================================================================== */
+
+/* 1. Global Icon Lists (Footer, Header, Content) */
+.elementor-icon-list-icon,
+.e-icon-list-icon,
+.elementor-widget-icon-list .elementor-icon-list-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    min-height: 22px !important;
+    max-height: 22px !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+    margin-right: 8px !important;
+}
+
+.elementor-icon-list-icon svg,
+.elementor-icon-list-icon img,
+.e-icon-list-icon svg,
+.e-icon-list-icon img,
+.elementor-widget-icon-list .elementor-icon-list-icon svg,
+.elementor-widget-icon-list .elementor-icon-list-icon img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 22px !important;
+    max-height: 22px !important;
+    object-fit: contain !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+.elementor-widget-icon-list .elementor-icon-list-item {
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1.4 !important;
+}
+
+.elementor-widget-icon-list .elementor-icon-list-item > a {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* 2. Generic Elementor Widget SVGs */
+.elementor-widget-icon svg,
+.elementor-icon svg,
+.elementor-button-icon svg,
+.elementor-social-icon svg {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: inline-block;
+}
+
+
+/* ==========================================================================
+   Header Mobile & Universal Layout Fixes
+   ========================================================================== */
+
+/* 1. Sticky Header wrapper */
+body .elementor-location-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* 2. Header Container: Enforce horizontal single-row flex layout across all screen sizes */
+#header-id,
+.elementor-14412 #header-id,
+.elementor-location-header #header-id,
+.elementor-location-header .elementor-element-ec7d5e6 {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-height: 55px !important;
+    height: auto !important;
+    padding: 8px 16px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+/* 3. Site Logo: Centered and properly proportioned */
+.elementor-location-header .elementor-element-4de8c72,
+#header-id .elementor-widget-theme-site-logo {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+}
+
+.elementor-location-header .elementor-element-4de8c72 a,
+#header-id .elementor-widget-theme-site-logo a {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.elementor-location-header .elementor-element-4de8c72 img,
+#header-id .elementor-widget-theme-site-logo img {
+    height: 40px !important;
+    max-height: 40px !important;
+    width: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+@media (max-width: 480px) {
+    .elementor-location-header .elementor-element-4de8c72 img,
+    #header-id .elementor-widget-theme-site-logo img {
+        height: 32px !important;
+        max-height: 32px !important;
+    }
+}
+
+/* 4. Right Container: Language switcher, search, support in horizontal row */
+#header-id .elementor-element-f51dbc3,
+#header-id > .e-con:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+}
+
+@media (max-width: 480px) {
+    #header-id .elementor-element-f51dbc3,
+    #header-id > .e-con:last-child {
+        gap: 8px !important;
+    }
+}
+
+/* Polylang Flag sizing */
+.elementor-location-header .cpel-switcher__flag,
+.elementor-location-header .cpel-switcher__flag img {
+    width: 20px !important;
+    height: auto !important;
+    display: block !important;
+}
+
+/* 5. Header Icons (Buttons & Links): Constrain to crisp fixed dimensions */
+.elementor .header-icon,
+.elementor .g-1b13a6e,
+.elementor-location-header button.header-icon,
+.elementor-location-header a.header-icon,
+button.e-911c107-cd191c2 {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
+}
+
+@media (max-width: 480px) {
+    .elementor .header-icon,
+    .elementor .g-1b13a6e,
+    .elementor-location-header button.header-icon,
+    .elementor-location-header a.header-icon,
+    button.e-911c107-cd191c2 {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        max-width: 24px !important;
+        min-height: 24px !important;
+        max-height: 24px !important;
+    }
+}
+
+/* 6. SVGs inside header icons must scale to their container (24px/28px), NOT 800px */
+.elementor .header-icon svg,
+.elementor .g-1b13a6e svg,
+.elementor-location-header button.header-icon svg,
+.elementor-location-header a.header-icon svg,
+button.e-911c107-cd191c2 svg {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+}
+
+
+/* ==========================================================================
+   Our Story / About Us (Post ID 58) Layout Fixes
+   ========================================================================== */
+
+/* 1. Hero Section */
+.elementor-58 .elementor-element-a862be4,
+.elementor-58 .e-a862be4-a0a4d3b {
+    min-height: 600px !important;
+    height: auto !important;
+    background-image: url("https://odella.ge/wp-content/uploads/AboutUsBg-1.jpg") !important;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 60px 8% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.elementor-58 .elementor-element-d1ed617 {
+    width: 460px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 30px !important;
+    background-color: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+    box-sizing: border-box !important;
+    line-height: 1.75 !important;
+}
+
+/* 2. Hide Spacer */
+.elementor-58 .elementor-element-709df08,
+.elementor-58 .e-709df08-2129836 {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 3. Slogan Section */
+.elementor-58 .elementor-element-6c7ab5f,
+.elementor-58 .e-6c7ab5f-70d8e1c {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    max-width: 1140px !important;
+    width: 100% !important;
+    margin: 40px auto 20px !important;
+    padding: 0 20px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.elementor-58 .elementor-element-8483176,
+.elementor-58 .elementor-element-e66f7d3 {
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+.elementor-58 .elementor-element-8483176 .elementor-heading-title,
+.elementor-58 .elementor-element-e66f7d3 .elementor-heading-title {
+    font-size: 36px !important;
+    line-height: 1.3 !important;
+    color: #212121 !important;
+    word-break: break-word !important;
+    margin: 0 !important;
+}
+
+.elementor-58 .elementor-element-8483176 .elementor-heading-title {
+    text-align: left !important;
+}
+
+.elementor-58 .elementor-element-e66f7d3 .elementor-heading-title {
+    text-align: right !important;
+}
+
+/* 4. Two-Column Content (Girls Image + Vases Image + Story Text) */
+.elementor-58 .elementor-element-8394863 {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    max-width: 1140px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 20px 20px 60px !important;
+    gap: 50px !important;
+    box-sizing: border-box !important;
+}
+
+.elementor-58 .elementor-element-6138037 {
+    width: 45% !important;
+    flex: 0 0 45% !important;
+    box-sizing: border-box !important;
+}
+
+.elementor-58 .elementor-element-6138037 img,
+.elementor-58 .e-a0cef7f-ee847b1 {
+    position: sticky !important;
+    top: 100px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 40px !important;
+    object-fit: cover !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    display: block !important;
+}
+
+.elementor-58 .elementor-element-6c76351 {
+    width: 50% !important;
+    flex: 0 0 50% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 25px !important;
+    box-sizing: border-box !important;
+}
+
+.elementor-58 .elementor-element-6c76351 img,
+.elementor-58 .e-82cb693-25e2464 {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 40px !important;
+    object-fit: cover !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    display: block !important;
+}
+
+.elementor-58 .elementor-element-5ede82b {
+    line-height: 1.8 !important;
+    font-size: 15px !important;
+    color: #333333 !important;
+}
+
+/* Our Story Mobile (max-width: 767px) */
+@media (max-width: 767px) {
+    .elementor-58 .elementor-element-a862be4,
+    .elementor-58 .e-a862be4-a0a4d3b {
+        min-height: auto !important;
+        height: auto !important;
+        padding: 24px 16px !important;
+        justify-content: center !important;
+        background-position: center center !important;
+        margin: 0 !important;
+    }
+
+    .elementor-58 .elementor-element-d1ed617 {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 16px !important;
+        font-size: 13.5px !important;
+        line-height: 1.65 !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+        border-radius: 10px !important;
+    }
+
+    .elementor-58 .elementor-element-6c7ab5f,
+    .elementor-58 .e-6c7ab5f-70d8e1c {
+        margin: 24px auto 16px !important;
+        padding: 0 16px !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .elementor-58 .elementor-element-8483176 .elementor-heading-title,
+    .elementor-58 .elementor-element-e66f7d3 .elementor-heading-title {
+        font-size: 20px !important;
+        line-height: 1.35 !important;
+        text-align: left !important;
+    }
+
+    .elementor-58 .elementor-element-e66f7d3 .elementor-heading-title {
+        text-align: right !important;
+    }
+
+    .elementor-58 .elementor-element-8394863 {
+        flex-direction: column !important;
+        padding: 10px 16px 50px !important;
+        gap: 20px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .elementor-58 .elementor-element-6138037,
+    .elementor-58 .elementor-element-6c76351 {
+        width: 100% !important;
+        flex: none !important;
+    }
+
+    .elementor-58 .elementor-element-6138037 img,
+    .elementor-58 .e-a0cef7f-ee847b1 {
+        position: static !important;
+        border-radius: 20px !important;
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 5px !important;
+    }
+
+    .elementor-58 .elementor-element-6c76351 img,
+    .elementor-58 .e-82cb693-25e2464 {
+        border-radius: 20px !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .elementor-58 .elementor-element-5ede82b {
+        font-size: 14px !important;
+        line-height: 1.7 !important;
+    }
+}
+
+
+/* ==========================================================================
+   Footer (Post ID 3023) Mobile & Universal Layout Fixes
+   ========================================================================== */
+
+/* 1. Outer Footer Wrapper */
+#footer-id,
+.elementor-3023,
+.elementor-location-footer,
+.elementor-location-footer #footer-id {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* 2. Main Flex Container (Desktop) */
+#footer-id .elementor-element-a6ed2d6,
+.elementor-3023 .elementor-element-a6ed2d6,
+.elementor-3023 .e-a6ed2d6-1a50240 {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    max-width: 1200px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+}
+
+/* 3. Footer Columns (Desktop) */
+.elementor-3023 .footer-side,
+#footer-id .footer-side,
+.elementor .footer-side,
+.elementor-3023 .elementor-element-643fb0c,
+.elementor-3023 .elementor-element-4464dcd {
+    width: 380px !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.elementor-3023 .elementor-element-e93113c,
+.elementor-3023 .e-e93113c-774933f {
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.elementor-3023 .elementor-element-e93113c img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+}
+
+.elementor-3023 .elementor-element-cc010b9,
+.elementor-3023 .e-cc010b9-a0ec516 {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 30px !important;
+    box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   Footer Mobile & Tablet Responsive (Switches to Vertical Layout)
+   ========================================================================== */
+@media (max-width: 1024px) {
+    /* Stack footer elements vertically */
+    #footer-id .elementor-element-a6ed2d6,
+    .elementor-3023 .elementor-element-a6ed2d6,
+    .elementor-3023 .e-a6ed2d6-1a50240 {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 35px !important;
+        padding: 40px 20px 70px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Make all columns full width and centered */
+    .elementor-3023 .footer-side,
+    #footer-id .footer-side,
+    .elementor .footer-side,
+    .elementor-3023 .elementor-element-643fb0c,
+    .elementor-3023 .elementor-element-4464dcd {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin: 0 auto !important;
+    }
+
+    /* Headings in Footer */
+    .elementor-3023 .footer-heading,
+    .elementor-3023 .elementor-element-8d6a3e4,
+    .elementor-3023 .elementor-element-8fd1e6f {
+        text-align: center !important;
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* Contact icon list centering */
+    .elementor-3023 .elementor-element-0f2eecd {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .elementor-3023 .elementor-element-0f2eecd .elementor-icon-list-items {
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+
+    .elementor-3023 .elementor-element-0f2eecd .elementor-icon-list-item {
+        justify-content: center !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+
+    /* Middle cover image on mobile */
+    .elementor-3023 .elementor-element-e93113c,
+    .elementor-3023 .e-e93113c-774933f {
+        width: 100% !important;
+        max-width: 220px !important;
+        height: auto !important;
+        margin: 0 auto !important;
+    }
+
+    .elementor-3023 .elementor-element-e93113c img {
+        width: 100% !important;
+        max-width: 220px !important;
+        height: auto !important;
+    }
+
+    /* Pages 2-column menu on mobile */
+    .elementor-3023 .elementor-element-cc010b9,
+    .elementor-3023 .e-cc010b9-a0ec516 {
+        width: 100% !important;
+        max-width: 340px !important;
+        margin: 0 auto !important;
+        justify-content: space-around !important;
+        gap: 20px !important;
+    }
+
+    .elementor-3023 .elementor-element-42b3a12,
+    .elementor-3023 .elementor-element-3e7091a {
+        width: auto !important;
+        flex: 1 !important;
+    }
+
+    .elementor-3023 .elementor-element-42b3a12 .elementor-nav-menu,
+    .elementor-3023 .elementor-element-3e7091a .elementor-nav-menu {
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .elementor-3023 .elementor-element-42b3a12 .elementor-nav-menu--main,
+    .elementor-3023 .elementor-element-3e7091a .elementor-nav-menu--main {
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .elementor-3023 .elementor-element-42b3a12 .elementor-nav-menu--main ul,
+    .elementor-3023 .elementor-element-3e7091a .elementor-nav-menu--main ul {
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    /* Copyright Section on Mobile */
+    .elementor-3023 .elementor-element-6e5a6ab,
+    .elementor-3023 .e-6e5a6ab-d095f18 {
+        position: static !important;
+        width: 100% !important;
+        text-align: center !important;
+        margin-top: 20px !important;
+        padding: 10px 16px !important;
+    }
+
+    .elementor-3023 .elementor-element-47f9e12,
+    .elementor-3023 .e-47f9e12-2c0e601 {
+        position: static !important;
+        inset: auto !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    .elementor-3023 .elementor-element-47f9e12 .elementor-heading-title {
+        text-align: center !important;
+        font-size: 11px !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+}
+
+
+/* ==========================================================================
+   Product Loop Grid & Load More Button Styling
+   ========================================================================== */
+.e-loop__load-more {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 40px auto 60px !important;
+    width: 100% !important;
+}
+
+.e-loop__load-more .elementor-button,
+.elementor-button.e-loop__load-more-button {
+    background-color: #212121 !important;
+    color: #ffffff !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 12px 36px !important;
+    border-radius: 30px !important;
+    border: 1px solid #212121 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.e-loop__load-more .elementor-button:hover,
+.elementor-button.e-loop__load-more-button:hover {
+    background-color: #ffffff !important;
+    color: #212121 !important;
+    border-color: #212121 !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+}

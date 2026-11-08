@@ -1,0 +1,3 @@
+Source: https://github.com/WordPress/agent-skills (commit 7374e6f, 2026-11-05), GPL-2.0-or-later.
+Copied skills: wp-performance, wp-wpcli-and-ops, wp-plugin-development, wp-project-triage.
+Update: re-clone that repo and copy the same four folders over these.

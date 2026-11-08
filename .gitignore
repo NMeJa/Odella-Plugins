@@ -1,0 +1,7 @@
+.env
+OdellaPlugins.zip
+reports/raw/
+Odella-Plugins/.build_temp/
+Odella-Plugins/Test Videos/
+node_modules/
+__pycache__/

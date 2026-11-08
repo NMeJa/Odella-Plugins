@@ -1,0 +1,84 @@
+.nmj-gallery-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.nmj-grid-row {
+    display: grid;
+    grid-template-columns: repeat(var(--nmj-cols, 1), 1fr);
+}
+
+.nmj-grid-item {
+    overflow: hidden;
+    display: block;
+    width: 100%;
+    position: relative;
+    aspect-ratio: var(--nmj-ar, auto);
+    height: var(--nmj-h, auto);
+}
+
+.nmj-grid-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: var(--nmj-fit, cover);
+    object-position: var(--nmj-pos, center center);
+}
+
+.nmj-gallery-lightbox-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.nmj-product-gallery {
+    display: flex;
+    flex-direction: column;
+}
+
+.nmj-pg-main-wrap {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.nmj-pg-main-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.nmj-pg-main-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.nmj-pg-thumbnails-wrap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+}
+
+.nmj-pg-thumb {
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.nmj-pg-thumb-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 1 / 1;
+}
+
+.nmj-pg-thumb.nmj-pg-thumb-active {
+    border-color: #000;
+}
