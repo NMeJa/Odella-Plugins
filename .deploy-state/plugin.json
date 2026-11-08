@@ -1,5 +1,5 @@
 {
-  "deployed_at": "2026-11-08T16:44:35Z",
+  "deployed_at": "2026-11-08T17:12:20Z",
   "hashes": {
     "assets/css/add-to-cart.css": "593a279382f591b9985b9b3c86573fff9ad5e594816b550bafdd75ae5f2fdb44",
     "assets/css/full-page-scroll.css": "e8bdc22d9ee96291fe601e280522f6af7d3b5ba51e72e7711445643b69a34fc4",
@@ -13,8 +13,9 @@
     "assets/js/gallery-grid.js": "82ab91b83f67722290e2af55d9fcb5dff20b5cdc5982b9eb27ee43e5eda4fe25",
     "assets/js/page-transition.js": "b9667c068f5bcac3283dfb1eecf27988ce7554a20be2066990355d693522fc3a",
     "assets/js/responsive-video.js": "b10712fe40137993bc32768083acc6de867b11eb578a98d5431097d75a485be3",
+    "includes/filter-query.php": "adf2b693b6bf02a1e1ea6cf63fd5ea83a47e4b2a9b46d9cc32900ffbdc8d0941",
     "includes/i18n.php": "6f76498c94892eebc5cb8eaafa9820d779db8cd18822ad341159d13f7c46092c",
-    "includes/plugin.php": "ffa56d3d5fb767b676402ede5bf32535dc452863f45ed73bc274ce597377972e",
+    "includes/plugin.php": "c755ffac45d2c4eb8fb44d88bb273c7f3378cbc4316ddf63ea1a0584523a5e0b",
     "includes/related-products.php": "de802d7c752cedf23026387d943d709048a6fd85a7655ba71eae804b4704e85f",
     "includes/widgets/add-to-cart-widget.php": "977ae96b938761f984e83e183c637e64abefc409b1dcdb859e9f1537c895a58e",
     "includes/widgets/full-page-scroll-widget.php": "d994a971992b976b687b04879779fda326d9b3ba87a0bfb31bdcac57e9ce8072",
@@ -24,7 +25,7 @@
     "includes/widgets/traits/atc-content-controls.php": "00fba93feda8c09402f5e0470e469fc48b10172e9cdc0c3c69ac24baf21f9be5",
     "includes/widgets/traits/atc-style-controls.php": "e22a20b99f22decb46abb1ce768c70f077a55d720953bcb326f508d8859c2b6f",
     "includes/widgets/variation-selector-widget.php": "4594d6bf2702e51299c4de55f9b9eb060a65e84c40b7e64dd20b7a54eacae71f",
-    "odella-elementor-widgets.php": "5e3028c7569cb1caa62a608bd8407a122a52a30a9db80c6d8e2051f87d8ac84d"
+    "odella-elementor-widgets.php": "80ca77a85f55828bd0aaf493c5fe24cdf718f56d6352ac11bbcb121628131094"
   },
   "target": "plugin"
 }
