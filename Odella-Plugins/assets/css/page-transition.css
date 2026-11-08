@@ -1,0 +1,5 @@
+#odella-pt{position:fixed;inset:0;z-index:2147483000;background:#fff;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;animation:odellaPtIn .25s ease-out both}
+@keyframes odellaPtIn{from{opacity:1}to{opacity:0}}
+#odella-pt.is-leaving{animation:none;opacity:1;transition:opacity .2s ease-in;pointer-events:auto}
+#odella-pt img{width:111px;height:auto}
+@media (prefers-reduced-motion:reduce){#odella-pt{animation:none;opacity:0}#odella-pt.is-leaving{transition:none;opacity:0}}

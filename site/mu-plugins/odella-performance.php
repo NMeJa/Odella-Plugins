@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
  * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, conditionally dequeues heavy filter assets on non-catalog pages, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.4.0
+ * Version: 1.5.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -401,3 +401,18 @@ add_filter( 'style_loader_src', function( $src, $handle ) {
 add_filter( 'big_image_size_threshold', function () {
     return 2560;
 }, 999 );
+
+/**
+ * 13. Prefetch hovered links (WordPress speculation rules).
+ *     Logged-in visitors keep core's own setting. Cart, checkout and account
+ *     stay out of the prefetch list. Query-string URLs stay excluded by core.
+ */
+add_filter( 'wp_speculation_rules_configuration', function ( $config ) {
+    if ( is_user_logged_in() ) {
+        return $config;
+    }
+    return array( 'mode' => 'prefetch', 'eagerness' => 'moderate' );
+} );
+add_filter( 'wp_speculation_rules_href_exclude_paths', function ( $paths ) {
+    return array_merge( $paths, array( '/ka/elementor-15559/*', '/en/elementor-15559/*', '/ka/my-account-2/*', '/en/my-account/*', '/ka/cart/*', '/en/cart/*' ) );
+} );

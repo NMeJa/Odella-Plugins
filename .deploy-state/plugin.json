@@ -1,17 +1,19 @@
 {
-  "deployed_at": "2026-11-08T10:19:32Z",
+  "deployed_at": "2026-11-08T12:07:59Z",
   "hashes": {
     "assets/css/add-to-cart.css": "593a279382f591b9985b9b3c86573fff9ad5e594816b550bafdd75ae5f2fdb44",
     "assets/css/full-page-scroll.css": "e8bdc22d9ee96291fe601e280522f6af7d3b5ba51e72e7711445643b69a34fc4",
     "assets/css/gallery-grid.css": "1d220eeb8a33d67c405ded32409873bf13d611adc118efa4f2972a4f52caf059",
+    "assets/css/page-transition.css": "e60f9db4b012ad249da81edd0186027b08a1822bfd012787eabedad15c4f6b28",
     "assets/css/product-price.css": "a167d6603bc0323a4e47adda914a248e9c79f65d75bff8c103cd9ebea0cc8259",
     "assets/css/responsive-video.css": "f6efe29d98b9ceb4286e10cdffc6b78cccba954755fa415f5fd6b18a34bd609d",
     "assets/css/variation-selector.css": "d1d0fec70ddfdc4ee955a557207c8bbb12902f060e1edfc9d97f8ff9ea5fc538",
     "assets/js/add-to-cart.js": "0e4c824d36de9e4d95756887a8f744a5479f0e850527d821e62d649774830568",
     "assets/js/full-page-scroll.js": "f7cbeec54b2f4e94c3d059199ea5f55e3f7232c852234f6e930a805f1b290b33",
     "assets/js/gallery-grid.js": "82ab91b83f67722290e2af55d9fcb5dff20b5cdc5982b9eb27ee43e5eda4fe25",
+    "assets/js/page-transition.js": "b9667c068f5bcac3283dfb1eecf27988ce7554a20be2066990355d693522fc3a",
     "assets/js/responsive-video.js": "b10712fe40137993bc32768083acc6de867b11eb578a98d5431097d75a485be3",
-    "includes/plugin.php": "58b87e344a566da8ad831f46f90d04c859803b0bf0c37a04742db17e54815047",
+    "includes/plugin.php": "5ebd1f49e78407c265bdf5c06bf7cb0f8df53348d578d3c6a8bcac4ec73fe8c2",
     "includes/widgets/add-to-cart-widget.php": "51e7ad7c2a5df7c369c621cff2af5a997a38af0526275ad722cec7304d47b152",
     "includes/widgets/full-page-scroll-widget.php": "d994a971992b976b687b04879779fda326d9b3ba87a0bfb31bdcac57e9ce8072",
     "includes/widgets/gallery-grid-widget.php": "e3a39de7b8b529511647ad5aa2bc3ef3c86d087955214fae919457b0e804594f",
@@ -20,7 +22,7 @@
     "includes/widgets/traits/atc-content-controls.php": "00fba93feda8c09402f5e0470e469fc48b10172e9cdc0c3c69ac24baf21f9be5",
     "includes/widgets/traits/atc-style-controls.php": "e22a20b99f22decb46abb1ce768c70f077a55d720953bcb326f508d8859c2b6f",
     "includes/widgets/variation-selector-widget.php": "b83480046313c1b03bbd55e08ef56da4781506785b965636c587430718882a33",
-    "odella-elementor-widgets.php": "1f924cdc7153e514c72023af7edb7128f5c08bd3e6b5c1316044b715bd041627"
+    "odella-elementor-widgets.php": "b242bde8909c5233b41725e517fbbf8e3dec49e8e9b76712b62cac948eee2584"
   },
   "target": "plugin"
 }

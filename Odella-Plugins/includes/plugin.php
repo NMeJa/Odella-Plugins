@@ -37,6 +37,8 @@ final class Plugin
         add_action('elementor/widgets/register', [$this, 'register_widgets']);
         add_action('elementor/frontend/after_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
         add_action('elementor/editor/after_enqueue_scripts', [$this, 'enqueue_editor_assets']);
+        add_action('wp_head', [$this, 'print_page_transition_css'], 1);
+        add_action('wp_body_open', [$this, 'print_page_transition']);
 
         add_action('wp_ajax_nmj_load_quick_view', [$this, 'load_quick_view_template']);
         add_action('wp_ajax_nopriv_nmj_load_quick_view', [$this, 'load_quick_view_template']);
@@ -195,6 +197,55 @@ final class Plugin
 
         $rv_js_path = NMJ_PATH . 'assets/js/responsive-video.js';
         wp_register_script('nmj-responsive-video', NMJ_URL . 'assets/js/responsive-video.js', [], $this->get_asset_version($rv_js_path), true);
+
+        if ($this->skip_page_transition()) {
+            return;
+        }
+
+        $pt_css = NMJ_PATH . 'assets/css/page-transition.css';
+        $pt_js = NMJ_PATH . 'assets/js/page-transition.js';
+        wp_enqueue_style('nmj-page-transition', NMJ_URL . 'assets/css/page-transition.css', [], $this->get_asset_version($pt_css));
+        wp_enqueue_script(
+            'nmj-page-transition',
+            NMJ_URL . 'assets/js/page-transition.js',
+            [],
+            $this->get_asset_version($pt_js),
+            ['in_footer' => true, 'strategy' => 'defer']
+        );
+    }
+
+    private function skip_page_transition(): bool
+    {
+        if (is_admin() || isset($_GET['elementor-preview'])) {
+            return true;
+        }
+        if (class_exists('\Elementor\Plugin')) {
+            $elementor = \Elementor\Plugin::$instance;
+            if ($elementor && isset($elementor->preview) && $elementor->preview->is_preview_mode()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function print_page_transition_css(): void
+    {
+        if ($this->skip_page_transition()) {
+            return;
+        }
+        $css = NMJ_PATH . 'assets/css/page-transition.css';
+        if (!is_readable($css)) {
+            return;
+        }
+        echo '<style id="odella-page-transition">' . file_get_contents($css) . '</style>' . "\n";
+    }
+
+    public function print_page_transition(): void
+    {
+        if ($this->skip_page_transition()) {
+            return;
+        }
+        echo '<div id="odella-pt" aria-hidden="true"><img src="https://odella.ge/wp-content/uploads/Odella-Full-Logo.png" alt="" width="111" height="48"></div>' . "\n";
     }
 
     public function enqueue_editor_assets(): void
