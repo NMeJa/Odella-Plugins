@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Odella — manual test, speed and scrolling</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; color: #222; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  a { color: #0b57d0; }
+  li { margin: 0.35rem 0; }
+  .ok { background: #f4f7f4; padding: 0.6rem 0.8rem; }
+  .bad { background: #fdf6f6; padding: 0.6rem 0.8rem; }
+  .note { font-size: 0.95rem; color: #444; }
+</style>
+</head>
+<body>
+<h1>Odella website — what to check (speed and scrolling)</h1>
+<p>Open each link on a phone and on a computer. Tick the box only if what you see matches the “You should see” line. If it does not, write down the page and what you saw instead.</p>
+<p class="note">Use the Georgian site: <a href="https://odella.ge/ka/">https://odella.ge/ka/</a>. English pages are not part of this check.</p>
+
+<h2>1. Homepage scrolling</h2>
+<p>Open <a href="https://odella.ge/ka/">the homepage</a>.</p>
+<ul>
+  <li><label><input type="checkbox"> On a phone, each swipe down stops on the next full screen: video, then categories, then products, then Instagram. There are <strong>4 dots</strong>, not 5.</label></li>
+  <li><label><input type="checkbox"> One more swipe down from Instagram shows the <strong>whole footer</strong>, including the last line (“© 2026 Odella…”).</label></li>
+  <li><label><input type="checkbox"> One swipe up from the footer returns to Instagram, not past it.</label></li>
+  <li><label><input type="checkbox"> On a computer, the mouse wheel and the Page Down / Page Up keys do the same. One wheel notch does not skip two screens.</label></li>
+  <li><label><input type="checkbox"> Open the cart from the homepage and scroll inside the cart. The page behind it does not jump to the next screen.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> four screens that snap, then a footer you can read to the end.</p>
+<p class="bad"><strong>A problem:</strong> the footer is cut off, a fifth dot is still there, or one swipe skips a screen.</p>
+
+<h2>2. Product photos</h2>
+<p>Open <a href="https://odella.ge/ka/product/women/kimono-women/cardigan-dream-bordeaux/">Cardigan Dream Bordeaux</a> and <a href="https://odella.ge/ka/store/">the store</a>.</p>
+<ul>
+  <li><label><input type="checkbox"> The main photo on the cardigan page looks sharp on a phone and on a wide screen. It is not soft or pixelated.</label></li>
+  <li><label><input type="checkbox"> Tapping the photo still opens the large picture.</label></li>
+  <li><label><input type="checkbox"> Store cards and “Related products” cards look the same sharpness as before. They are not stretched or blurry.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> a clear garment photo, and the large picture when you tap it.</p>
+<p class="bad"><strong>A problem:</strong> the main photo is obviously blurry, or the tap does not open the large picture.</p>
+
+<h2>3. Moving from page to page</h2>
+<ul>
+  <li><label><input type="checkbox"> From the store, tap a product. The screen goes white and the Odella logo appears at once, then the product page fades in. There is no long pause on the white screen.</label></li>
+  <li><label><input type="checkbox"> Press Back. The store is visible. The screen is not stuck white.</label></li>
+  <li><label><input type="checkbox"> Add a product to the cart from a product card. The cart opens or updates as before. You are not sent to a white screen.</label></li>
+  <li><label><input type="checkbox"> Open a product photo (the large picture). It opens on top of the page. Closing it returns you to the same product.</label></li>
+  <li><label><input type="checkbox"> Hold Ctrl (or Command on a Mac) and click a product. It opens in a new tab. The original tab does not turn white.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> a short white flash with the logo, then the next page.</p>
+<p class="bad"><strong>A problem:</strong> the white screen stays, the logo never appears, or Back leaves a white page.</p>
+
+<h2>What this check does not cover</h2>
+<p>PageSpeed scores and the long cache warm are a separate run. The homepage still has no PageSpeed score because the first screen is a video. That was already true before these changes. Do not mark the homepage as failed for that.</p>
+</body>
+</html>

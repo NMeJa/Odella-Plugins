@@ -64,6 +64,21 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Why:** Turning on LiteSpeed's file-rewriting minification/deferral generated 83 new `/wp-content/litespeed/` URLs (causing cold misses on Hostinger Edge CDN), converted inline scripts to base64 `data:` URIs, and injected `webfontloader.min.js` (causing late font swaps). Inlining small CSS files via `style_loader_tag` eliminates 34 render-blocking HTTP requests with zero CDN cache race conditions.  
 **Trade-off:** Adds ~28 KB of raw CSS (~5 KB gzipped) inline to the HTML document in exchange for removing 34 blocking network round-trips.
 
+### 2026-11-08 — Unpriced products are hidden, and only new ones are drafted
+**Decision:** A published product with no GEL price is hidden with WooCommerce catalog visibility (`exclude-from-catalog`, `exclude-from-search`) and `_odella_auto_hidden`. It is shown again when a price is saved, including from WP Sheet Editor. A product published without a price, or one that loses its price, is set back to Draft. A product that already has `_odella_auto_hidden` stays published and hidden.  
+**Why:** Fifty published products had no price and could not be bought. Hiding them keeps the store and search clear. Drafting only new ones means filling those fifty in Sheet Editor does not move the rows to Draft.  
+**Trade-off:** The product’s own URL still opens, with Rank Math `noindex`. Visibility terms the owner set are left in place.
+
+### 2026-11-08 — EUR and USD follow the daily National Bank of Georgia rate
+**Decision:** `odella-pricing.php` writes the daily National Bank of Georgia EUR and USD rates into Price Based on Country (free 4.3.6). The zone `exchange_rate` is foreign currency per 1 GEL. A rate outside 0.15–0.80, or more than 10% off the stored rate, is rejected and the old rate stays. The first run skips the 10% check because the stored rate was exactly 1.  
+**Why:** The free plugin has no automatic rates, so a 430 ₾ coat was showing as €430 / $430. Buying the Pro plugin was the other way to get rates.  
+**Trade-off:** Rates update once a day on WP-Cron (03:30 Asia/Tbilisi), not live.
+
+### 2026-11-08 — Foreign prices round up to 9 at the WooCommerce getter
+**Decision:** When the visitor’s zone is not GEL and the product is priced by the exchange rate, `odella_round_up_9` runs at `PHP_INT_MAX` on the WooCommerce price getters. A manual zone price is left as entered. GEL is left as entered.  
+**Why:** The free plugin’s rounding is a protected method with no filter, and it only rounds decimals. €148.30 should display as €149, and an entered €200 should stay €200.  
+**Trade-off:** The stored zone meta can stay the unrounded conversion. The price ending in 9 is what the storefront, cart, and checkout show.
+
 ## Open Questions
 
 ### Parked Domain (`odellagiftshop.com` / `odellagift.com`) & Polylang English Readiness for GeoIP Routing
@@ -72,6 +87,8 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Why it's open:**
 1. `odellagiftshop.com` currently returns `NXDOMAIN` in DNS, and `odellagift.com` (previously parked on Hostinger) is currently expired and serves Hostinger's domain expiration page.
 2. In Polylang (`language` term `405`), English (`en_US`) is marked `active: false` (`b:0`), and the English front page (`ID 14592`, *Home - English*) plus Cart/Checkout/My Account translations (`14598`, `14600`, `14602`) are currently in `draft` status, causing `/en/` to return `404`.
+
+**Update 2026-11-08:** The eurozone and the rest-of-world zone now convert from the daily National Bank of Georgia rate, so a non-Georgian visitor already sees EUR or USD instead of a 1:1 copy of the GEL price. Georgian visitors still see GEL. The domain and English-front questions above are still open.
 
 ## Gotchas
 
@@ -89,6 +106,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Symptom:** Enabling Object Cache in LiteSpeed Cache shows `Memcached Extension: Enabled`, `Redis Extension: Enabled`, but `Connection Test: Failed`.  
 **Cause:** Hostinger's shared/cloud CageFS environment compiles the PHP extensions into the binary but does not run a local `redis-server` (`127.0.0.1:6379`) or `memcached` (`127.0.0.1:11211`) daemon or UNIX socket.  
 **Fix:** Keep `litespeed.conf.object` set to `0` (`OFF`) so LiteSpeed does not attempt failing TCP connections on every page request.
+
+### 2026-11-08 — The NBG currency filter returns an empty list
+**Symptom:** `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json/?currencies=EUR,USD` returns `[]` with HTTP 200.  
+**Cause:** That filter does not return the two codes. The same URL with no `currencies` parameter returns the full list, including EUR and USD.  
+**Fix:** `odella_fetch_nbg_rates()` tries the filtered URL first. If EUR and USD are missing, it uses the unfiltered response and keeps only those two codes.
 
 
 

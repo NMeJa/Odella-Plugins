@@ -42,6 +42,7 @@
   * Uses an Elementor Loop Grid with AJAX **Load More** pagination and card template ID `14786`.
 * **Single Product Template**: Elementor Library ID `15154`
 * **Our Story / About Us Page**: Post ID `58` (`/ka/our-story/`)
+* **Pricing guards**: [`site/mu-plugins/odella-pricing.php`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/mu-plugins/odella-pricing.php). A published product with no GEL price is hidden from the catalog and search. A newly unpriced product stays Draft. EUR and USD follow the daily National Bank of Georgia rate unless a manual zone price is entered, and a converted price is rounded up to the next whole number ending in 9.
 
 ---
 

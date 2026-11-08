@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Odella — manual test, prices</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; color: #222; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  a { color: #0b57d0; }
+  li { margin: 0.35rem 0; }
+  .ok { background: #f4f7f4; padding: 0.6rem 0.8rem; }
+  .bad { background: #fdf6f6; padding: 0.6rem 0.8rem; }
+  .note { font-size: 0.95rem; color: #444; }
+</style>
+</head>
+<body>
+<h1>Odella website — what to check (prices)</h1>
+<p>Do these from Georgia first, with no VPN. Then repeat the marked steps with a VPN. Tick a box only if the page matches the “You should see” line. If it does not, write the page address and the price you saw.</p>
+<p class="note">Prices in Georgia use the lari sign (₾). Abroad, Germany should show euros (€) and the United States should show dollars ($). A converted foreign price ends in 9 (149, 159, 169). A price someone typed by hand does not get changed.</p>
+
+<h2>1. Products with no price stay out of the shop</h2>
+<p>These products are still on the site. They must not appear as cards you can buy.</p>
+<ul>
+  <li><label><input type="checkbox"> Open <a href="https://odella.ge/ka/store/">the store</a>. Every card has a price. None say nothing where the price should be.</label></li>
+  <li><label><input type="checkbox"> Open <a href="https://odella.ge/ka/product-category/women/kimono-women/long-kimono-women/">long kimonos</a>. The list is empty (no product cards). That category has no priced products.</label></li>
+  <li><label><input type="checkbox"> Search for <a href="https://odella.ge/ka/?s=Morbido&amp;post_type=product">Morbido</a>. You may land on a priced scarf. You should not see a long-kimono card with an empty price.</label></li>
+  <li><label><input type="checkbox"> Open this address directly: <a href="https://odella.ge/ka/product/women/kimono-women/long-kimono-women/%E1%83%90%E1%83%91%E1%83%A0%E1%83%94%E1%83%A8%E1%83%A3%E1%83%9B%E1%83%98%E1%83%A1-%E1%83%9B%E1%83%9D%E1%83%A1%E1%83%90%E1%83%AA%E1%83%9B%E1%83%94%E1%83%9A%E1%83%98-morbido-2/">the unpriced Morbido long kimono</a>. The page opens. It has <strong>no price</strong> and no working add-to-cart for a price.</label></li>
+  <li><label><input type="checkbox"> On a priced product, the “Related products” row has no card without a price.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> priced cards in the store, an empty long-kimono list, and the direct Morbido page with no price.</p>
+<p class="bad"><strong>A problem:</strong> a card in the store, search, or related products has a blank price.</p>
+
+<h2>2. Georgia prices did not change</h2>
+<p>No VPN. You are in Georgia.</p>
+<ul>
+  <li><label><input type="checkbox"> <a href="https://odella.ge/ka/product/women/kimono-women/cardigan-dream-bordeaux/">Cardigan Dream Bordeaux</a> shows <strong>430 ₾</strong>.</label></li>
+  <li><label><input type="checkbox"> A square scarf such as <a href="https://odella.ge/ka/product/women/scarf-women/square-scarf-women/%E1%83%90%E1%83%91%E1%83%A0%E1%83%94%E1%83%A8%E1%83%A3%E1%83%9B%E1%83%98%E1%83%A1-%E1%83%97%E1%83%90%E1%83%95%E1%83%A1%E1%83%90%E1%83%91%E1%83%A3%E1%83%A0%E1%83%90%E1%83%95%E1%83%98-nola/">Nola</a> shows <strong>90 ₾</strong>.</label></li>
+  <li><label><input type="checkbox"> The store and a category page still show lari prices, not euros or dollars.</label></li>
+</ul>
+<p class="bad"><strong>A problem:</strong> a Georgian visitor sees € or $, or the cardigan is no longer 430 ₾.</p>
+
+<h2>3. Abroad, the price is converted and ends in 9</h2>
+<p>Use a VPN. Open the same cardigan: <a href="https://odella.ge/ka/product/women/kimono-women/cardigan-dream-bordeaux/">Cardigan Dream Bordeaux</a>.</p>
+<ul>
+  <li><label><input type="checkbox"> VPN set to <strong>Germany</strong>: the price is in euros and is <strong>149 €</strong> (not 430, and not 148).</label></li>
+  <li><label><input type="checkbox"> VPN set to the <strong>United States</strong>: the price is in dollars and is <strong>169 $</strong> (not 430, and not 165).</label></li>
+  <li><label><input type="checkbox"> Turn the VPN off in Georgia: the price is <strong>430 ₾</strong> again.</label></li>
+  <li><label><input type="checkbox"> In Germany, add the cardigan to the cart. The cart total is <strong>149 €</strong>. Go to checkout. The total is still <strong>149 €</strong>. Stop on the payment step. Do not pay.</label></li>
+  <li><label><input type="checkbox"> Repeat that cart check in the United States. The total is <strong>169 $</strong> in the cart and at checkout. Do not pay.</label></li>
+</ul>
+<p class="note">A 90 ₾ scarf is about <strong>39 €</strong> in Germany and <strong>39 $</strong> in the United States. Both end in 9. That is expected.</p>
+<p class="bad"><strong>A problem:</strong> Germany or the United States still shows 430, or the cart total is different from the price on the product page.</p>
+
+<h2>4. A price typed by hand wins</h2>
+<p>This step is for the person who edits products in WP Sheet Editor.</p>
+<ol>
+  <li>WP Sheet Editor → Products → Columns visibility / Custom fields. Turn on <code>_eurozone_regular_price</code> and <code>_global_regular_price</code>. Rename them <strong>EUR price</strong> and <strong>USD price</strong>. If the columns are missing, type one manual price on the normal product screen first, then turn the columns on.</li>
+  <li>On one test product, set EUR price to <strong>200</strong> and save.</li>
+  <li>With the VPN in Germany, that product shows <strong>200 €</strong> exactly. It does not become 209.</li>
+  <li>Clear that EUR price and save. Germany shows the converted price ending in 9 again.</li>
+</ol>
+<ul>
+  <li><label><input type="checkbox"> Germany showed 200 € while the cell was 200, and the converted …9 price after the cell was cleared.</label></li>
+</ul>
+
+<h2>5. A new product with no price does not stay in the shop</h2>
+<p>In WordPress → Products → Add New. Name it <strong>TEST unpriced</strong>. Leave the price empty. Click Publish.</p>
+<ul>
+  <li><label><input type="checkbox"> The product comes back as <strong>Draft</strong>, not Published.</label></li>
+  <li><label><input type="checkbox"> A yellow notice names it and says it was kept as Draft because it has no price. In Georgian the notice starts with “შენახულია მონახაზად, რადგან ფასი არ აქვს:”.</label></li>
+  <li><label><input type="checkbox"> Set the price to 1 ₾ and publish again. It stays Published and appears in the store.</label></li>
+  <li><label><input type="checkbox"> Delete that test product permanently (Trash, then Delete permanently).</label></li>
+</ul>
+<p class="note">Do not draft the 50 older products that already have no price. Editing only their description must leave them Published. They stay hidden from the store.</p>
+</body>
+</html>
