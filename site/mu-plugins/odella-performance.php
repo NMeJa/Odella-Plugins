@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
  * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, conditionally dequeues heavy filter assets on non-catalog pages, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.2.0
+ * Version: 1.3.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -393,3 +393,11 @@ add_filter( 'style_loader_src', function( $src, $handle ) {
     }
     return $src;
 }, 999, 2 );
+
+/**
+ * 12. Cap newly uploaded originals at 2560 px.
+ *     Existing originals are left as they are; the lightbox still uses them.
+ */
+add_filter( 'big_image_size_threshold', function () {
+    return 2560;
+}, 999 );

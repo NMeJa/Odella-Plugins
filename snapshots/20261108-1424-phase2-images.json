@@ -1,0 +1,245 @@
+{
+  "posts": {
+    "15154": {
+      "post_status": "publish",
+      "_elementor_data": "[{\"id\":\"8ba0638\",\"elType\":\"container\",\"settings\":{\"flex_direction\":\"column\"},\"elements\":[{\"id\":\"799c47f\",\"elType\":\"e-flexbox\",\"settings\":{\"classes\":{\"$$type\":\"classes\",\"value\":[\"e-799c47f-67b9474\"]}},\"elements\":[{\"id\":\"9b5758a\",\"elType\":\"e-div-block\",\"settings\":[],\"elements\":[{\"id\":\"80d5d33\",\"elType\":\"widget\",\"settings\":{\"__globals__\":{\"link_color\":\"globals\\/colors?id=9333735\",\"text_color\":\"globals\\/colors?id=256943e\",\"text_typography_typography\":\"globals\\/typography?id=18c7f5d\"},\"alignment_mobile\":\"start\"},\"elements\":[],\"widgetType\":\"woocommerce-breadcrumb\"},{\"id\":\"f48a81a\",\"elType\":\"widget\",\"settings\":{\"row_pattern\":[{\"_id\":\"f24a6a7\",\"row_label\":\"Row\",\"row_shape\":\"ar_0.6667\",\"row_object_fit\":\"scale-down\"},{\"row_label\":\"Small rows\",\"row_columns\":2,\"row_object_fit\":\"contain\",\"_id\":\"bdde32e\",\"row_custom_height\":{\"unit\":\"px\",\"size\":350,\"sizes\":[]},\"row_shape\":\"ar_0.6667\"}],\"background_color\":\"\",\"__dynamic__\":{\"gallery\":\"[elementor-tag id=\\\"cb3e5bc\\\" name=\\\"woocommerce-product-gallery-tag\\\" settings=\\\"%7B%7D\\\"]\"},\"hover_opacity\":{\"unit\":\"px\",\"size\":1,\"sizes\":[]},\"hover_scale\":{\"unit\":\"px\",\"size\":1,\"sizes\":[]},\"open_lightbox\":\"yes\"},\"elements\":[],\"widgetType\":\"nmj_gallery_grid\"}],\"isInner\":false,\"styles\":[],\"interactions\":[],\"editor_settings\":{\"title\":\"Images\"},\"version\":\"0.0\"},{\"id\":\"8e4983b\",\"elType\":\"e-div-block\",\"settings\":{\"classes\":{\"$$type\":\"classes\",\"value\":[\"e-8e4983b-f490abe\"]}},\"elements\":[{\"id\":\"3c7df5f\",\"elType\":\"e-div-block\",\"settings\":{\"classes\":{\"$$type\":\"classes\",\"value\":[\"e-3c7df5f-c04abf6\"]}},\"elements\":[{\"id\":\"22bce04c\",\"elType\":\"widget\",\"settings\":{\"_margin\":{\"unit\":\"%\",\"top\":\"0\",\"right\":\"0\",\"bottom\":\"8\",\"left\":\"0\",\"isLinked\":false},\"_margin_tablet\":{\"unit\":\"%\",\"top\":\"0\",\"right\":\"0\",\"bottom\":\"0\",\"left\":\"0\",\"isLinked\":false},\"_margin_mobile\":{\"unit\":\"%\",\"top\":\"\",\"right\":\"\",\"bottom\":\"\",\"left\":\"\",\"isLinked\":true}},\"elements\":[],\"widgetType\":\"woocommerce-notices\"},{\"id\":\"60d003d3\",\"elType\":\"widget\",\"settings\":{\"__dynamic__\":{\"title\":\"[elementor-tag id=\\\"\\\" name=\\\"woocommerce-product-title-tag\\\" settings=\\\"%7B%22product_id%22%3Afalse%2C%22before%22%3A%22%22%2C%22after%22%3A%22%22%2C%22fallback%22%3A%22%22%7D\\\"]\"},\"title\":\"Add Your Heading Text Here\",\"__globals__\":{\"title_color\":\"globals\\/colors?id=256943e\",\"typography_typography\":\"globals\\/typography?id=7fabfe3\",\"text_stroke_stroke_color\":\"globals\\/colors?id=v4-odellasilver\"},\"align_mobile\":\"center\",\"text_stroke_text_stroke_type\":\"yes\",\"text_stroke_text_stroke\":{\"unit\":\"px\",\"size\":2,\"sizes\":[]},\"text_shadow_text_shadow\":{\"horizontal\":0,\"vertical\":0,\"blur\":17,\"color\":\"rgba(0,0,0,0.3)\"}},\"elements\":[],\"widgetType\":\"woocommerce-product-title\"},{\"id\":\"47db2a3\",\"elType\":\"widget\",\"settings\":{\"out_of_stock_text\":\"Out of Stock\",\"alignment\":\"left\",\"__dynamic__\":{\"out_of_stock_text\":\"[elementor-tag id=\\\"15eca17\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Aout_of_stock%22%7D\\\"]\"},\"__globals__\":{\"sale_original_color\":\"globals\\/colors?id=357c029\",\"price_color\":\"globals\\/colors?id=256943e\",\"oos_color\":\"globals\\/colors?id=256943e\"},\"price_tag\":\"h6\"},\"elements\":[],\"widgetType\":\"nmj_product_price\"},{\"id\":\"b7afd24\",\"elType\":\"widget\",\"settings\":{\"show_quantity\":\"\",\"show_native_atc\":\"\",\"reset_label\":\"Clear\",\"clear_text\":\"Clear\",\"show_variation_price\":\"\",\"clear_icon\":{\"value\":\"fas fa-times\",\"library\":\"fa-solid\"},\"__dynamic__\":{\"clear_text\":\"[elementor-tag id=\\\"9a32b90\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Aclear%22%7D\\\"]\"},\"show_description\":\"\"},\"elements\":[],\"widgetType\":\"nmj_variation_selector\"},{\"id\":\"e768832\",\"elType\":\"widget\",\"settings\":{\"in_stock_text\":\"\",\"in_stock_icon\":{\"value\":{\"url\":\"https:\\/\\/odella.ge\\/wp-content\\/uploads\\/Cart-With-Plus.svg\",\"id\":15084},\"library\":\"svg\"},\"added_text\":\"\",\"added_icon\":{\"value\":{\"url\":\"https:\\/\\/odella.ge\\/wp-content\\/uploads\\/Cart-With-Added.svg\",\"id\":15192},\"library\":\"svg\"},\"out_of_stock_text\":\"\",\"out_of_stock_icon\":{\"value\":{\"url\":\"https:\\/\\/odella.ge\\/wp-content\\/uploads\\/Cart-With-Ban.svg\",\"id\":15180},\"library\":\"svg\"},\"button_padding\":{\"unit\":\"px\",\"top\":\"\",\"right\":\"\",\"bottom\":\"\",\"left\":\"\",\"isLinked\":true},\"border_radius\":{\"unit\":\"px\",\"top\":\"\",\"right\":\"\",\"bottom\":\"\",\"left\":\"\",\"isLinked\":true},\"btn_bg_color\":\"#00000000\",\"btn_hover_bg_color\":\"#00000000\",\"btn_added_bg_color\":\"#00000000\",\"btn_oos_bg_color\":\"#00000000\",\"btn_oos_opacity\":{\"unit\":\"px\",\"size\":0.8,\"sizes\":[]},\"icon_size\":{\"unit\":\"px\",\"size\":25,\"sizes\":[]},\"_offset_orientation_h\":\"end\",\"_offset_x_end\":{\"unit\":\"px\",\"size\":35,\"sizes\":[]},\"_offset_y\":{\"unit\":\"px\",\"size\":35,\"sizes\":[]},\"_z_index\":100,\"__globals__\":{\"btn_text_color\":\"globals\\/colors?id=9333735\",\"btn_hover_text_color\":\"globals\\/colors?id=357c029\",\"btn_added_text_color\":\"globals\\/colors?id=357c029\",\"btn_oos_text_color\":\"globals\\/colors?id=256943e\",\"btn_awaiting_text_color\":\"globals\\/colors?id=256943e\",\"btn_awaiting_bg_color\":\"\",\"btn_bg\":\"globals\\/colors?id=v4-odellagreen\",\"btn_bg_h\":\"globals\\/colors?id=v4-odellapurple\",\"text_color\":\"globals\\/colors?id=v4-odellawhite\",\"text_typo_typography\":\"globals\\/typography?id=87d6faf\"},\"show_quantity_input\":\"yes\",\"awaiting_text\":\"Select option\",\"quick_view_text\":\"Quick View\",\"__dynamic__\":{\"out_of_stock_text\":\"[elementor-tag id=\\\"ef8e96a\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Aout_of_stock%22%7D\\\"]\",\"added_text\":\"[elementor-tag id=\\\"b3f678e\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Aadded%22%7D\\\"]\",\"in_stock_text\":\"[elementor-tag id=\\\"013da43\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Aadd_to_cart%22%7D\\\"]\",\"awaiting_text\":\"[elementor-tag id=\\\"147b08a\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Aselect_option%22%7D\\\"]\"},\"text_specific_typography_typography\":\"custom\",\"btn_text_color\":\"#00A79D\",\"btn_hover_text_color\":\"#7966B1\",\"btn_awaiting_text_color\":\"#8A8D8F\",\"btn_awaiting_bg_color\":\"#00000000\",\"btn_added_text_color\":\"#7966B1\",\"btn_oos_text_color\":\"#8A8D8F\",\"awaiting_icon\":{\"value\":{\"url\":\"https:\\/\\/odella.ge\\/wp-content\\/uploads\\/Cart-View.svg\",\"id\":16395},\"library\":\"svg\"}},\"elements\":[],\"widgetType\":\"nmj_add_to_cart\"},{\"id\":\"a5fc689\",\"elType\":\"widget\",\"settings\":{\"_margin\":{\"unit\":\"px\",\"top\":\"15\",\"right\":\"0\",\"bottom\":\"0\",\"left\":\"0\",\"isLinked\":false},\"__globals__\":{\"text_typography_typography\":\"globals\\/typography?id=87d6faf\",\"text_color\":\"globals\\/colors?id=v4-odellasilver\"}},\"elements\":[],\"widgetType\":\"woocommerce-product-short-description\"},{\"id\":\"6f16bdb\",\"elType\":\"widget\",\"widgetType\":\"nested-accordion\",\"settings\":{\"items\":[{\"item_title\":\"Description\",\"_id\":\"dd118f6\",\"__dynamic__\":{\"item_title\":\"[elementor-tag id=\\\"1837384\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Adescription%22%7D\\\"]\"}}],\"default_state\":\"all_collapsed\"},\"elements\":[{\"id\":\"12a6fb4\",\"elType\":\"container\",\"settings\":{\"_title\":\"item #1\",\"content_width\":\"full\"},\"elements\":[{\"id\":\"8f7baa6\",\"elType\":\"widget\",\"settings\":{\"align\":\"start\",\"__globals__\":{\"text_color\":\"globals\\/colors?id=v4-odellasilver\",\"typography_typography\":\"globals\\/typography?id=77fde2e\"},\"_title\":\"Post Content\"},\"elements\":[],\"widgetType\":\"theme-post-content\"}],\"isInner\":true,\"isLocked\":true}]},{\"id\":\"768eda0\",\"elType\":\"widget\",\"settings\":{\"view\":\"table\",\"divider\":\"yes\",\"divider_weight\":{\"unit\":\"px\",\"size\":\"\",\"sizes\":[]},\"space_between\":{\"unit\":\"px\",\"size\":7,\"sizes\":[]},\"divider_style\":\"dotted\",\"divider_color\":\"\",\"_margin\":{\"unit\":\"px\",\"top\":\"15\",\"right\":\"0\",\"bottom\":\"0\",\"left\":\"0\",\"isLinked\":false},\"__globals__\":{\"divider_color\":\"\",\"text_typography_typography\":\"globals\\/typography?id=18c7f5d\",\"link_typography_typography\":\"globals\\/typography?id=18c7f5d\",\"text_color\":\"globals\\/colors?id=v4-odellasilver\",\"link_color\":\"globals\\/colors?id=v4-odellasilver\"},\"__dynamic__\":{\"category_caption_single\":\"[elementor-tag id=\\\"fca4fca\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Acategory%22%7D\\\"]\",\"category_caption_plural\":\"[elementor-tag id=\\\"b386266\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Acategories%22%7D\\\"]\",\"sku_caption\":\"[elementor-tag id=\\\"f754ef8\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Asku%22%7D\\\"]\",\"sku_missing_caption\":\"[elementor-tag id=\\\"6b84017\\\" name=\\\"acf-text\\\" settings=\\\"%7B%22key%22%3A%22options%3Ana%22%7D\\\"]\"}},\"elements\":[],\"widgetType\":\"woocommerce-product-meta\"},{\"id\":\"7ae560c\",\"elType\":\"widget\",\"settings\":{\"share_buttons\":[{\"_id\":\"e521544\"},{\"button\":\"x-twitter\",\"_id\":\"f335dd1\"},{\"button\":\"linkedin\",\"_id\":\"a65f4d5\"}],\"view\":\"icon\",\"skin\":\"minimal\",\"shape\":\"rounded\",\"row_gap\":{\"unit\":\"px\",\"size\":\"\",\"sizes\":[]},\"button_size\":{\"unit\":\"px\",\"size\":0.7,\"sizes\":[]},\"icon_size\":{\"unit\":\"em\",\"size\":2.5,\"sizes\":[]},\"_margin\":{\"unit\":\"px\",\"top\":\"015\",\"right\":\"0\",\"bottom\":\"0\",\"left\":\"0\",\"isLinked\":false},\"__globals__\":{\"typography_typography\":\"globals\\/typography?id=87d6faf\"}},\"elements\":[],\"widgetType\":\"share-buttons\"}],\"isInner\":false,\"styles\":{\"e-3c7df5f-c04abf6\":{\"id\":\"e-3c7df5f-c04abf6\",\"label\":\"local\",\"type\":\"class\",\"variants\":[{\"meta\":{\"breakpoint\":\"desktop\",\"state\":null},\"props\":{\"position\":{\"$$type\":\"string\",\"value\":\"sticky\"},\"inset-block-start\":{\"$$type\":\"size\",\"value\":{\"size\":50,\"unit\":\"px\"}}},\"custom_css\":null}]}},\"interactions\":[],\"editor_settings\":{\"title\":\"Info\"},\"version\":\"0.0\"}],\"isInner\":false,\"styles\":{\"e-8e4983b-f490abe\":{\"id\":\"e-8e4983b-f490abe\",\"label\":\"local\",\"type\":\"class\",\"variants\":[{\"meta\":{\"breakpoint\":\"desktop\",\"state\":null},\"props\":{\"margin\":{\"$$type\":\"dimensions\",\"value\":{\"block-start\":null}}},\"custom_css\":null}]}},\"interactions\":[],\"editor_settings\":[],\"version\":\"0.0\"}],\"isInner\":false,\"styles\":{\"e-799c47f-67b9474\":{\"id\":\"e-799c47f-67b9474\",\"label\":\"local\",\"type\":\"class\",\"variants\":[{\"meta\":{\"breakpoint\":\"desktop\",\"state\":null},\"props\":{\"max-width\":{\"$$type\":\"global-size-variable\",\"value\":\"e-gv-0e07c3a\"},\"margin\":{\"$$type\":\"dimensions\",\"value\":{\"block-start\":null}}},\"custom_css\":null},{\"meta\":{\"breakpoint\":\"mobile_extra\",\"state\":null},\"props\":{\"flex-direction\":{\"$$type\":\"string\",\"value\":\"column\"}},\"custom_css\":null}]}},\"interactions\":[],\"editor_settings\":{\"title\":\"Product\"},\"version\":\"0.0\"}],\"isInner\":false},{\"id\":\"76226a5\",\"elType\":\"container\",\"settings\":{\"flex_direction\":\"column\",\"_title\":\"Related Products\"},\"elements\":[{\"id\":\"7bc6c2db\",\"elType\":\"widget\",\"settings\":{\"title\":\"Related Products\",\"align\":\"center\",\"typography_font_family\":\"Poppins\",\"typography_font_size\":{\"unit\":\"px\",\"size\":65,\"sizes\":[]},\"typography_font_size_tablet\":{\"unit\":\"px\",\"size\":45,\"sizes\":[]},\"typography_font_size_mobile\":{\"unit\":\"px\",\"size\":28,\"sizes\":[]},\"typography_font_weight\":\"600\",\"typography_text_transform\":\"none\",\"typography_font_style\":\"normal\",\"typography_text_decoration\":\"none\",\"typography_line_height\":{\"unit\":\"em\",\"size\":1.2,\"sizes\":[]},\"typography_line_height_mobile\":{\"unit\":\"em\",\"size\":1.1,\"sizes\":[]},\"typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"__globals__\":[]},\"elements\":[],\"widgetType\":\"heading\"},{\"id\":\"11ace090\",\"elType\":\"widget\",\"settings\":{\"posts_per_page\":3,\"columns\":3,\"columns_mobile\":1,\"column_gap\":{\"unit\":\"px\",\"size\":10,\"sizes\":[]},\"row_gap\":{\"unit\":\"px\",\"size\":140,\"sizes\":[]},\"align\":\"left\",\"image_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"button_text_padding\":{\"unit\":\"px\",\"top\":\"10\",\"right\":\"0\",\"bottom\":\"0\",\"left\":\"0\",\"isLinked\":false},\"button_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"show_heading\":\"\",\"heading_text_align\":\"center\",\"heading_spacing\":{\"unit\":\"px\",\"size\":56,\"sizes\":[]},\"onsale_border_radius\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"onsale_width\":{\"unit\":\"px\",\"size\":80,\"sizes\":[]},\"onsale_height\":{\"unit\":\"px\",\"size\":30,\"sizes\":[]},\"onsale_horizontal_position\":\"left\",\"onsale_distance\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"__globals__\":{\"title_color\":\"globals\\/colors?id=v4-odellasilver\",\"title_typography_typography\":\"globals\\/typography?id=87d6faf\",\"price_color\":\"globals\\/colors?id=v4-odellasilver\",\"price_typography_typography\":\"globals\\/typography?id=87d6faf\",\"old_price_color\":\"globals\\/colors?id=v4-odellasilver\",\"old_price_typography_typography\":\"globals\\/typography?id=87d6faf\",\"button_text_color\":\"globals\\/colors?id=v4-odellagreen\",\"button_background_color\":\"globals\\/colors?id=v4-odellatransparent\",\"button_typography_typography\":\"\",\"button_hover_color\":\"globals\\/colors?id=v4-odellapurple\",\"view_cart_color\":\"globals\\/colors?id=v4-odellagreen\",\"heading_color\":\"globals\\/colors?id=v4-odellasilver\",\"onsale_text_color\":\"globals\\/colors?id=v4-odellalightblue\"},\"_element_width_mobile\":\"inherit\",\"row_gap_mobile\":{\"unit\":\"px\",\"size\":70,\"sizes\":[]},\"align_mobile\":\"center\",\"image_spacing_mobile\":{\"unit\":\"px\",\"size\":30,\"sizes\":[]},\"title_color\":\"#8A8D8F\",\"title_typography_typography\":\"custom\",\"title_typography_font_family\":\"Noto Sans\",\"title_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"title_typography_font_size_mobile\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"title_typography_line_height\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"title_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"price_color\":\"#8A8D8F\",\"price_typography_typography\":\"custom\",\"price_typography_font_family\":\"Noto Sans\",\"price_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"price_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"price_typography_line_height\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"price_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"old_price_color\":\"#8A8D8F\",\"old_price_typography_typography\":\"custom\",\"old_price_typography_font_family\":\"Noto Sans\",\"old_price_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"old_price_typography_line_height\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"old_price_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"button_text_color\":\"#7966B1\",\"button_background_color\":\"#00000000\",\"button_typography_typography\":\"custom\",\"button_typography_font_family\":\"Noto Sans\",\"button_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"button_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"button_typography_font_style\":\"italic\",\"button_typography_text_decoration\":\"underline\",\"button_typography_line_height\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"button_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"pagination_spacing\":{\"unit\":\"px\",\"size\":60,\"sizes\":[]},\"pagination_border_color\":\"#467FF7\",\"pagination_padding\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"pagination_typography_typography\":\"custom\",\"pagination_typography_font_family\":\"Poppins\",\"pagination_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"pagination_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"pagination_typography_font_weight\":\"500\",\"pagination_typography_text_transform\":\"capitalize\",\"pagination_typography_font_style\":\"normal\",\"pagination_typography_text_decoration\":\"none\",\"pagination_typography_line_height\":{\"unit\":\"em\",\"size\":1,\"sizes\":[]},\"pagination_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"pagination_link_color\":\"#1C244B\",\"pagination_link_bg_color\":\"#02010100\",\"pagination_link_color_hover\":\"#1C244B\",\"pagination_link_bg_color_hover\":\"#F3F5F8\",\"pagination_link_color_active\":\"#FFFFFF\",\"pagination_link_bg_color_active\":\"#467FF7\",\"onsale_text_background_color\":\"#467FF7\",\"heading_typography_typography\":\"custom\",\"heading_typography_font_family\":\"Poppins\",\"heading_typography_font_size\":{\"unit\":\"px\",\"size\":65,\"sizes\":[]},\"heading_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":45,\"sizes\":[]},\"heading_typography_font_size_mobile\":{\"unit\":\"px\",\"size\":28,\"sizes\":[]},\"heading_typography_font_weight\":\"600\",\"heading_typography_text_transform\":\"none\",\"heading_typography_font_style\":\"normal\",\"heading_typography_text_decoration\":\"none\",\"heading_typography_line_height\":{\"unit\":\"em\",\"size\":1.2,\"sizes\":[]},\"heading_typography_line_height_mobile\":{\"unit\":\"em\",\"size\":1.1,\"sizes\":[]},\"heading_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"onsale_typography_typography\":\"custom\",\"onsale_typography_font_family\":\"Poppins\",\"onsale_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"onsale_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"onsale_typography_font_weight\":\"500\",\"onsale_typography_text_transform\":\"capitalize\",\"onsale_typography_font_style\":\"normal\",\"onsale_typography_text_decoration\":\"none\",\"onsale_typography_line_height\":{\"unit\":\"em\",\"size\":1,\"sizes\":[]},\"onsale_typography_line_height_tablet\":{\"unit\":\"em\",\"size\":2,\"sizes\":[]},\"onsale_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"view_typography_typography\":\"custom\",\"view_typography_font_family\":\"Poppins\",\"view_typography_font_weight\":\"500\",\"view_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"view_typography_text_transform\":\"capitalize\",\"view_typography_font_style\":\"normal\",\"view_typography_text_decoration\":\"none\",\"view_typography_line_height\":{\"unit\":\"em\",\"size\":1,\"sizes\":[]},\"view_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"view_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"old_typography_typography\":\"custom\",\"old_typography_font_family\":\"Poppins\",\"old_typography_font_size\":{\"unit\":\"px\",\"size\":16,\"sizes\":[]},\"old_typography_font_weight\":\"300\",\"old_typography_text_transform\":\"none\",\"old_typography_font_style\":\"normal\",\"old_typography_text_decoration\":\"line-through\",\"old_typography_line_height\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"old_typography_letter_spacing\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"old_typography_word_spacing\":{\"unit\":\"em\",\"size\":0,\"sizes\":[]},\"old_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":\"\",\"sizes\":[]},\"old_typography_font_size_mobile\":{\"unit\":\"px\",\"size\":\"\",\"sizes\":[]},\"old_typography_line_height_tablet\":{\"unit\":\"em\",\"size\":\"\",\"sizes\":[]},\"old_typography_line_height_mobile\":{\"unit\":\"em\",\"size\":\"\",\"sizes\":[]},\"old_typography_letter_spacing_tablet\":{\"unit\":\"px\",\"size\":\"\",\"sizes\":[]},\"old_typography_letter_spacing_mobile\":{\"unit\":\"px\",\"size\":\"\",\"sizes\":[]},\"old_typography_word_spacing_tablet\":{\"unit\":\"em\",\"size\":\"\",\"sizes\":[]},\"old_typography_word_spacing_mobile\":{\"unit\":\"em\",\"size\":\"\",\"sizes\":[]},\"image_border_radius\":{\"unit\":\"px\",\"top\":\"15\",\"right\":\"15\",\"bottom\":\"15\",\"left\":\"15\",\"isLinked\":true},\"title_typography_font_size_laptop\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"title_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"title_typography_font_size_mobile_extra\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"title_typography_line_height_laptop\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"title_typography_line_height_tablet\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"title_typography_line_height_mobile_extra\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"title_typography_line_height_mobile\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"title_typography_letter_spacing_laptop\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"title_typography_letter_spacing_tablet\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"title_typography_letter_spacing_mobile_extra\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"title_typography_letter_spacing_mobile\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"price_typography_font_size_laptop\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"price_typography_font_size_mobile_extra\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"price_typography_font_size_mobile\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"price_typography_line_height_laptop\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"price_typography_line_height_tablet\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"price_typography_line_height_mobile_extra\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"price_typography_line_height_mobile\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"price_typography_letter_spacing_laptop\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"price_typography_letter_spacing_tablet\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"price_typography_letter_spacing_mobile_extra\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"price_typography_letter_spacing_mobile\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"old_price_typography_font_size_laptop\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"old_price_typography_font_size_tablet\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"old_price_typography_font_size_mobile_extra\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"old_price_typography_font_size_mobile\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"old_price_typography_line_height_laptop\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"old_price_typography_line_height_tablet\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"old_price_typography_line_height_mobile_extra\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"old_price_typography_line_height_mobile\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"old_price_typography_letter_spacing_laptop\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"old_price_typography_letter_spacing_tablet\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"old_price_typography_letter_spacing_mobile_extra\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"old_price_typography_letter_spacing_mobile\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"button_typography_font_size_laptop\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"button_typography_font_size_mobile_extra\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"button_typography_font_size_mobile\":{\"unit\":\"px\",\"size\":14,\"sizes\":[]},\"button_typography_line_height_laptop\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"button_typography_line_height_tablet\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"button_typography_line_height_mobile_extra\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"button_typography_line_height_mobile\":{\"unit\":\"em\",\"size\":1.5,\"sizes\":[]},\"button_typography_letter_spacing_laptop\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"button_typography_letter_spacing_tablet\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"button_typography_letter_spacing_mobile_extra\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"button_typography_letter_spacing_mobile\":{\"unit\":\"px\",\"size\":0,\"sizes\":[]},\"show_onsale_flash\":\"\"},\"elements\":[],\"widgetType\":\"woocommerce-product-related\"}],\"isInner\":false}]",
+      "_elementor_page_settings": {
+        "page_template": "elementor_header_footer",
+        "preview_id": "16128"
+      }
+    }
+  },
+  "options": {
+    "wr2x_options": {
+      "method": "Responsive",
+      "retina_sizes": [
+        "Odella Product Card"
+      ],
+      "disabled_sizes": [
+        "thumbnail",
+        "medium",
+        "medium_large",
+        "large",
+        "1536x1536",
+        "2048x2048",
+        "woocommerce_single",
+        "variation_swatches_image_size",
+        "variation_swatches_tooltip_size",
+        "woocommerce_gallery_thumbnail",
+        "woocommerce_thumbnail"
+      ],
+      "big_image_size_threshold": false,
+      "hide_retina_dashboard": false,
+      "module_dashboard_enabled": true,
+      "hide_retina_column": true,
+      "hide_optimize": true,
+      "auto_generate": true,
+      "ignore_sizes": [],
+      "picturefill_keep_src": false,
+      "picturefill_css_background": false,
+      "disable_responsive": false,
+      "full_size": false,
+      "quality": 75,
+      "over_http_check": false,
+      "easyio_domain": "",
+      "cdn_domain": "",
+      "easyio_lossless": "",
+      "debug": false,
+      "logs": false,
+      "picturefill_noscript": false,
+      "image_replace": false,
+      "sizes": [
+        {
+          "width": 150,
+          "height": 150,
+          "crop": 1,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "thumbnail",
+          "shortname": "T"
+        },
+        {
+          "width": 300,
+          "height": 300,
+          "crop": 0,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "medium",
+          "shortname": "M"
+        },
+        {
+          "width": 768,
+          "height": 0,
+          "crop": 0,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "medium_large",
+          "shortname": "ML"
+        },
+        {
+          "width": 1024,
+          "height": 1024,
+          "crop": 0,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "large",
+          "shortname": "L"
+        },
+        {
+          "width": 600,
+          "height": 900,
+          "crop": true,
+          "enabled": true,
+          "retina_enabled": true,
+          "retina": true,
+          "webp": true,
+          "webp_retina": true,
+          "name": "Odella Product Card",
+          "shortname": "OD"
+        },
+        {
+          "width": 600,
+          "height": 0,
+          "crop": 0,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "woocommerce_thumbnail",
+          "shortname": "WO"
+        },
+        {
+          "width": 900,
+          "height": 0,
+          "crop": 0,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "woocommerce_single",
+          "shortname": "WO"
+        },
+        {
+          "width": 100,
+          "height": 100,
+          "crop": 1,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "woocommerce_gallery_thumbnail",
+          "shortname": "WO"
+        },
+        {
+          "width": 50,
+          "height": 50,
+          "crop": 1,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "variation_swatches_image_size",
+          "shortname": "VA"
+        },
+        {
+          "width": 100,
+          "height": 100,
+          "crop": 1,
+          "enabled": false,
+          "retina_enabled": false,
+          "retina": false,
+          "webp": false,
+          "webp_retina": false,
+          "name": "variation_swatches_tooltip_size",
+          "shortname": "VA"
+        },
+        {
+          "enabled": false,
+          "retina": false,
+          "webp": false,
+          "name": "1536x1536",
+          "shortname": "W1"
+        },
+        {
+          "enabled": false,
+          "retina": false,
+          "webp": false,
+          "name": "2048x2048",
+          "shortname": "W2"
+        }
+      ],
+      "module_imagesizes_enabled": true,
+      "module_retina_enabled": true,
+      "module_optimize_enabled": false,
+      "module_ui_enabled": true,
+      "gif_thumbnails_disabled": true,
+      "avif_thumbnails_disabled": true,
+      "webp_thumbnails_disabled": true,
+      "hide_admin_messages": false,
+      "logs_path": null,
+      "custom_image_sizes": [
+        {
+          "name": "Odella Product Card",
+          "width": "600",
+          "height": "900",
+          "crop": "yes"
+        }
+      ],
+      "legacy_build_thumbnails": false,
+      "module_devtools": false,
+      "module_webp_enabled": true,
+      "webp_force_with_easyio": false,
+      "webp_full_size": false,
+      "generate_avif": true,
+      "webp_auto_generate": true,
+      "webp_retina_sizes": [
+        "Odella Product Card"
+      ],
+      "webp_sizes": [
+        "Odella Product Card"
+      ],
+      "webp_method": "none",
+      "webp_ignored_extensions": [
+        "gif",
+        "svg",
+        "bmp",
+        "tiff"
+      ],
+      "module_ai_enabled": false,
+      "ai_service": "none",
+      "ai_history": [],
+      "ai_upscale": false,
+      "ai_retina_full_size": false,
+      "claid_api_key": "",
+      "claid_host": "api.claid.ai",
+      "claid_remote_upload": "upload",
+      "claid_restoration_type": "photo",
+      "claid_upscale_type": "bounds",
+      "wp_lazy_loading": {
+        "img": false,
+        "iframe": false,
+        "video": false,
+        "picture": false
+      },
+      "wp_auto_sizes": true
+    }
+  },
+  "label": "phase2-images",
+  "saved_at": "2026-11-08T14:24:57"
+}
