@@ -4,6 +4,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 ## Decisions
 
+### 2026-11-08 — Elementor CSS is external, small-file inline threshold is 2 KB
+**Decision:** `elementor_css_print_method` is `external`. The mu-plugin inlines a local stylesheet only when the file is ≤ 2 KB. This supersedes the 2026-11-07 decision to print Elementor CSS internally.  
+**Why:** Internal CSS repeated 270–400 KB on every page and could not be reused on the next navigation. External files are cached by the browser. The old 404 risk is guarded by the purge order (Elementor cache, then LiteSpeed, then the Hostinger CDN) and by `tools/probe_css.py`.  
+**Trade-off:** A stylesheet that is missing from the CDN 404s until the purge finishes. Generated files stay on disk after a rollback of the option.
+
 ### 2026-11-08 — Live Elementor is 4.3.6 / Pro 4.3.3
 **Decision:** The live site runs Elementor 4.3.6 and Elementor Pro 4.3.3. The 2026-11-07 note that Elementor was pinned at 4.2.3 / Pro 4.2.2 is historical.  
 **Why:** The versions on the server are the pair that is actually installed.  

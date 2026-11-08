@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
  * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, conditionally dequeues heavy filter assets on non-catalog pages, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.3.0
+ * Version: 1.4.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -169,7 +169,7 @@ add_filter( 'style_loader_tag', function( $tag, $handle, $href, $media ) {
              . '<noscript><link rel="stylesheet" href="' . $safe_href . '" /></noscript>' . "\n";
     }
 
-    // 6c. Inline local stylesheets <= 28 KB (with automatic relative url() resolution)
+    // 6c. Inline local stylesheets ≤ 2 KB (with automatic relative url() resolution)
     $path = parse_url( $href, PHP_URL_PATH );
     if ( empty( $path ) || strpos( $path, '/wp-content/' ) !== 0 ) {
         return $tag;
@@ -179,7 +179,7 @@ add_filter( 'style_loader_tag', function( $tag, $handle, $href, $media ) {
         return $tag;
     }
     $size = filesize( $file );
-    if ( $size > 0 && $size <= 28672 ) {
+    if ( $size > 0 && $size <= 2048 ) {
         $css = file_get_contents( $file );
         if ( $css !== false && stripos( $css, '@import' ) === false && strpos( $css, '</style' ) === false ) {
             if ( stripos( $css, 'url(' ) !== false ) {

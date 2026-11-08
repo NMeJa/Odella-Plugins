@@ -6,6 +6,7 @@ Exit 1 when any asset returns 404. Other non-200 statuses are printed.
 
 from __future__ import annotations
 
+import argparse
 import http.client
 import re
 import ssl
@@ -20,6 +21,7 @@ MOBILE_UA = (
     "AppleWebKit/605.1.15 Mobile/15E148 OdellaCacheWarmer/1.0 (+https://odella.ge)"
 )
 DESKTOP_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) OdellaCacheWarmer/1.0 (+https://odella.ge)"
+STYLE_RE = re.compile(r"<style\b", re.I)
 LINK_RE = re.compile(r"<link\b[^>]*>", re.I)
 SCRIPT_RE = re.compile(r"<script\b[^>]*\bsrc=[\"']([^\"']+)", re.I)
 HREF_RE = re.compile(r"href=[\"']([^\"']+)", re.I)
@@ -46,7 +48,7 @@ def request(method: str, url: str, timeout: int = 60) -> tuple[int, bytes]:
     return status, body
 
 
-def page_html(url: str, user_agent: str) -> tuple[int, str]:
+def page_response(url: str, user_agent: str) -> tuple[int, str, bytes]:
     parsed = urllib.parse.urlparse(url)
     conn = http.client.HTTPSConnection(parsed.hostname, timeout=60, context=ssl.create_default_context())
     path = parsed.path or "/"
@@ -60,8 +62,27 @@ def page_html(url: str, user_agent: str) -> tuple[int, str]:
     resp = conn.getresponse()
     body = resp.read()
     status = resp.status
+    location = resp.getheader("Location")
     conn.close()
+    if status in (301, 302, 303, 307, 308) and location:
+        return status, urllib.parse.urljoin(url, location), body
+    return status, "", body
+
+
+def page_html(url: str, user_agent: str) -> tuple[int, str]:
+    status, _location, body = page_response(url, user_agent)
     return status, body.decode("utf-8", "replace")
+
+
+def fetch_document(url: str, user_agent: str) -> tuple[int, str, bytes]:
+    current = url
+    for _ in range(5):
+        status, location, body = page_response(current, user_agent)
+        if location:
+            current = location
+            continue
+        return status, current, body
+    return status, current, body
 
 
 def absolutize(page: str, asset: str) -> str | None:
@@ -103,14 +124,29 @@ def asset_status(url: str) -> int:
     return status
 
 
+def print_sizes(pages: list[str]) -> None:
+    print(f"{'bytes':>8}  {'styles':>6}  {'status':>6}  ua       url")
+    for page in pages:
+        for label, agent in (("mobile", MOBILE_UA), ("desktop", DESKTOP_UA)):
+            status, _final, body = fetch_document(page, agent)
+            styles = len(STYLE_RE.findall(body.decode("utf-8", "replace")))
+            print(f"{len(body):8}  {styles:6}  {status:6}  {label:7}  {page}")
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    parser = argparse.ArgumentParser(description="Check CSS/JS responses, or print HTML size and style-block counts.")
+    parser.add_argument("--sizes", action="store_true", help="Print raw HTML bytes and <style> block counts. Do not check assets.")
+    args = parser.parse_args()
     pages = [
         line.strip()
         for line in URLS_PATH.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.strip().startswith("#")
     ]
+    if args.sizes:
+        print_sizes(pages)
+        return
     assets: set[str] = set()
     for page in pages:
         for label, agent in (("mobile", MOBILE_UA), ("desktop", DESKTOP_UA)):
