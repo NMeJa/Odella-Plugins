@@ -69,6 +69,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Why:** Those strings were hardcoded in English inside Elementor.  
 **Trade-off:** A new shop string has to be added to that map.
 
+### 2026-11-09 — Payments stay off while the site is live
+**Decision:** Payment gateways stay disabled. Do not turn one on without the owner.  
+**Why:** The store is public, and checkout is not ready to take money.  
+**Trade-off:** Placing an order stops at the payment step. Shipping zones stay empty until delivery is decided — see Open Questions.
+
 ### 2026-11-08 — WOOF is deactivated; delete it on 2026-11-22
 **Decision:** The store archive uses the Odella Product Filter widget. WOOF (`woocommerce-products-filter`) is deactivated and left installed. Delete it on 2026-11-22 if no rollback was needed (`wp plugin delete woocommerce-products-filter`), and delete popup `16255` then.  
 **Why:** The new filter uses real category URLs. WOOF stays installed for two weeks so it can be switched back on.  
@@ -110,6 +115,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 **Update 2026-11-08:** The eurozone and the rest-of-world zone now convert from the daily National Bank of Georgia rate, so a non-Georgian visitor already sees EUR or USD instead of a 1:1 copy of the GEL price. Georgian visitors still see GEL. The domain and English-front questions above are still open.
 
+### Delivery — Glovo / Wolt
+**Status:** Open  
+**Context:** The owner still has to confirm with the client a distance-based Glovo or Wolt fee and an automatic hand-off of the order. Shipping zones stay empty until that is decided.  
+**Why it's open:** Payments are disabled, and no carrier is chosen.
+
 ## Gotchas
 
 ### 2026-11-07 — Hostinger Edge CDN cache 404 race condition with external Elementor CSS
@@ -131,6 +141,21 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 **Symptom:** `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json/?currencies=EUR,USD` returns `[]` with HTTP 200.  
 **Cause:** That filter does not return the two codes. The same URL with no `currencies` parameter returns the full list, including EUR and USD.  
 **Fix:** `odella_fetch_nbg_rates()` tries the filtered URL first. If EUR and USD are missing, it uses the unfiltered response and keeps only those two codes.
+
+### 2026-11-09 — Body line-height disappeared from 1600 px up
+**Symptom:** Body text and cart-drawer product names were clipped at 1600 px and wider.  
+**Cause:** Kit 16 typography `7778499` (Body) had desktop line-height set to unit `em` with an empty size. Elementor then omitted `--e-global-typography-7778499-line-height` above 1599 px. An empty size is the same failure as a line-height under 5 px: the computed value collapses. The saved value was not `1.6px` when this was fixed.  
+**Fix:** Desktop line-height is `1.6em`. The other global typographies were already `em`. Terms and Privacy had no line-height keys.
+
+### 2026-11-09 — Hello Elementor button styles cover third-party buttons
+**Symptom:** The checkout phone field (intl-tel-input) showed a pink border and background, and the flag, arrow, and `+995` did not sit on one line.  
+**Cause:** Hello Elementor's global `button` rules override the country button.  
+**Fix:** `site/theme-child/style.css` resets `.iti .iti__selected-country` only. The input's own padding is left alone.
+
+### 2026-11-09 — Modern Cart HTML and nonce are cached
+**Symptom:** A cached page can show an old cart count, and later cart AJAX fails because `moderncart_ajax_object.ajax_nonce` was baked into that HTML.  
+**Cause:** LiteSpeed caches the drawer markup and the nonce with the page.  
+**Fix:** `cart-refresh.js` loads a visitor nonce from `GET /wp-json/odella/v1/cart-nonce` (`Cache-Control: no-store, private`) and replaces the drawer and the floating cart when the cart cookie or the badge says the cached HTML is stale. A rejected nonce is fetched again once.
 
 
 
