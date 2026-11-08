@@ -50,7 +50,20 @@
         }
 
         var mandatory = instances.some(function (inst) { return !inst.released; });
+        // A 27" 2K viewport (2560x1440, or ~2048x1152 at 125% scale) is tall enough
+        // that proximity snap treats the short footer as "near" Instagram and pulls
+        // back. Shorter viewports, including 1920x1080, stay put with proximity.
+        if (!mandatory && tallWideViewport()) {
+            setSnap('none');
+            return;
+        }
         setSnap(mandatory ? 'y mandatory' : 'y proximity');
+    }
+
+    function tallWideViewport() {
+        var w = window.innerWidth || htmlEl.clientWidth || 0;
+        var h = window.innerHeight || htmlEl.clientHeight || 0;
+        return w >= 2000 && h > 1080;
     }
 
     function setActive(inst, index) {
@@ -283,6 +296,10 @@
                 e.preventDefault();
                 scrollToSection(inst, inst.sections.length - 1);
             }
+        });
+
+        window.addEventListener('resize', function () {
+            refreshSnap();
         });
 
         // Real-time scroll tracking for touch swipes and scrollbar dragging
