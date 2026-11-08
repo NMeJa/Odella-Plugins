@@ -52,7 +52,22 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 ### 2026-11-07 — Frontend Admin-Plugin Bypass & Conditional WOOF Asset Loading via MU-Plugin
 **Decision:** Created `wp-content/mu-plugins/odella-performance.php` to (1) skip loading strictly administrative/bulk-editor plugins (`wp-sheet-editor-*`, `woo-products-bulk-editor-premium`, `acf-quickedit-fields`, `enable-media-replace`) on public frontend visitor requests while keeping them 100% active in `/wp-admin/`, and (2) unhook and dequeue `woocommerce-products-filter` (WOOF's 58 CSS/JS files) on non-catalog pages (Home, Single Product, About, Contact, Cart, Checkout).  
 **Why:** Eliminates ~600 ms of PHP plugin initialization overhead and removes 59 unnecessary CSS/JS HTTP requests from the homepage and single product pages without affecting `/wp-admin/` workflows or store catalog filtering.  
-**Trade-off:** If a WOOF filter widget is ever placed on a new custom page outside the standard WooCommerce shop/archive/store routes, its page ID/slug should be added to `odella_is_catalog_filter_page()` in `odella-performance.php`.
+**Trade-off:** None remaining. WOOF itself was removed from the mu-plugin on 2026-11-08.
+
+### 2026-11-09 — The shop filter uses category URLs and a local product index
+**Decision:** Category archives are the filter URLs. Search is `?q=` and sort is `?orderby=date|price|price-desc`, with newest as the default. Clicks filter a cached catalog file, `wp-content/uploads/odella-catalog/catalog-<stamp>.json`, instead of rebuilding the Elementor archive. Rebuild it from the admin-bar Reindex button, from Products → Catalog index, or on a timer (24h 0m by default). 0h 0m leaves it manual.  
+**Why:** Fetching a full archive page for a few hundred products was the slow part. The index is built once and then filtered in the browser.  
+**Trade-off:** The file stays as it was until the next rebuild. Opening a category URL directly still renders that archive on the server.
+
+### 2026-11-09 — Related products stay in the same category
+**Decision:** Related products come from the product’s deepest category, then from that category’s parent only. Tags are not used. The list is published, in stock, catalog-visible, and priced. The widget shows 4 on desktop and 2 on mobile. The code is `Odella-Plugins/includes/related-products.php`.  
+**Why:** WooCommerce’s default related list mixed categories and tags.  
+**Trade-off:** A category with only one or two siblings is topped up from its parent and can still be short. It never pulls from other branches.
+
+### 2026-11-09 — Georgian shop strings live in one map
+**Decision:** `nmj_t()` in `Odella-Plugins/includes/i18n.php` is the Georgian and English map for shop UI strings. Widgets use it when a text setting is empty or still the English default. The Load More button (`c490a4e`) and the Related heading (`7bc6c2db`) are swapped by element ID on Georgian pages.  
+**Why:** Those strings were hardcoded in English inside Elementor.  
+**Trade-off:** A new shop string has to be added to that map.
 
 ### 2026-11-08 — WOOF is deactivated; delete it on 2026-11-22
 **Decision:** The store archive uses the Odella Product Filter widget. WOOF (`woocommerce-products-filter`) is deactivated and left installed. Delete it on 2026-11-22 if no rollback was needed (`wp plugin delete woocommerce-products-filter`), and delete popup `16255` then.  

@@ -1,0 +1,12 @@
+{
+  "posts": {
+    "18918": {
+      "post_status": "private",
+      "_elementor_data": "[{\"id\":\"t3dwrap\",\"elType\":\"container\",\"settings\":{\"flex_direction\":\"column\",\"content_width\":\"full\"},\"elements\":[{\"id\":\"t3dfilt\",\"elType\":\"widget\",\"widgetType\":\"nmj_product_filter\",\"settings\":{\"grid_element_id\":\"c490a4e\"},\"elements\":[]},{\"id\":\"c490a4e\",\"elType\":\"widget\",\"widgetType\":\"loop-grid\",\"settings\":{\"template_id\":\"14786\",\"product_query_post_type\":\"product\",\"post_query_post_type\":\"product\",\"posts_per_page\":24,\"columns\":4,\"columns_mobile\":2,\"pagination_type\":\"load_more_on_click\",\"text\":\"Load More\",\"load_more_no_posts_custom_message\":\"\",\"load_more_no_posts_message_switcher\":\"\",\"_skin\":\"product\"},\"elements\":[]}],\"isInner\":false}]",
+      "_elementor_page_settings": ""
+    }
+  },
+  "options": [],
+  "label": "3F-test-filter",
+  "saved_at": "2026-11-09T01:45:42"
+}

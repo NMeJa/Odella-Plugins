@@ -23,8 +23,8 @@
 * **Page Builder**: Elementor & Elementor Pro.
   * **CSS Print Method**: **External** (`elementor_css_print_method: external`). The mu-plugin inlines a local stylesheet only when the file is ≤ 2 KB. Purge order is Elementor, then LiteSpeed, then the Hostinger CDN, and `tools/probe_css.py` checks for 404s.
   * **Page transitions**: custom. A click fades to white with the O'Della logo (200 ms out, 250 ms in, no minimum wait). Elementor Pro page transitions in kit 16 are off. Logged-out pages prefetch links at eagerness `moderate`, excluding cart, checkout, and account.
-* **Custom Widgets**: `odella-elementor-widgets` plugin (provides custom widgets: `nmj-gallery-grid`, `nmj-add-to-cart`, `nmj-product-price`, `nmj-variation-selector`).
-* **Product Filters**: `woocommerce-products-filter` (WOOF / Husky).
+* **Custom Widgets**: `odella-elementor-widgets` plugin (provides custom widgets: `nmj-gallery-grid`, `nmj-add-to-cart`, `nmj-product-price`, `nmj-variation-selector`, `nmj_product_filter`).
+* **Product Filters**: Odella Product Filter widget (`nmj_product_filter`) on the store archive. Category URLs are the filter. Search is `?q=` and sort is `?orderby=`. Clicks use the cached catalog index in `wp-content/uploads/odella-catalog/`. WOOF is deactivated until 2026-11-22.
 * **Multilingual**: `polylang` + `connect-polylang-elementor`.
 
 ---
@@ -40,6 +40,9 @@
 * **Footer Template**: Elementor Library ID `3023`
 * **Product Archive / Store Page**: Template ID `15580`
   * Uses an Elementor Loop Grid with AJAX **Load More** pagination and card template ID `14786`.
+  * The Odella Product Filter widget (`nmj_product_filter`, element `f3e0d21`) sits above Loop Grid `c490a4e`.
+* **Shop strings**: `nmj_t()` in `Odella-Plugins/includes/i18n.php`.
+* **Related products**: `Odella-Plugins/includes/related-products.php`. Same deepest category, then its parent only. Widget `11ace090` on single product template `15154`.
 * **Single Product Template**: Elementor Library ID `15154`
 * **Our Story / About Us Page**: Post ID `58` (`/ka/our-story/`)
 * **Pricing guards**: [`site/mu-plugins/odella-pricing.php`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/mu-plugins/odella-pricing.php). A published product with no GEL price is hidden from the catalog and search. A newly unpriced product stays Draft. EUR and USD follow the daily National Bank of Georgia rate unless a manual zone price is entered, and a converted price is rounded up to the next whole number ending in 9.
