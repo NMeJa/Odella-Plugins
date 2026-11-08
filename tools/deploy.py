@@ -57,10 +57,10 @@ TARGETS = {
         "remote": f"{REMOTE_WP_ROOT}/wp-content/plugins/odella-elementor-widgets",
     },
     "mu": {
-        "kind": "file",
+        "kind": "files",
         "root": REPO_ROOT / "site" / "mu-plugins",
-        "file": "odella-performance.php",
-        "remote": f"{REMOTE_WP_ROOT}/wp-content/mu-plugins/odella-performance.php",
+        "files": ["odella-performance.php", "odella-pricing.php"],
+        "remote": f"{REMOTE_WP_ROOT}/wp-content/mu-plugins",
     },
     "theme": {
         "kind": "dir",
@@ -193,36 +193,53 @@ def deploy_dir(cfg):
         if staging and os.path.exists(staging):
             shutil.rmtree(staging, ignore_errors=True)
 
-def deploy_file(cfg):
-    live = cfg["remote"]
-    name = os.path.basename(live)
-    if name != "odella-performance.php":
-        raise RuntimeError("refusing to replace %s" % name)
-    parent = os.path.dirname(live)
-    new_path = os.path.join(parent, name + ".new")
+def deploy_files(cfg):
+    remote_dir = cfg["remote"]
+    allowed = cfg["files"]
     raw = base64.b64decode(cfg["payload_b64"])
-    data = None
+    payloads = {}
     with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tf:
-        src = tf.extractfile(tf.getmember(name))
-        data = src.read()
-    with open(new_path, "wb") as fp:
-        fp.write(data)
-    os.chmod(new_path, 0o644)
-    os.utime(new_path, (time.time(), time.time()))
+        for member in tf.getmembers():
+            name = member.name
+            if name not in allowed or name != os.path.basename(name):
+                raise RuntimeError("refusing to replace %s" % name)
+            src = tf.extractfile(member)
+            if src is None:
+                raise RuntimeError("empty payload for %s" % name)
+            payloads[name] = src.read()
+    for name in allowed:
+        if name not in payloads:
+            raise RuntimeError("payload missing %s" % name)
+    new_paths = []
     try:
-        php_lint(new_path)
+        for name in allowed:
+            new_path = os.path.join(remote_dir, name + ".new")
+            with open(new_path, "wb") as fp:
+                fp.write(payloads[name])
+            os.chmod(new_path, 0o644)
+            os.utime(new_path, (time.time(), time.time()))
+            php_lint(new_path)
+            new_paths.append(new_path)
         stamp = datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S")
         ensure_dir(cfg["backup_root"])
         dest = os.path.join(cfg["backup_root"], stamp)
-        copy_live_to_backup(live, dest, "file")
+        ensure_dir(dest)
+        for name in allowed:
+            live = os.path.join(remote_dir, name)
+            if os.path.isfile(live):
+                shutil.copy2(live, os.path.join(dest, name))
         prune(cfg["backup_root"], cfg["keep"])
-        os.rename(new_path, live)
-        new_path = None
+        for name in allowed:
+            new_path = os.path.join(remote_dir, name + ".new")
+            live = os.path.join(remote_dir, name)
+            os.rename(new_path, live)
+            new_paths.remove(new_path)
         print("BACKUP %s" % stamp)
         print("__DEPLOY_SUCCESS__")
     finally:
-        if new_path and os.path.exists(new_path):
-            os.remove(new_path)
+        for new_path in list(new_paths):
+            if os.path.exists(new_path):
+                os.remove(new_path)
 
 def rollback_dir(cfg):
     live = cfg["remote"]
@@ -248,26 +265,44 @@ def rollback_dir(cfg):
         if staging and os.path.exists(staging):
             shutil.rmtree(staging, ignore_errors=True)
 
-def rollback_file(cfg):
-    live = cfg["remote"]
-    name = os.path.basename(live)
+def rollback_files(cfg):
+    remote_dir = cfg["remote"]
+    allowed = cfg["files"]
+    for name in allowed:
+        if name != os.path.basename(name):
+            raise RuntimeError("refusing to replace %s" % name)
     stamp = newest_backup(cfg["backup_root"])
-    src = os.path.join(cfg["backup_root"], stamp, name)
-    if not os.path.isfile(src):
-        raise RuntimeError("backup file missing: %s" % src)
-    new_path = live + ".new"
-    shutil.copy2(src, new_path)
-    os.chmod(new_path, 0o644)
-    os.utime(new_path, (time.time(), time.time()))
+    src_dir = os.path.join(cfg["backup_root"], stamp)
+    new_paths = []
     try:
-        php_lint(new_path)
-        os.rename(new_path, live)
-        new_path = None
+        for name in allowed:
+            src = os.path.join(src_dir, name)
+            live = os.path.join(remote_dir, name)
+            if not os.path.isfile(src):
+                continue
+            new_path = live + ".new"
+            shutil.copy2(src, new_path)
+            os.chmod(new_path, 0o644)
+            os.utime(new_path, (time.time(), time.time()))
+            php_lint(new_path)
+            new_paths.append(new_path)
+        for name in allowed:
+            src = os.path.join(src_dir, name)
+            live = os.path.join(remote_dir, name)
+            new_path = live + ".new"
+            if os.path.isfile(src):
+                os.rename(new_path, live)
+                if new_path in new_paths:
+                    new_paths.remove(new_path)
+            elif os.path.isfile(live):
+                # This managed file was added after the backup. Remove it.
+                os.remove(live)
         print("RESTORED %s" % stamp)
         print("__DEPLOY_SUCCESS__")
     finally:
-        if new_path and os.path.exists(new_path):
-            os.remove(new_path)
+        for new_path in list(new_paths):
+            if os.path.exists(new_path):
+                os.remove(new_path)
 
 def main(cfg):
     try:
@@ -275,12 +310,12 @@ def main(cfg):
         kind = cfg["kind"]
         if action == "deploy" and kind == "dir":
             deploy_dir(cfg)
-        elif action == "deploy" and kind == "file":
-            deploy_file(cfg)
+        elif action == "deploy" and kind == "files":
+            deploy_files(cfg)
         elif action == "rollback" and kind == "dir":
             rollback_dir(cfg)
-        elif action == "rollback" and kind == "file":
-            rollback_file(cfg)
+        elif action == "rollback" and kind == "files":
+            rollback_files(cfg)
         else:
             raise RuntimeError("unknown action %s/%s" % (action, kind))
     except Exception as exc:
@@ -303,11 +338,12 @@ def collect_local_files(target: str) -> dict[str, bytes]:
     spec = TARGETS[target]
     root: Path = spec["root"]
     files: dict[str, bytes] = {}
-    if spec["kind"] == "file":
-        path = root / spec["file"]
-        if not path.is_file():
-            raise FileNotFoundError(f"Required file missing: {path}")
-        files[spec["file"]] = normalize_bytes(path.read_bytes(), path.suffix)
+    if spec["kind"] == "files":
+        for name in spec["files"]:
+            path = root / name
+            if not path.is_file():
+                raise FileNotFoundError(f"Required file missing: {path}")
+            files[name] = normalize_bytes(path.read_bytes(), path.suffix)
         return files
 
     includes = spec["includes"]
@@ -369,16 +405,19 @@ def fetch_remote_hashes(target: str) -> dict[str, str]:
 import os, hashlib, json
 root = {json.dumps(spec["remote"])}
 kind = {json.dumps(spec["kind"])}
+names = {json.dumps(spec.get("files") or [])}
 text_ext = set({json.dumps(sorted(TEXT_EXTENSIONS))})
 
 def skipped(name):
     return name.startswith(".") or name.endswith(".bak") or name.endswith(".tmp")
 
 out = {{}}
-if kind == "file":
-    if os.path.isfile(root):
-        name = os.path.basename(root)
-        with open(root, "rb") as fp:
+if kind == "files":
+    for name in names:
+        path = os.path.join(root, name)
+        if not os.path.isfile(path):
+            continue
+        with open(path, "rb") as fp:
             data = fp.read()
         ext = os.path.splitext(name)[1].lower()
         if ext in text_ext:
@@ -519,6 +558,7 @@ def apply_remote(action: str, target: str, files: dict[str, bytes] | None = None
         "action": action,
         "backup_root": f"{BACKUP_ROOT}/{target}",
         "keep": 5,
+        "files": spec.get("files") or [],
         "kind": spec["kind"],
         "payload_b64": pack_files(files) if files is not None else "",
         "remote": spec["remote"],

@@ -24,7 +24,7 @@ python "c:\Users\Nick\Projects\Hostinger-Connect\tools\deploy.py" --check --all
 | `--target` | Local tree |
 |---|---|
 | `plugin` (default) | `Odella-Plugins/` — `odella-elementor-widgets.php`, `includes/`, `assets/` |
-| `mu` | `site/mu-plugins/odella-performance.php` |
+| `mu` | `site/mu-plugins/odella-performance.php` and `site/mu-plugins/odella-pricing.php` (each uploaded as `.new`, linted, then renamed; other mu-plugins are left alone) |
 | `theme` | `site/theme-child/` |
 
 Leave `hostinger-auto-updates.php` alone.
