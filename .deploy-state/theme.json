@@ -1,10 +1,10 @@
 {
-  "deployed_at": "2026-11-08T23:29:28Z",
+  "deployed_at": "2026-11-08T23:46:29Z",
   "hashes": {
     "functions.php": "1da5d7413428809d29e86776637e6c45f4fd9c6f5c8ec1229cc584f8195aa853",
     "readme.txt": "b7efb40cb18efed19bb5bdb74ebb93fa643b061135d9923b1a982a1b15818f6a",
     "screenshot.png": "c854022c9d79e95f95da8fa0d30ce57501834d7b53080c81fc5649545f802d7e",
-    "style.css": "5dea6cbab70816ad81fcf4c34cb87ec0fa11bf41dbdfc46aa1c98332328b8605"
+    "style.css": "967d16d1a94933d95244178904ab355e8211fbe6c9e5a9cb23763667efa1e5b1"
   },
   "target": "theme"
 }

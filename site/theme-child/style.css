@@ -867,3 +867,16 @@ button.e-911c107-cd191c2 svg {
 .iti .iti__selected-country-primary { padding: 0 6px 0 12px; }
 .iti .iti__selected-dial-code { margin-left: 4px; color: var(--e-global-color-256943e); }
 .iti .iti__selected-country:focus-visible { outline: 2px solid var(--e-global-color-9333735); outline-offset: -2px; }
+
+/* Cart empty-state button matches the checkout place-order button. */
+.page-id-4083 .return-to-shop .button {
+  background-color: var(--e-global-color-357c029);
+  color: var(--e-global-color-c06ceed);
+  border: 0;
+  border-radius: 3px;
+}
+.page-id-4083 .return-to-shop .button:hover,
+.page-id-4083 .return-to-shop .button:focus {
+  background-color: var(--e-global-color-a33bc50);
+  color: var(--e-global-color-c06ceed);
+}
