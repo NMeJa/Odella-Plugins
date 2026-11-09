@@ -21,6 +21,47 @@ function nmj_register_cart_nonce_route(): void
         'permission_callback' => '__return_true',
         'callback' => 'nmj_rest_cart_nonce',
     ]);
+
+    register_rest_route('odella/v1', '/cart-items', [
+        'methods' => 'GET',
+        'permission_callback' => '__return_true',
+        'callback' => 'nmj_rest_cart_items',
+    ]);
+}
+
+/**
+ * Product and variation IDs in this visitor's cart. Add-to-cart buttons
+ * use it to correct the checked icon on cached pages.
+ */
+function nmj_rest_cart_items(): WP_REST_Response
+{
+    if (function_exists('wc_load_cart')) {
+        wc_load_cart();
+    }
+
+    $simple = [];
+    $variations = [];
+    $wc = function_exists('WC') ? WC() : null;
+    if ($wc && $wc->cart) {
+        foreach ($wc->cart->get_cart() as $item) {
+            $variation_id = (int) ($item['variation_id'] ?? 0);
+            $product_id = (int) ($item['product_id'] ?? 0);
+            if ($variation_id > 0) {
+                $variations[] = $variation_id;
+            } elseif ($product_id > 0) {
+                $simple[] = $product_id;
+            }
+        }
+    }
+
+    $response = new WP_REST_Response([
+        'simple' => array_values(array_unique($simple)),
+        'variations' => array_values(array_unique($variations)),
+    ]);
+    $response->header('Cache-Control', 'no-store, private');
+    do_action('litespeed_control_set_nocache', 'odella cart items');
+
+    return $response;
 }
 
 function nmj_rest_cart_nonce(): WP_REST_Response

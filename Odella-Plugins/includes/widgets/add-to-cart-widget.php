@@ -128,6 +128,27 @@ class Add_To_Cart_Widget extends Widget_Base
         }
     }
 
+    /**
+     * Loop cards cannot choose a variation. Off the product page, a variable
+     * product shows the variation icon and links to the product. The product
+     * page keeps the widget's own behavior.
+     */
+    private function link_variable_to_product_page(int $pid): bool
+    {
+        if (class_exists('\Elementor\Plugin')) {
+            $elementor = \Elementor\Plugin::$instance;
+            if ($elementor->editor && $elementor->editor->is_edit_mode()) {
+                return false;
+            }
+        }
+
+        $on_product_page = function_exists('is_product')
+            && is_product()
+            && (int) get_queried_object_id() === $pid;
+
+        return !$on_product_page;
+    }
+
     // ── Render ─────────────────────────────────────────────────────────────────
 
     protected function render(): void
@@ -160,6 +181,9 @@ class Add_To_Cart_Widget extends Widget_Base
         $qty_pos = $s['qty_position'] ?? 'left';
         $qty_val = max(1, absint($s['qty_default'] ?? 1));
         $var_beh = $s['variable_behavior'] ?? 'inline';
+        if ($is_var && $in_stock && $this->link_variable_to_product_page($pid)) {
+            $var_beh = 'redirect';
+        }
 
         // ── State machine ─────────────────────────────────────────────────
         $state = 'in-stock';
@@ -189,8 +213,10 @@ class Add_To_Cart_Widget extends Widget_Base
             $interact = true;
             $hide_qty = true;
         } elseif ($is_var && $var_beh === 'redirect') {
-            $state = 'in-stock';
+            // Variation icon (awaiting), but the control is a product link.
+            $state = 'awaiting';
             $interact = true;
+            $hide_qty = true;
         }
 
         // ── Resolve current text ──────────────────────────────────────────
@@ -199,9 +225,13 @@ class Add_To_Cart_Widget extends Widget_Base
             'in-stock' => $s['in_stock_text'] ?? '',
             'added' => $s['added_text'] ?? '',
             'oos' => nmj_setting_text((string) ($s['out_of_stock_text'] ?? ''), 'out_of_stock'),
-            'awaiting' => ($is_var && $var_beh === 'quick_view')
-                ? nmj_setting_text((string) ($s['quick_view_text'] ?? ''), 'quick_view')
-                : nmj_setting_text((string) ($s['awaiting_text'] ?? ''), 'select_option'),
+            // Card links stay icon-only unless a label was actually typed.
+            // Inline and quick view still fall back to the translated label.
+            'awaiting' => ($is_var && $var_beh === 'redirect')
+                ? (string) ($s['awaiting_text'] ?? '')
+                : (($is_var && $var_beh === 'quick_view')
+                    ? nmj_setting_text((string) ($s['quick_view_text'] ?? ''), 'quick_view')
+                    : nmj_setting_text((string) ($s['awaiting_text'] ?? ''), 'select_option')),
         ];
         $cur_text = $text_map[$state];
 
@@ -240,6 +270,9 @@ class Add_To_Cart_Widget extends Widget_Base
         if ($is_var && $var_beh === 'inline') {
             $cls[] = 'nmj--variable-inline';
         }
+        if ($is_var && $var_beh === 'redirect') {
+            $cls[] = 'nmj--variable-link';
+        }
 
         // ── Data attributes ───────────────────────────────────────────────
         $data = [
@@ -249,6 +282,8 @@ class Add_To_Cart_Widget extends Widget_Base
             'data-lock-after-add' => $lock ? '1' : '0',
             'data-state' => $state,
             'data-state-texts' => wp_json_encode($text_map),
+            'data-add-url' => $product->add_to_cart_url(),
+            'data-product-url' => get_permalink($pid),
         ];
 
         if ($is_var) {
@@ -278,7 +313,14 @@ class Add_To_Cart_Widget extends Widget_Base
         $tag_open = '';
         $tag_close = '';
 
-        if ($interact) {
+        // "Added" stays an anchor so a cached check can become "add" again
+        // once the live cart says the product is gone. It is not clickable.
+        $use_anchor = $interact || $state === 'added';
+        $aria = ($is_var && $var_beh === 'redirect')
+            ? sprintf(__('Choose options for "%s"', 'nmj'), $product->get_name())
+            : sprintf(__('Add "%s" to your cart', 'nmj'), $product->get_name());
+
+        if ($use_anchor) {
             if ($is_var && $var_beh === 'redirect') {
                 $href = get_permalink($pid);
             } elseif ($is_var && $var_beh === 'quick_view') {
@@ -286,11 +328,14 @@ class Add_To_Cart_Widget extends Widget_Base
             } else {
                 $href = $product->add_to_cart_url();
             }
+            $inert = $interact ? '' : ' aria-disabled="true" tabindex="-1"';
             $tag_open = '<a href="' . esc_url($href) . '" class="' . esc_attr($cls_str) . '"' . $data_str
-                . ' aria-label="' . esc_attr(sprintf(__('Add "%s" to your cart', 'nmj'), $product->get_name())) . '" rel="nofollow">';
+                . $inert
+                . ' aria-label="' . esc_attr($aria) . '" rel="nofollow">';
             $tag_close = '</a>';
         } else {
-            $tag_open = '<span class="' . esc_attr($cls_str) . '"' . $data_str . ' aria-disabled="true">';
+            $tag_open = '<span class="' . esc_attr($cls_str) . '"' . $data_str
+                . ' aria-disabled="true" aria-label="' . esc_attr($aria) . '">';
             $tag_close = '</span>';
         }
 

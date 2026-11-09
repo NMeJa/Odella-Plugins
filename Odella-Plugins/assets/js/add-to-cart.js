@@ -61,12 +61,15 @@
         var newText = stTexts[state] || '';
 
         // Remove all state classes
-        $btn.removeClass('nmj--in-stock nmj--added nmj--oos nmj--awaiting nmj-qv-trigger nmj--variable-inline');
-        $btn.removeClass('add_to_cart_button ajax_add_to_cart button added loading');
+        $btn.removeClass('nmj--in-stock nmj--added nmj--oos nmj--awaiting nmj-qv-trigger nmj--variable-inline nmj--variable-link');
+        $btn.removeClass('add_to_cart_button ajax_add_to_cart nmj_custom_ajax_add_to_cart button added loading');
 
         // Add new state class
         $btn.addClass('nmj--' + state);
         $btn.attr('data-state', state);
+        if (state === 'awaiting' && $btn.attr('data-variable-behavior') === 'redirect') {
+            $btn.addClass('nmj--variable-link');
+        }
 
         // Swap text
         if (newText && $text.length) {
@@ -85,23 +88,35 @@
         // Interactivity
         var isInteractive = (state === 'in-stock');
         var isQV = (state === 'awaiting' && $btn.attr('data-variable-behavior') === 'quick_view');
+        var isRedirect = (state === 'awaiting' && $btn.attr('data-variable-behavior') === 'redirect');
 
-        if (isInteractive) {
+        if (isRedirect) {
+            var productUrl = $btn.attr('data-product-url');
+            if (productUrl) {
+                $btn.attr('href', productUrl);
+            }
+            $btn.css({ 'pointer-events': '', 'cursor': 'pointer' });
+            $btn.removeAttr('aria-disabled').removeAttr('tabindex');
+        } else if (isInteractive) {
             $btn.addClass('add_to_cart_button button');
             if ($btn.attr('data-is-variable') !== '1') {
                 $btn.addClass('ajax_add_to_cart');
+                var addUrl = $btn.attr('data-add-url');
+                if (addUrl) {
+                    $btn.attr('href', addUrl);
+                }
             } else {
                 $btn.addClass('nmj_custom_ajax_add_to_cart');
             }
             $btn.css({ 'pointer-events': '', 'cursor': '' });
-            $btn.removeAttr('aria-disabled');
+            $btn.removeAttr('aria-disabled').removeAttr('tabindex');
         } else if (isQV) {
             $btn.addClass('nmj-qv-trigger');
             $btn.css({ 'pointer-events': '', 'cursor': 'pointer' });
-            $btn.removeAttr('aria-disabled');
+            $btn.removeAttr('aria-disabled').removeAttr('tabindex');
         } else {
             $btn.css({ 'pointer-events': 'none', 'cursor': 'not-allowed' });
-            $btn.attr('aria-disabled', 'true');
+            $btn.attr({ 'aria-disabled': 'true', 'tabindex': '-1' });
         }
 
         // Quantity field visibility
@@ -119,6 +134,103 @@
             $btn.addClass('nmj--variable-inline');
         }
     }
+
+    // ── Live cart → button state ──────────────────────────────────────────────
+    // Page HTML is cached, so the checked icon cannot be trusted. The browser
+    // asks for this visitor's cart and paints every simple button (and the
+    // selected variation on the product page) to match it.
+    var nmjSyncTimer = null;
+    var nmjSyncTicket = 0;
+
+    function nmjCartHasItems() {
+        return /(?:^|;\s*)woocommerce_items_in_cart=1(?:\s*;|$)/.test(document.cookie);
+    }
+
+    function nmjApplyCartState(simpleIds, variationIds) {
+        var simple = {};
+        var variations = {};
+        $.each(simpleIds || [], function (_, id) { simple[parseInt(id, 10)] = true; });
+        $.each(variationIds || [], function (_, id) { variations[parseInt(id, 10)] = true; });
+
+        $('.nmj-atc-btn').each(function () {
+            var $btn = $(this);
+            if ($btn.hasClass('loading') || $btn.hasClass('nmj--oos') || $btn.attr('data-state') === 'oos') {
+                return;
+            }
+
+            var behavior = $btn.attr('data-variable-behavior');
+            if ($btn.attr('data-is-variable') === '1' && behavior === 'redirect') {
+                return;
+            }
+
+            var $wrap = $btn.closest('.nmj-atc-wrap');
+            if ($btn.attr('data-is-variable') === '1' && behavior === 'inline') {
+                var known = [];
+                $.each(variationIds || [], function (_, id) {
+                    var parsed = parseInt(id, 10);
+                    if (parsed) known.push(parsed);
+                });
+                $btn.attr('data-cart-variations', JSON.stringify(known));
+                var selected = parseInt($btn.attr('data-variation_id'), 10);
+                if (!selected) {
+                    return;
+                }
+                var variationLocked = $btn.attr('data-lock-after-add') === '1' && !!variations[selected];
+                nmjSetState($wrap, variationLocked ? 'added' : 'in-stock');
+                return;
+            }
+
+            if ($btn.attr('data-is-variable') === '1') {
+                return;
+            }
+
+            var productId = parseInt($btn.attr('data-product_id'), 10);
+            var inCart = $btn.attr('data-lock-after-add') === '1' && !!simple[productId];
+            if (inCart) {
+                if ($btn.attr('data-state') !== 'added') {
+                    nmjSetState($wrap, 'added');
+                }
+            } else if ($btn.attr('data-state') === 'added') {
+                nmjSetState($wrap, 'in-stock');
+            }
+        });
+    }
+
+    function nmjSyncCartButtonsNow() {
+        if (!nmjCartHasItems()) {
+            nmjApplyCartState([], []);
+            return;
+        }
+
+        var ticket = ++nmjSyncTicket;
+        var url = (typeof nmj_params !== 'undefined' && nmj_params.cartItemsUrl)
+            ? nmj_params.cartItemsUrl
+            : '/wp-json/odella/v1/cart-items';
+
+        fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (ticket !== nmjSyncTicket) {
+                    return;
+                }
+                nmjApplyCartState(
+                    data && data.simple ? data.simple : [],
+                    data && data.variations ? data.variations : []
+                );
+            })
+            .catch(function () { });
+    }
+
+    function nmjSyncCartButtons() {
+        clearTimeout(nmjSyncTimer);
+        nmjSyncTimer = setTimeout(nmjSyncCartButtonsNow, 40);
+    }
+
+    window.nmjSyncCartButtons = nmjSyncCartButtons;
+
+    $(document).on('click', 'a.nmj-atc-btn.nmj--added, a.nmj-atc-btn.nmj--oos', function (e) {
+        e.preventDefault();
+    });
 
     // ── Quantity → data-quantity sync ──────────────────────────────────────────
     $(document).on('input', '.nmj-atc-qty', function () {
@@ -154,10 +266,36 @@
         }
 
         if (lock) {
-            nmjTimers.set(wrap, setTimeout(function () { nmjSetState($wrap, 'added'); }, 800));
+            nmjTimers.set(wrap, setTimeout(function () {
+                nmjSetState($wrap, 'added');
+                nmjSyncCartButtons();
+            }, 800));
         } else {
             nmjSetState($wrap, 'added');
             nmjTimers.set(wrap, setTimeout(function () { nmjSetState($wrap, 'in-stock'); }, 1500));
+        }
+    });
+
+    $(document.body).on('removed_from_cart wc_fragments_refreshed', nmjSyncCartButtons);
+
+    $(document).ajaxSuccess(function (_event, _xhr, settings) {
+        var data = settings && settings.data;
+        var action = '';
+        if (typeof data === 'string') {
+            action = data;
+        } else if (data && data.action) {
+            action = String(data.action);
+        }
+        if (action.indexOf('moderncart_remove_product') !== -1 || action.indexOf('moderncart_update_cart') !== -1) {
+            nmjSyncCartButtons();
+        }
+    });
+
+    $(function () { nmjSyncCartButtons(); });
+    $(document.body).on('post-load', nmjSyncCartButtons);
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            nmjSyncCartButtons();
         }
     });
 
@@ -221,41 +359,64 @@
     // "loaded/ready" state the theme's CSS expects (many themes fade-in prices
     // via class toggle or transition). Force visibility so the price never
     // gets stuck in a loading/skeleton state.
+    // Price Based on Country hides the amount behind a dots placeholder
+    // (.wcpbc-price.loading) until its country check finishes. That check
+    // runs once. A snapshot taken before it finishes, pasted back when a
+    // variation is cleared, brings the dots back for good.
+    function nmjSettlePriceHtml(html) {
+        if (!html || (html.indexOf('wcpbc-placeholder') === -1 && html.indexOf('loading') === -1)) {
+            return html || '';
+        }
+        var $parsed = $('<div>').html(html);
+        $parsed.find('.wcpbc-price').removeClass('loading');
+        $parsed.find('.wcpbc-placeholder').remove();
+        return $parsed.html();
+    }
+
     function nmjUpdatePrice($el, html) {
-        $el.html(html);
-        $el.find('.price').css({ opacity: 1, visibility: 'visible', animation: 'none' });
+        $el.html(nmjSettlePriceHtml(html));
+        $el.find('.price, .wcpbc-price').css({ opacity: 1, visibility: 'visible', animation: 'none' });
     }
 
-    // Remember the price markup each widget was actually rendered with, keyed
-    // on the element itself.
-    //
-    // data-original-price is a server-side snapshot taken when the HTML was
-    // GENERATED, which is not the same moment the visitor loaded the page: a
-    // full-page cache, an AJAX-filtered loop fragment or a bfcache restore all
-    // hand back markup whose attribute predates the current price. Capturing
-    // the live DOM before the first swap gives us a reset value that at least
-    // matches what this visitor actually saw, and falls back to the attribute
-    // only when there is nothing rendered to capture.
+    // The range to restore when a variation is cleared. Keyed on the price
+    // node. A node seen while the dots are still showing is marked skipped:
+    // the next thing in that node is a variation price, not the range, so
+    // the server markup (with the dots removed) is the fallback.
     var nmjOriginalPrice = new WeakMap();
+    var nmjPriceSkipLive = new WeakSet();
 
-    function nmjRememberPrice($el) {
-        var el = $el[0];
-        if (!el || nmjOriginalPrice.has(el)) return;
+    function nmjRememberPrice($els) {
+        $els.each(function () {
+            var el = this;
+            if (nmjOriginalPrice.has(el) || nmjPriceSkipLive.has(el)) return;
 
-        var live = $.trim($el.html());
-        nmjOriginalPrice.set(el, live || $el.attr('data-original-price') || '');
+            var $el = $(el);
+            if ($el.find('.wcpbc-price.loading').length) {
+                nmjPriceSkipLive.add(el);
+                return;
+            }
+
+            var live = $.trim($el.html());
+            if (!live) return;
+            nmjOriginalPrice.set(el, nmjSettlePriceHtml(live));
+        });
     }
 
-    function nmjRestorePrice($el) {
-        var el = $el[0];
-        if (!el) return;
+    function nmjRestorePrice($els) {
+        $els.each(function () {
+            var el = this;
+            var $el = $(el);
+            var original = nmjOriginalPrice.has(el)
+                ? nmjOriginalPrice.get(el)
+                : ($el.attr('data-original-price') || '');
 
-        var original = nmjOriginalPrice.has(el)
-            ? nmjOriginalPrice.get(el)
-            : ($el.attr('data-original-price') || '');
-
-        if (original) nmjUpdatePrice($el, original);
+            if (original) nmjUpdatePrice($el, original);
+        });
     }
+
+    $(document.body).on('wc_price_based_country_after_ajax_geolocation', function () {
+        nmjRememberPrice($('.nmj-price-in-stock'));
+    });
 
     // Toggle a price widget between its in-stock and out-of-stock presentation.
     // Both nodes are always rendered (see product-price-widget.php) so this can
@@ -364,6 +525,9 @@
         e.stopPropagation();
 
         var $btn = $(this);
+        if ($btn.hasClass('nmj--variable-link') || $btn.attr('data-variable-behavior') === 'redirect') {
+            return;
+        }
         var productId = parseInt($btn.attr('data-product_id'), 10) || 0;
         var popupId = parseInt($btn.attr('data-popup-id'), 10) || 0;
 

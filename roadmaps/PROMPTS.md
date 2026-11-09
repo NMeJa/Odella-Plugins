@@ -170,6 +170,25 @@ Do roadmap 04-checkout-cart.md Phase 4E (docs). [RULES]
 
 ## 6 · Roadmap 05 — Pages (Georgian only)
 
+**05 — whole roadmap, one phase at a time**
+
+```
+Start roadmap order item 6: roadmaps/05-pages.md. Shop UX (roadmaps/03-shop-ux.md) and checkout/cart (roadmaps/04-checkout-cart.md, phases 4A–4E) are finished. Do not start anything after this file.
+
+Do Phase 5A, then 5B, 5C, 5D, and 5E, one phase at a time. Verify, then commit with that phase's commit message, then start the next. Do not push.
+
+Where things stand:
+- Plugin is 1.0.71. Owned code deploys only via python tools\deploy.py.
+- Body typography 7778499 desktop line-height is 1.6em. Do not change it again.
+- Unpriced products have no price and no add-to-cart button (Morbido 17550). Priced simple 18781 and variable Pera 16128 add normally.
+- Checkout phone defaults to Georgia +995, submits E.164, and rejects a Georgian number that is not 9 digits starting with 5. Payments and shipping stay disabled. Do not place an order.
+- Cart drawer refreshes from GET /wp-json/odella/v1/cart-nonce. Georgian drawer texts are already live. /ka/cart/ is still a draft 404 (page 4083). My Account is the published page 4085 at /ka/my-account-2/, with Hello's English title still showing.
+- WOOF is deactivated, not deleted. On 2026-11-22, if no rollback was needed, delete it and popup 16255. Leave English drafts alone.
+- The manual check for this shop and checkout work is roadmaps/manual-test-03-shop-checkout.html. Do not rewrite it unless a 05 change makes a step wrong.
+
+[RULES]
+```
+
 **05-A — Hello page titles off**
 
 ```

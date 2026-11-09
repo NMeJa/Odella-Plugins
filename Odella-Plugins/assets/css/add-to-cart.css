@@ -33,7 +33,7 @@
 
 .nmj-atc-btn.nmj--oos,
 .nmj-atc-btn.nmj--added,
-.nmj-atc-btn.nmj--awaiting:not(.nmj-qv-trigger) {
+.nmj-atc-btn.nmj--awaiting:not(.nmj-qv-trigger):not(.nmj--variable-link) {
     pointer-events: none;
     cursor: not-allowed;
     user-select: none;
@@ -96,23 +96,34 @@
     overflow: hidden;
 }
 
-.reveal-cart-on-hover .nmj-atc-wrap {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all 0.3s ease-in-out;
-}
+/* Loop cards reveal the button on hover. Touch and other no-hover
+   devices never match this query, so the button stays visible there.
+   Keyboard focus inside the card counts as hover. */
+@media (hover: hover) and (pointer: fine) {
+    .e-loop-item .nmj-atc-wrap,
+    .elementor-loop-item .nmj-atc-wrap {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    }
 
-.reveal-cart-on-hover:hover .nmj-atc-wrap {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-@media (max-width: 1024px) {
-    .reveal-cart-on-hover .nmj-atc-wrap {
+    .e-loop-item:hover .nmj-atc-wrap,
+    .e-loop-item:focus-within .nmj-atc-wrap,
+    .elementor-loop-item:hover .nmj-atc-wrap,
+    .elementor-loop-item:focus-within .nmj-atc-wrap {
         opacity: 1;
         visibility: visible;
-        transform: translateY(0);
+        transition: opacity 0.3s ease, visibility 0s linear 0s;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+    .e-loop-item .nmj-atc-wrap,
+    .elementor-loop-item .nmj-atc-wrap,
+    .e-loop-item:hover .nmj-atc-wrap,
+    .e-loop-item:focus-within .nmj-atc-wrap,
+    .elementor-loop-item:hover .nmj-atc-wrap,
+    .elementor-loop-item:focus-within .nmj-atc-wrap {
+        transition: none;
     }
 }

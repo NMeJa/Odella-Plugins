@@ -367,6 +367,9 @@
             box.appendChild(fillCard(widget, list[i], i === 0 && start === 0));
         }
         widget._nmjShown = end;
+        if (window.nmjSyncCartButtons) {
+            window.nmjSyncCartButtons();
+        }
         var button = grid.querySelector('.e-loop__load-more');
         var ended = end >= list.length;
         grid.classList.toggle('e-load-more-pagination-end', ended);
@@ -470,23 +473,65 @@
         });
         var button = node.querySelector('.nmj-atc-btn');
         if (button) {
-            var state = !product.in_stock ? 'oos' : (product.type === 'variable' ? 'awaiting' : 'in-stock');
+            var variable = product.type === 'variable' && product.in_stock;
+            var state = !product.in_stock ? 'oos' : (variable ? 'awaiting' : 'in-stock');
+            if (button.tagName.toLowerCase() !== 'a') {
+                var anchor = document.createElement('a');
+                Array.prototype.forEach.call(button.attributes, function (attr) {
+                    anchor.setAttribute(attr.name, attr.value);
+                });
+                anchor.innerHTML = button.innerHTML;
+                button.replaceWith(anchor);
+                button = anchor;
+            }
             ['in-stock', 'oos', 'added', 'awaiting'].forEach(function (name) {
                 button.classList.remove('nmj--' + name);
             });
+            button.classList.remove('nmj-qv-trigger', 'nmj--variable-inline', 'nmj--variable-link', 'nmj_custom_ajax_add_to_cart', 'add_to_cart_button', 'button', 'ajax_add_to_cart', 'added', 'loading');
             button.classList.add('nmj--' + state);
             button.setAttribute('data-state', state);
             button.setAttribute('data-product_id', id);
             button.setAttribute('data-product_sku', product.sku || '');
-            button.setAttribute('aria-label', 'Add "' + product.title + '" to your cart');
-            if (state === 'in-stock') {
-                var add = new URL(widget.dataset.store || '/', window.location.href);
-                add.searchParams.set('add-to-cart', id);
-                button.setAttribute('href', add.pathname + add.search);
-                button.classList.add('add_to_cart_button', 'button', 'ajax_add_to_cart');
-            } else {
+            button.setAttribute('data-product-url', product.url);
+            button.removeAttribute('data-popup-id');
+            button.style.pointerEvents = '';
+            var add = new URL(widget.dataset.store || '/', window.location.href);
+            add.searchParams.set('add-to-cart', id);
+            button.setAttribute('data-add-url', add.pathname + add.search);
+            var wrap = button.closest('.nmj-atc-wrap');
+            var tpl = wrap && wrap.querySelector('.nmj-atc-icon-tpl[data-state="' + state + '"]');
+            var icon = button.querySelector('.nmj-atc-icon');
+            if (tpl && icon) {
+                icon.innerHTML = tpl.innerHTML;
+            }
+            var label = button.querySelector('.nmj-atc-text');
+            var texts = {};
+            try { texts = JSON.parse(button.getAttribute('data-state-texts') || '{}'); } catch (error) { texts = {}; }
+            if (label) {
+                label.textContent = texts[state] || '';
+            }
+            if (variable) {
+                button.classList.add('nmj--variable-link');
+                button.setAttribute('data-is-variable', '1');
+                button.setAttribute('data-variable-behavior', 'redirect');
                 button.setAttribute('href', product.url);
-                button.classList.remove('add_to_cart_button', 'button', 'ajax_add_to_cart');
+                button.setAttribute('aria-label', 'Choose options for "' + product.title + '"');
+                button.removeAttribute('aria-disabled');
+                button.removeAttribute('tabindex');
+            } else if (state === 'in-stock') {
+                button.removeAttribute('data-is-variable');
+                button.setAttribute('data-variable-behavior', '');
+                button.setAttribute('href', button.getAttribute('data-add-url'));
+                button.classList.add('add_to_cart_button', 'button', 'ajax_add_to_cart');
+                button.setAttribute('aria-label', 'Add "' + product.title + '" to your cart');
+                button.removeAttribute('aria-disabled');
+                button.removeAttribute('tabindex');
+            } else {
+                button.removeAttribute('data-is-variable');
+                button.setAttribute('href', product.url);
+                button.setAttribute('aria-disabled', 'true');
+                button.setAttribute('tabindex', '-1');
+                button.setAttribute('aria-label', product.title);
             }
         }
         return node;

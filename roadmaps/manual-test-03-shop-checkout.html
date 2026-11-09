@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Odella — manual test, shop, cart, checkout, and account</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; color: #222; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  a { color: #0b57d0; }
+  li { margin: 0.35rem 0; }
+  .ok { background: #f4f7f4; padding: 0.6rem 0.8rem; }
+  .bad { background: #fdf6f6; padding: 0.6rem 0.8rem; }
+  .note { font-size: 0.95rem; color: #444; }
+</style>
+</head>
+<body>
+<h1>Odella website — what to check (shop, cart, checkout, and account)</h1>
+<p>Open each link on a phone and on a computer. On a wide screen, also try a window about 2560 pixels wide if you can. Tick the box only if what you see matches the “You should see” line. If it does not, write down the page and what you saw instead.</p>
+<p class="note">Use the Georgian site. English pages are drafts and are not part of this check. Do not pay. Payment is turned off on purpose. The cart page now opens at <a href="https://odella.ge/ka/cart/">/ka/cart/</a>.</p>
+
+<h2>1. Store filter, search, and sort</h2>
+<p>Open <a href="https://odella.ge/ka/store/">the store</a>.</p>
+<ul>
+  <li><label><input type="checkbox"> The filter is a list of categories (ქალი, and the groups under it). Clicking a category changes the address to that category’s own page, and the cards match that category.</label></li>
+  <li><label><input type="checkbox"> The button says <strong>მეტის ნახვა</strong>. It loads more cards. When nothing is left, the button is gone. There is no “no more posts” line.</label></li>
+  <li><label><input type="checkbox"> Search from the filter (try <strong>პალტო</strong>). The address contains <code>?q=</code>. The cards match the word. A search with no matches says <strong>პროდუქტი ვერ მოიძებნა</strong>.</label></li>
+  <li><label><input type="checkbox"> Sort defaults to newest. <strong>ფასი: ზრდადობით</strong> puts the cheaper cards first. <strong>ფასი: კლებადობით</strong> puts the dearer cards first. The address contains <code>?orderby=price</code> or <code>?orderby=price-desc</code>.</label></li>
+  <li><label><input type="checkbox"> Every card that has an add-to-cart button also has a price in lari. No card has a blank price.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> category links, Georgian search and sort, and a price on every card you can add.</p>
+<p class="bad"><strong>A problem:</strong> the old WOOF filter is back, a card has no price, or sort does not change the order.</p>
+<p class="note">A category you open by its address still loads on the server. Filter clicks use a saved product list. If a product you just edited is missing from a filter click, use the admin-bar <strong>Reindex</strong> button or Products → Catalog index. The direct category address still shows the live list.</p>
+
+<h2>2. A product with no price cannot be bought</h2>
+<p>Open <a href="https://odella.ge/ka/product/women/kimono-women/long-kimono-women/%E1%83%90%E1%83%91%E1%83%A0%E1%83%94%E1%83%A8%E1%83%A3%E1%83%9B%E1%83%98%E1%83%A1-%E1%83%9B%E1%83%9D%E1%83%A1%E1%83%90%E1%83%AA%E1%83%9B%E1%83%94%E1%83%9A%E1%83%98-morbido-2/">the unpriced Morbido long kimono</a>.</p>
+<ul>
+  <li><label><input type="checkbox"> The page has <strong>no price</strong> and <strong>no add-to-cart button</strong>.</label></li>
+  <li><label><input type="checkbox"> If a quick view opens from a card for this product, that window also has no add button.</label></li>
+  <li><label><input type="checkbox"> Related products under it, if any, are priced. None of them are another blank-price card.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> the description, and nothing you can press to buy it.</p>
+<p class="bad"><strong>A problem:</strong> an add button or a price appears on Morbido.</p>
+
+<h2>3. Adding a priced product</h2>
+<p>Open <a href="https://odella.ge/ka/product/women/kimono-women/cardigan-dream-bordeaux/">Cardigan Dream Bordeaux</a> (430 ₾).</p>
+<ul>
+  <li><label><input type="checkbox"> The add button is there. After you press it, the cart drawer opens or the button changes to <strong>დამატებულია</strong>, and the cardigan is in the drawer at <strong>430 ₾</strong>.</label></li>
+  <li><label><input type="checkbox"> On a computer the related row shows <strong>4</strong> products. On a phone it shows <strong>2</strong>. They are other kimonos or cardigans, not scarves or bags. The heading is <strong>მსგავსი პროდუქტები</strong>.</label></li>
+  <li><label><input type="checkbox"> Find a scarf that asks for a size (search the store for <strong>Pera</strong>). Before a size is chosen you cannot add it. After you choose a size, the price becomes one number and <strong>დაამატე კალათაში</strong> adds that size.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> the cardigan in the drawer, and a size chosen before Pera can be added.</p>
+<p class="bad"><strong>A problem:</strong> the cardigan button does nothing, or Pera adds with no size.</p>
+
+<h2>4. The cart drawer</h2>
+<p>With at least one product in the cart, open <a href="https://odella.ge/ka/store/">the store</a> again (a normal visit, not a private window is fine). Then reload the page.</p>
+<ul>
+  <li><label><input type="checkbox"> The round cart button shows the right count as soon as the page appears, including after reload.</label></li>
+  <li><label><input type="checkbox"> The drawer title is <strong>თქვენი კალათა</strong>. The total line says <strong>ჯამი</strong>. Remove says <strong>წაშლა</strong>. The bottom button says <strong>გაფორმება</strong>.</label></li>
+  <li><label><input type="checkbox"> On a wide screen the product name is fully visible, including a long Georgian name such as <strong>აბრეშუმის თავსაბურავი</strong>. The letters are not cut through the middle.</label></li>
+  <li><label><input type="checkbox"> <strong>წაშლა</strong> removes that line. The count and the total both drop. Reload. They stay correct.</label></li>
+  <li><label><input type="checkbox"> Remove everything. The drawer says <strong>თქვენი კალათა ცარიელია</strong>, then <strong>ნახეთ ჩვენი მაღაზია.</strong>, and the button says <strong>კალათა ცარიელია. დაიწყეთ შოპინგი</strong>.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> Georgian drawer text, a count that survives reload, and names that are not sliced in half.</p>
+<p class="bad"><strong>A problem:</strong> the count stays on an old number after reload, remove does nothing, or the drawer is in English.</p>
+<p class="note">Please read the Georgian lines above and say if any wording should change. Those are the texts now on the site.</p>
+
+<h2>5. Checkout phone</h2>
+<p>Put one priced product in the cart. Open <a href="https://odella.ge/ka/elementor-15559/">checkout</a>. Fill the other required fields with test details. Do not place an order.</p>
+<ul>
+  <li><label><input type="checkbox"> The phone field already shows Georgia: the flag, a small arrow, and <strong>+995</strong> on one line inside the field. The field is not pink.</label></li>
+  <li><label><input type="checkbox"> Hover and click the field. It does not grow a pink border or a pink background. The flag button stays in line with +995.</label></li>
+  <li><label><input type="checkbox"> The country list opens. Search finds another country and changes the code. Set it back to Georgia.</label></li>
+  <li><label><input type="checkbox"> The digits you type start <strong>after</strong> +995. They do not sit underneath it. Check this on a phone and on a wide screen.</label></li>
+  <li><label><input type="checkbox"> Type <strong>123456789</strong> and try to continue. You see <strong>შეიყვანეთ სწორი მობილურის ნომერი: 9 ციფრი, იწყება 5-ით</strong>.</label></li>
+  <li><label><input type="checkbox"> Change it to <strong>555123456</strong>. That phone error goes away. The only block left is that payment is not available. Stop there.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> +995 on one line, a clear error for a number that does not start with 5, and no way to pay.</p>
+<p class="bad"><strong>A problem:</strong> the flag sits above the number, the field is pink, a bad number is accepted, or a real order is created.</p>
+
+<h2>6. The cart page</h2>
+<p>Add <a href="https://odella.ge/ka/product/women/kimono-women/cardigan-dream-bordeaux/">Cardigan Dream Bordeaux</a>. In the notice, press <strong>კალათის ნახვა</strong>.</p>
+<ul>
+  <li><label><input type="checkbox"> The address is <a href="https://odella.ge/ka/cart/">https://odella.ge/ka/cart/</a>. The page opens. The heading is <strong>კალათა</strong>.</label></li>
+  <li><label><input type="checkbox"> The cardigan is there, with its photo, the full name, the price, and a quantity. On a computer the items are on the left and the totals on the right. On a phone they stack in one column.</label></li>
+  <li><label><input type="checkbox"> Change the quantity. The totals change without a reload. There is no coupon box and no “you may also like” row.</label></li>
+  <li><label><input type="checkbox"> The totals heading is <strong>შეკვეთების ჯამი</strong>. The button says <strong>გაფორმება</strong> and opens checkout with the same cardigan. Do not place an order. Come back.</label></li>
+  <li><label><input type="checkbox"> Remove the cardigan. The page says <strong>თქვენი კალათა ცარიელია.</strong> The button says <strong>მაღაზიაში დაბრუნება</strong> and opens <a href="https://odella.ge/ka/store/">the store</a>. Reload the store: the cart button shows 0.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> a Georgian cart page that stays in step with the drawer.</p>
+<p class="bad"><strong>A problem:</strong> the address is “page not found”, the name is cut off, the total stays on the old number, or checkout has a different product.</p>
+
+<h2>7. My Account and registration</h2>
+<p>Open <a href="https://odella.ge/ka/my-account-2/">ჩემი პროფილი</a> while logged out. Use an email address you can read. Do not use a customer’s address.</p>
+<ul>
+  <li><label><input type="checkbox"> The heading is <strong>ჩემი პროფილი</strong>. There is no English “My account” above it.</label></li>
+  <li><label><input type="checkbox"> On a computer, <strong>შესვლა</strong> and <strong>რეგისტრაცია</strong> sit side by side. On a phone, registration is under login. The sentences under registration are Georgian.</label></li>
+  <li><label><input type="checkbox"> Register with your test email. The email arrives, and it is in Georgian. The link lets you set a password. You can log in with that password.</label></li>
+  <li><label><input type="checkbox"> Once logged in, the menu has five items: <strong>კონსოლი</strong>, <strong>შეკვეთები</strong>, <strong>მისამართები</strong>, <strong>ანგარიშის დეტალები</strong>, <strong>გამოსვლა</strong>. There is no <strong>ჩამოტვირთვები</strong> and no <strong>გადახდის მეთოდები</strong>.</label></li>
+  <li><label><input type="checkbox"> On a phone the five items sit in one row you can scroll sideways. On a computer they sit down the left side.</label></li>
+  <li><label><input type="checkbox"> Open <strong>მისამართები</strong> and edit one. The phone field shows Georgia <strong>+995</strong> on one line, the same way as checkout. Do not save a real order.</label></li>
+  <li><label><input type="checkbox"> Log out. Open <strong>დაგავიწყდათ პაროლი?</strong>. The form is Georgian. You can request the reset email if you want to check that too.</label></li>
+  <li><label><input type="checkbox"> In wp-admin → Users, delete the test user when you are finished.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> Georgian login and registration, an email you can use, and five account tabs.</p>
+<p class="bad"><strong>A problem:</strong> no registration form, the email never arrives, the email is English, or Downloads or Payment methods is in the menu.</p>
+<p class="note">If the registration email does not arrive, stop and say so. Do not keep making users.</p>
+
+<h2>8. Page headings</h2>
+<ul>
+  <li><label><input type="checkbox"> <a href="https://odella.ge/ka/terms-conditions-2/">Terms</a> and <a href="https://odella.ge/ka/privacy-policy-2/">Privacy</a> each show one Georgian heading. There is no English “Terms &amp; Conditions” or “Privacy Policy” above it, and the heading is not hidden under the site header. Check a phone, a normal computer, and a wide screen.</label></li>
+  <li><label><input type="checkbox"> <a href="https://odella.ge/ka/">Home</a>, <a href="https://odella.ge/ka/store/">the store</a>, a product, and <a href="https://odella.ge/ka/our-story/">Our Story</a> look as they did. No extra English page title appeared.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> the page’s own Georgian heading, and nothing English from the theme above it.</p>
+<p class="bad"><strong>A problem:</strong> an English title is back, or the Georgian heading sits under the header.</p>
+<p class="note">These three have no heading now, on purpose, until you say what they should say: <a href="https://odella.ge/ka/shipping-ge/">Shipping</a>, <a href="https://odella.ge/ka/blog/">the blog archive</a>, and any missing page (the 404). Write the Georgian title you want, or say they should stay blank.</p>
+
+<h2>What this check does not cover</h2>
+<p>Prices abroad (euros and dollars) are in the prices checklist, not this one. English drafts stay unpublished. Payment and shipping stay off, so checkout cannot finish an order.</p>
+</body>
+</html>

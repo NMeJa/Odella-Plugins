@@ -200,6 +200,7 @@ final class Plugin
         // logged-out visitor served from the cache.
         wp_localize_script('nmj-add-to-cart', 'nmj_params', [
             'ajax_url' => admin_url('admin-ajax.php'),
+            'cartItemsUrl' => rest_url('odella/v1/cart-items'),
         ]);
 
         // jquery + elementor-frontend: the script hooks frontend/element_ready
