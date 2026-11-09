@@ -35,6 +35,22 @@ function nmj_catalog(): array
             'ka' => 'შეიყვანეთ სწორი მობილურის ნომერი: 9 ციფრი, იწყება 5-ით',
             'en' => 'Enter a valid Georgian mobile number: 9 digits starting with 5',
         ],
+        'account_set_password' => [
+            'ka' => 'ახალი პაროლის დასაყენებელი ბმული გამოგეგზავნებათ ელფოსტაზე.',
+            'en' => 'A link to set a new password will be sent to your email address.',
+        ],
+        'account_show_password' => [
+            'ka' => 'პაროლის ჩვენება',
+            'en' => 'Show password',
+        ],
+        'account_hide_password' => [
+            'ka' => 'პაროლის დამალვა',
+            'en' => 'Hide password',
+        ],
+        'account_privacy' => [
+            'ka' => 'თქვენი პერსონალური მონაცემები გამოიყენება ამ ვებსაიტზე თქვენი გამოცდილების უზრუნველსაყოფად, ანგარიშზე წვდომის სამართავად და სხვა მიზნებისთვის. დაწვრილებით იხილეთ [privacy_policy].',
+            'en' => 'Your personal data will be used to support your experience throughout this website, to manage access to your account, and for other purposes described in our [privacy_policy].',
+        ],
     ];
 }
 

@@ -880,3 +880,86 @@ button.e-911c107-cd191c2 svg {
   background-color: var(--e-global-color-a33bc50);
   color: var(--e-global-color-c06ceed);
 }
+
+/* ==========================================================================
+   My Account (page 4085)
+   ========================================================================== */
+
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .form-row .input-text,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .form-row select,
+.page-id-4085 .woocommerce form .form-row input.input-text,
+.page-id-4085 .woocommerce form .form-row textarea,
+.page-id-4085 .woocommerce form .form-row select {
+  border: 1px solid #d5d8dc;
+  border-radius: 3px;
+  font-family: "Noto Sans", sans-serif;
+  color: var(--e-global-color-256943e);
+}
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .login .button,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .register .button,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .woocommerce-ResetPassword .button,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce-EditAccountForm .button,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce-address-fields .button,
+.page-id-4085 .woocommerce button.button,
+.page-id-4085 .woocommerce a.button {
+  background-color: var(--e-global-color-357c029);
+  color: #fff;
+  border: 0;
+  border-radius: 3px;
+  font-family: "Noto Sans", sans-serif;
+}
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .login .button:hover,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .register .button:hover,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce .woocommerce-ResetPassword .button:hover,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce-EditAccountForm .button:hover,
+.page-id-4085 .elementor-widget-woocommerce-my-account .e-my-account-tab:not(.e-my-account-tab__dashboard--custom) .woocommerce-address-fields .button:hover,
+.page-id-4085 .woocommerce button.button:hover,
+.page-id-4085 .woocommerce button.button:focus,
+.page-id-4085 .woocommerce a.button:hover,
+.page-id-4085 .woocommerce a.button:focus {
+  background-color: var(--e-global-color-a33bc50);
+  color: #fff;
+}
+.page-id-4085 .woocommerce-MyAccount-navigation ul li.is-active a {
+  color: var(--e-global-color-357c029);
+}
+@media (max-width: 767px) {
+  .page-id-4085 .woocommerce-MyAccount-navigation {
+    float: none;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .page-id-4085 .woocommerce-MyAccount-navigation ul {
+    display: flex;
+    flex-wrap: nowrap;
+    width: max-content;
+    margin: 0;
+  }
+  .page-id-4085 .woocommerce-MyAccount-navigation ul li {
+    float: none;
+    white-space: nowrap;
+  }
+  .page-id-4085 .e-my-account-tab .woocommerce-MyAccount-content {
+    float: none;
+    width: 100%;
+  }
+  .page-id-4085 #customer_login.u-columns {
+    display: block;
+  }
+  .page-id-4085 #customer_login .u-column1,
+  .page-id-4085 #customer_login .u-column2 {
+    float: none;
+    width: 100%;
+  }
+}
+@media (min-width: 768px) {
+  .page-id-4085 #customer_login.u-columns {
+    display: flex;
+    gap: 40px;
+  }
+  .page-id-4085 #customer_login .u-column1,
+  .page-id-4085 #customer_login .u-column2 {
+    float: none;
+    width: 50%;
+  }
+}
