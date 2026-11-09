@@ -355,10 +355,12 @@
             if (!el) return;
 
             if (idx === 0) {
-                // First section sits directly below the sticky header in normal flow:
-                // scroll-margin-top = offset keeps its snap point at scrollY = 0 with zero layout shift.
+                // First section sits directly below the sticky header in normal flow.
+                // A 100vh scroll margin clamps its snap point to scrollY = 0 whatever the real
+                // header height. Using `offset` (60) let a 62px mobile header snap the page 2px
+                // at load, which stops Chrome's LCP measurement (PageSpeed NO_LCP).
                 el.style.setProperty('min-height', 'calc(100vh - ' + offset + 'px)', 'important');
-                el.style.setProperty('scroll-margin-top', offset + 'px', 'important');
+                el.style.setProperty('scroll-margin-top', '100vh', 'important');
                 el.style.setProperty('padding-top', '0px', 'important');
                 var rvInner = el.querySelector('.nmj-rv-inner');
                 if (rvInner) {

@@ -103,7 +103,10 @@ add_action( 'wp_head', function() {
         echo '<link rel="preload" as="image" href="https://odella.ge/wp-content/uploads/Main-Mobile.jpg" media="(max-width: 767px)" fetchpriority="high">' . "\n";
         echo '<style id="odella-fps-critical-css">'
            . 'html{scroll-snap-type:y mandatory}'
-           . '#video{min-height:calc(100vh - 60px)!important;scroll-margin-top:60px!important;padding-top:0px!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}'
+           // scroll-margin-top:100vh, not the 60px header offset: the snap point clamps to scrollY 0
+           // whatever the header height. With 60px, the 62px mobile header made the browser snap
+           // 2px at load, which ends Chrome's LCP measurement (PageSpeed NO_LCP).
+           . '#video{min-height:calc(100vh - 60px)!important;scroll-margin-top:100vh!important;padding-top:0px!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}'
            . '#video .nmj-rv-inner{max-height:calc(100vh - 60px)}'
            . '#categories,#products,#instagram{min-height:100vh!important;scroll-margin-top:0px!important;padding-top:60px!important;box-sizing:border-box!important;scroll-snap-align:start!important;scroll-snap-stop:always!important}'
            . '#footer-id{scroll-snap-align:end!important;scroll-snap-stop:normal!important}'

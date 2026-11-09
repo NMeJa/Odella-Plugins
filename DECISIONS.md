@@ -127,6 +127,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 ## Gotchas
 
+### 2026-11-09 — A 2 px snap at load gave the mobile homepage NO_LCP
+**Symptom:** PageSpeed mobile showed no performance score for the homepage (`NO_LCP`) in every run since the baseline. Desktop scored normally.  
+**Cause:** The first full-page-scroll section had `scroll-margin-top: 60px`, but the mobile header is 62 px. Under `scroll-snap-type: y mandatory`, the browser scrolled the page 2 px at load to align the snap point, and Chrome stops recording LCP once the page scrolls.  
+**Fix:** The first section uses `scroll-margin-top: 100vh` in both `site/mu-plugins/odella-performance.php` (critical CSS) and `Odella-Plugins/assets/js/full-page-scroll.js`. The snap point clamps to scrollY 0 whatever the header height. Do not tie the first section's snap margin to a fixed header height again.
+
 ### 2026-11-07 — Hostinger Edge CDN cache 404 race condition with external Elementor CSS
 **Symptom:** Updated or dynamic pages intermittently throw 404s on external Elementor CSS files when served behind Hostinger Edge CDN.  
 **Cause:** Hostinger Edge CDN caches the HTML response referencing newly generated CSS filenames before the filesystem or CDN edge mirrors have the new file.  
