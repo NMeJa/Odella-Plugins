@@ -45,6 +45,9 @@
 * **Related products**: `Odella-Plugins/includes/related-products.php`. Same deepest category, then its parent only. Widget `11ace090` on single product template `15154`.
 * **Single Product Template**: Elementor Library ID `15154`
 * **Our Story / About Us Page**: Post ID `58` (`/ka/our-story/`)
+* **Cart**: Post ID `4083` (`/ka/cart/`). Elementor Cart widget.
+* **My Account**: Post ID `4085` (`/ka/my-account-2/`). Elementor My Account widget. Registration sends a password link.
+* **Checkout**: Post ID `15559` (`/ka/elementor-15559/`). Payments and shipping stay off.
 * **Pricing guards**: [`site/mu-plugins/odella-pricing.php`](file:///c:/Users/Nick/Projects/Hostinger-Connect/site/mu-plugins/odella-pricing.php). A published product with no GEL price is hidden from the catalog and search. A newly unpriced product stays Draft. EUR and USD follow the daily National Bank of Georgia rate unless a manual zone price is entered, and a converted price is rounded up to the next whole number ending in 9.
 
 ---

@@ -4,6 +4,11 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 ## Decisions
 
+### 2026-11-09 — Georgian pages carry their own headings
+**Decision:** Hello’s automatic page title is off sitewide (`hello_elementor_page_title`). Each page shows its own Georgian heading. The cart is the Elementor Cart widget on page `4083` (`/ka/cart/`). My Account is page `4085` (`/ka/my-account-2/`): registration is on, the visitor enters an email, and WooCommerce emails the password link. The Downloads and Payment methods tabs are removed. English translations of the pages stay deferred until the Georgian site is complete.  
+**Why:** Hello was printing an English title above pages that already have a Georgian heading. The cart URL was a draft, and My Account had no heading and no registration.  
+**Trade-off:** Shipping (`16066`) and the blog archive no longer get Hello’s title, because they had no heading of their own. English drafts are untouched.
+
 ### 2026-11-08 — Page transitions are custom, prefetch is moderate
 **Decision:** Logged-out pages prefetch with WordPress speculation rules at eagerness `moderate`. Cart, checkout, and account URLs stay excluded. A click fades the screen to white with the O'Della logo over 200 ms, and the next page fades in over 250 ms, with no minimum wait. Elementor Pro page transitions in kit 16 are off.  
 **Why:** Elementor's own transition added layout shift and delayed LCP. A short overlay does not wait for the next page, and a prefetched product can open from cache.  
