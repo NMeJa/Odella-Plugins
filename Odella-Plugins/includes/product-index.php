@@ -3,14 +3,14 @@
  * Lightweight catalog index.
  *
  * The shop filter reads this file instead of asking WooCommerce to render
- * another archive page. An admin rebuilds it from Products → Catalog index
+ * another archive page. An admin rebuilds it from Odella → Catalog & Cache
  * after adding, removing, or changing products. The write is atomic: the
  * store keeps serving the previous file until the new one is renamed in.
  */
 
 defined('ABSPATH') || exit;
 
-add_action('admin_menu', 'nmj_product_index_menu');
+add_action('admin_init', 'nmj_product_index_legacy_redirect');
 add_action('admin_bar_menu', 'nmj_product_index_admin_bar', 80);
 add_action('wp_ajax_nmj_product_index', 'nmj_product_index_ajax');
 add_action('init', 'nmj_product_index_ensure_schedule');
@@ -92,7 +92,7 @@ function nmj_product_index_admin_bar($bar): void
         'id' => 'nmj-reindex',
         'parent' => 'top-secondary',
         'title' => 'Reindex',
-        'href' => admin_url('edit.php?post_type=product&page=nmj-catalog-index'),
+        'href' => admin_url('admin.php?page=odella-catalog-index'),
         'meta' => ['title' => 'Rebuild the catalog index'],
     ]);
 }
@@ -318,16 +318,19 @@ function nmj_product_index_build_all(): array
     return nmj_product_index_publish($products);
 }
 
-function nmj_product_index_menu(): void
+function nmj_product_index_legacy_redirect(): void
 {
-    add_submenu_page(
-        'edit.php?post_type=product',
-        'Catalog index',
-        'Catalog index',
-        'manage_woocommerce',
-        'nmj-catalog-index',
-        'nmj_product_index_page'
-    );
+    global $pagenow;
+    if ($pagenow !== 'edit.php') {
+        return;
+    }
+    $page = isset($_GET['page']) && is_string($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+    $post_type = isset($_GET['post_type']) && is_string($_GET['post_type']) ? sanitize_text_field(wp_unslash($_GET['post_type'])) : '';
+    if ($page !== 'nmj-catalog-index' || $post_type !== 'product') {
+        return;
+    }
+    wp_safe_redirect(admin_url('admin.php?page=odella-catalog-index'), 302);
+    exit;
 }
 
 function nmj_product_index_page(): void
