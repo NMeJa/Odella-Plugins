@@ -15,6 +15,7 @@ require_once NMJ_PATH . 'includes/account.php';
 require_once NMJ_PATH . 'includes/cart-refresh.php';
 require_once NMJ_PATH . 'includes/related-products.php';
 require_once NMJ_PATH . 'includes/filter-query.php';
+require_once NMJ_PATH . 'includes/cache-warmer.php';
 require_once NMJ_PATH . 'includes/product-index.php';
 require_once NMJ_PATH . 'includes/settings.php';
 require_once NMJ_PATH . 'includes/admin-menu.php';

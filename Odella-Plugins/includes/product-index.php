@@ -6,6 +6,7 @@
  * another archive page. An admin rebuilds it from Odella → Catalog & Cache
  * after adding, removing, or changing products. The write is atomic: the
  * store keeps serving the previous file until the new one is renamed in.
+ * Reindex then warms the Georgian storefront in LiteSpeed Cache.
  */
 
 defined('ABSPATH') || exit;
@@ -77,6 +78,12 @@ function nmj_product_index_cron_run(): void
         nmj_product_index_build_all();
     } catch (Throwable $e) {
         error_log('NMJ catalog index: ' . $e->getMessage());
+        return;
+    }
+    try {
+        nmj_cache_warmer_run_budget(45);
+    } catch (Throwable $e) {
+        error_log('NMJ cache warmer: ' . $e->getMessage());
     }
 }
 
@@ -93,7 +100,7 @@ function nmj_product_index_admin_bar($bar): void
         'parent' => 'top-secondary',
         'title' => 'Reindex',
         'href' => admin_url('admin.php?page=odella-catalog-index'),
-        'meta' => ['title' => 'Rebuild the catalog index'],
+        'meta' => ['title' => 'Rebuild the catalog index and warm the cache'],
     ]);
 }
 
@@ -342,6 +349,11 @@ function nmj_product_index_page(): void
     $info = is_readable($current) ? json_decode((string) file_get_contents($current), true) : null;
     $built = is_array($info) && isset($info['v']) ? wp_date('Y-m-d H:i', (int) $info['v']) : 'never';
     $count = is_array($info) && isset($info['count']) ? (int) $info['count'] : 0;
+    $warm = get_option('odella_last_warm');
+    $warm_time = is_array($warm) && isset($warm['time']) ? wp_date('Y-m-d H:i', (int) $warm['time']) : 'never';
+    $warm_urls = is_array($warm) && isset($warm['urls']) && is_numeric($warm['urls']) ? (int) $warm['urls'] : 0;
+    $warm_hits = is_array($warm) && isset($warm['hits']) && is_numeric($warm['hits']) ? (int) $warm['hits'] : 0;
+    $warm_misses = is_array($warm) && isset($warm['misses']) && is_numeric($warm['misses']) ? (int) $warm['misses'] : 0;
     $saved = false;
     if (isset($_POST['nmj_index_hours']) && check_admin_referer('nmj_product_index_schedule')) {
         $hours = min(8760, max(0, absint($_POST['nmj_index_hours'])));
@@ -357,12 +369,17 @@ function nmj_product_index_page(): void
     ?>
     <div class="wrap">
         <h1>Catalog index</h1>
-        <p>The store filter reads this index instead of rebuilding the shop page. Rebuild it from here or from Reindex in the top toolbar. Shoppers keep using the previous file until the new one is ready.</p>
+        <p>The store filter reads this index instead of rebuilding the shop page. Rebuild it from here or from Reindex in the top toolbar. That also warms the Georgian storefront in LiteSpeed Cache. Shoppers keep using the previous file until the new one is ready.</p>
         <?php if ($saved) : ?>
             <div class="notice notice-success"><p>Schedule saved.</p></div>
         <?php endif; ?>
-        <p><strong>Last build:</strong> <?php echo esc_html($built); ?> · <strong>Products:</strong> <?php echo esc_html((string) $count); ?></p>
-        <p><button class="button button-primary" id="nmj-index-build" type="button">Rebuild index</button> <span id="nmj-index-status"></span></p>
+        <p><strong>Last index build:</strong> <?php echo esc_html($built); ?> · <strong>Products:</strong> <?php echo esc_html((string) $count); ?></p>
+        <p><strong>Last cache warm:</strong> <?php echo esc_html($warm_time); ?> · <strong>URLs:</strong> <?php echo esc_html((string) $warm_urls); ?> · <strong>Hits:</strong> <?php echo esc_html((string) $warm_hits); ?> · <strong>Misses:</strong> <?php echo esc_html((string) $warm_misses); ?></p>
+        <p>
+            <button class="button button-primary" id="nmj-index-build" type="button">Rebuild index &amp; warm cache</button>
+            <button class="button button-secondary" id="nmj-index-warm" type="button">Warm cache only</button>
+            <span id="nmj-index-status"></span>
+        </p>
         <form method="post">
             <?php wp_nonce_field('nmj_product_index_schedule'); ?>
             <h2>Automatic rebuild</h2>
@@ -397,18 +414,32 @@ function nmj_product_index_footer_script(): void
     <script>
     (function () {
         var cfg = <?php echo wp_json_encode($config); ?>;
-        async function rebuild(onStatus) {
-            var post = async function (fields) {
-                var body = new URLSearchParams(fields);
-                body.set('action', 'nmj_product_index');
-                body.set('nonce', cfg.nonce);
-                var response = await fetch(cfg.ajax, { method: 'POST', credentials: 'same-origin', body: body });
-                var data = await response.json();
-                if (!data.success) {
-                    throw new Error((data.data && data.data.message) || 'Rebuild failed');
+        async function post(fields) {
+            var body = new URLSearchParams(fields);
+            body.set('action', 'nmj_product_index');
+            body.set('nonce', cfg.nonce);
+            var response = await fetch(cfg.ajax, { method: 'POST', credentials: 'same-origin', body: body });
+            var data = await response.json();
+            if (!data.success) {
+                throw new Error((data.data && data.data.message) || 'Request failed');
+            }
+            return data.data;
+        }
+        async function warm(onStatus) {
+            var start = await post({ step: 'warm_start' });
+            var offset = 0;
+            onStatus('Warming ' + offset + ' / ' + start.total);
+            while (offset < start.total) {
+                var batch = await post({ step: 'warm_batch', token: start.token });
+                if (batch.offset <= offset) {
+                    throw new Error('Warm did not advance');
                 }
-                return data.data;
-            };
+                offset = batch.offset;
+                onStatus('Warming ' + offset + ' / ' + (batch.total || start.total));
+            }
+            return post({ step: 'warm_finish', token: start.token });
+        }
+        async function rebuild(onStatus) {
             onStatus('Starting…');
             var start = await post({ step: 'start' });
             var offset = 0;
@@ -419,6 +450,12 @@ function nmj_product_index_footer_script(): void
             }
             var done = await post({ step: 'finish', token: start.token });
             onStatus('Indexed ' + done.count);
+            var warmed = await warm(onStatus);
+            onStatus('Indexed ' + done.count + ' · Warmed ' + warmed.urls);
+        }
+        async function warmOnly(onStatus) {
+            var warmed = await warm(onStatus);
+            onStatus('Warmed ' + warmed.urls);
         }
         var bar = document.querySelector('#wp-admin-bar-nmj-reindex > a');
         if (bar) {
@@ -436,12 +473,21 @@ function nmj_product_index_footer_script(): void
                 });
             });
         }
-        var button = document.getElementById('nmj-index-build');
-        if (button) {
+        function bindPageButton(button, runner) {
+            if (!button) {
+                return;
+            }
             button.addEventListener('click', function () {
                 var status = document.getElementById('nmj-index-status');
-                button.disabled = true;
-                rebuild(function (text) {
+                var build = document.getElementById('nmj-index-build');
+                var warmButton = document.getElementById('nmj-index-warm');
+                if (build) {
+                    build.disabled = true;
+                }
+                if (warmButton) {
+                    warmButton.disabled = true;
+                }
+                runner(function (text) {
                     if (status) {
                         status.textContent = text;
                     }
@@ -450,10 +496,17 @@ function nmj_product_index_footer_script(): void
                         status.textContent = error.message;
                     }
                 }).finally(function () {
-                    button.disabled = false;
+                    if (build) {
+                        build.disabled = false;
+                    }
+                    if (warmButton) {
+                        warmButton.disabled = false;
+                    }
                 });
             });
         }
+        bindPageButton(document.getElementById('nmj-index-build'), rebuild);
+        bindPageButton(document.getElementById('nmj-index-warm'), warmOnly);
     })();
     </script>
     <?php
@@ -467,6 +520,9 @@ function nmj_product_index_ajax(): void
     }
     $step = isset($_POST['step']) ? sanitize_key(wp_unslash($_POST['step'])) : '';
     try {
+        if ($step === 'warm_start' || $step === 'warm_batch' || $step === 'warm_finish') {
+            nmj_cache_warmer_handle($step);
+        }
         if ($step === 'start') {
             $token = bin2hex(random_bytes(16));
             $state = [
