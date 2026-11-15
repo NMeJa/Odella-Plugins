@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Odella — manual test, speed, cache, cart quantity, and registration</title>
+<style>
+  body { font-family: Georgia, serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; color: #222; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  a { color: #0b57d0; }
+  li { margin: 0.35rem 0; }
+  .ok { background: #f4f7f4; padding: 0.6rem 0.8rem; }
+  .bad { background: #fdf6f6; padding: 0.6rem 0.8rem; }
+  .note { font-size: 0.95rem; color: #444; }
+</style>
+</head>
+<body>
+<h1>Odella website — what to check (speed, cache, cart quantity, and registration)</h1>
+<p>Log in to wp-admin as an administrator for the first three checks. For the store and registration, also try a phone and a computer. Tick a box only if what you see matches the “You should see” line. If it does not, write down the page and what you saw instead.</p>
+<p class="note">Use the Georgian site. English pages are drafts and are not part of this check. Do not pay. Payment is turned off on purpose. The store is <a href="https://odella.ge/ka/store/">/ka/store/</a>. The address /ka/shop/ is not the store.</p>
+
+<h2>1. Odella → Settings</h2>
+<p>In wp-admin, open <strong>Odella → Settings</strong>. Only an administrator sees this screen. Shop managers see the other three Odella screens and do not see Settings.</p>
+<ul>
+  <li><label><input type="checkbox"> Paste the PageSpeed Insights API key into the PageSpeed password field, and the Gemini API key into the Gemini password field.</label></li>
+  <li><label><input type="checkbox"> If a key is already saved, a masked line sits above that field. Leave the field empty and the saved key stays. Do not tick <strong>Remove stored PageSpeed key</strong> or <strong>Remove stored Gemini key</strong> unless you mean to delete it.</label></li>
+  <li><label><input type="checkbox"> Press <strong>Test PageSpeed Key</strong>. The line beside it says the key is valid. Press <strong>Test Gemini Key</strong>. The line beside it says the key is valid.</label></li>
+  <li><label><input type="checkbox"> Under <strong>AI Report Languages</strong>, choose 1 to 3 languages. For example, tick <strong>English</strong> and <strong>Georgian (ქართული)</strong>. When three are ticked, the rest are greyed out. You cannot untick the last language.</label></li>
+  <li><label><input type="checkbox"> Turn <strong>Custom</strong> off. The prompt box is read-only: you cannot type in it, and <strong>Reset to default prompt</strong> is hidden.</label></li>
+  <li><label><input type="checkbox"> Turn <strong>Custom</strong> on. The box accepts typing. Change a few words, then press <strong>Reset to default prompt</strong>. The original wording comes back.</label></li>
+  <li><label><input type="checkbox"> Press <strong>Save settings</strong>. The notice says <strong>Settings saved.</strong></label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> both key tests succeed, one to three languages, a prompt you can edit only while Custom is on, and Settings saved.</p>
+<p class="bad"><strong>A problem:</strong> a test says the key is missing or the request failed, Custom off still lets you type, or Save does not confirm.</p>
+<p class="note">You do not type the language-tab format. The site adds that automatically when the report is built, so the language tabs keep working.</p>
+
+<h2>2. Is Slow?</h2>
+<p>In the top admin bar, click <strong>Is Slow?</strong>. It opens <strong>Odella → Speed Check</strong> and starts on its own. Wait. PageSpeed and the written report take a few minutes. You do not need to press <strong>Run check</strong> unless nothing starts.</p>
+<ul>
+  <li><label><input type="checkbox"> The table fills with <strong>9 checks</strong>, each with a status and a detail.</label></li>
+  <li><label><input type="checkbox"> If the PageSpeed key worked, cards appear under <strong>PageSpeed mobile</strong> and then under <strong>PageSpeed desktop</strong>.</label></li>
+  <li><label><input type="checkbox"> If Gemini ran, language tabs appear for the languages you saved (English and Georgian, if that is what you chose). Each tab has its own write-up.</label></li>
+  <li><label><input type="checkbox"> If the checks say the cache is cold, a banner appears and warms the cache by itself. You do not press anything for that. Wait until it finishes.</label></li>
+  <li><label><input type="checkbox"> Leave <strong>Force Purge &amp; Rebuild Cache</strong> alone, unless a check says a stylesheet is missing (404). If you do press it, the page asks you to confirm, warns that cached pages are cleared and take several minutes to fill again, and then tells you to purge the Hostinger CDN in hPanel: Websites → odella.ge → Performance → CDN → Purge all.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> 9 checks, mobile and desktop PageSpeed cards when the key worked, language tabs when Gemini ran, and a banner that warms a cold cache on its own.</p>
+<p class="bad"><strong>A problem:</strong> the table stays empty, PageSpeed or Gemini fails after a successful key test, a cold cache sits there with no banner, or stylesheets are 404 and nobody has purged the CDN.</p>
+
+<h2>3. Reindex and the cache</h2>
+<p>Click <strong>Reindex</strong> in the top bar, or open <strong>Odella → Catalog &amp; Cache</strong> (the page title is Catalog index) and press <strong>Rebuild index &amp; warm cache</strong>. This walks the store pages. Let it finish. Do not click it again while it is busy.</p>
+<ul>
+  <li><label><input type="checkbox"> The label leaves <strong>Reindex</strong> while the catalog is indexing. It counts up (a pair of numbers), then says <strong>Warming X / Y</strong>, and finishes with a warmed count (<strong>Indexed … · Warmed …</strong>). After a few seconds the top bar returns to <strong>Reindex</strong>.</label></li>
+  <li><label><input type="checkbox"> On Catalog &amp; Cache, <strong>Last cache warm</strong> shows a time and a URL count after the run.</label></li>
+  <li><label><input type="checkbox"> <strong>Warm cache only</strong> is there. It warms without rebuilding the product list. The label says <strong>Warming X / Y</strong> and finishes with <strong>Warmed</strong> and a count. Press it only if you want to try that path too.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> indexing, then Warming X / Y, then a warmed count.</p>
+<p class="bad"><strong>A problem:</strong> the label sticks on Reindex, never says Warming, or ends with an error and no warmed count.</p>
+
+<h2>4. Cart quantity on the store</h2>
+<p>Open <a href="https://odella.ge/ka/store/">the store</a>. Do not open /ka/shop/. Add a priced product, for example <a href="https://odella.ge/ka/product/women/coat-women/cardigan-dream-bordeaux/">Cardigan Dream Bordeaux</a> (430 ₾). The cart drawer should open.</p>
+<ul>
+  <li><label><input type="checkbox"> Click <strong>+</strong> several times quickly, then <strong>−</strong>. The number changes at once. The buttons stay clickable. They do not lock while the total catches up.</label></li>
+  <li><label><input type="checkbox"> After the clicks settle, the quantity and the total match. The drawer title stays <strong>თქვენი კალათა</strong>. The total line says <strong>ჯამი</strong>. The button says <strong>გაფორმება</strong>.</label></li>
+  <li><label><input type="checkbox"> Repeat in a private window while logged out. Add a priced product, click <strong>+</strong> quickly, then <strong>−</strong>. The same immediate count, and the same Georgian lines.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> the quantity move immediately, buttons that keep working, and the Georgian drawer, logged in and logged out.</p>
+<p class="bad"><strong>A problem:</strong> the number waits, the buttons grey out, the drawer switches to English, or /ka/shop/ was the page you tested.</p>
+
+<h2>5. Registration</h2>
+<p>Open <a href="https://odella.ge/ka/my-account-2/">ჩემი პროფილი</a> while logged out. Use a real email address you can open. Do not use a customer’s address. Do not pay. Payment is off.</p>
+<ul>
+  <li><label><input type="checkbox"> Register. The form leaves the page without a long pause.</label></li>
+  <li><label><input type="checkbox"> A Georgian password email arrives. The link lets you set a password and log in.</label></li>
+  <li><label><input type="checkbox"> In wp-admin → Users, delete the test user when you are finished.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> the page move on without a long wait, and a Georgian password email you can use.</p>
+<p class="bad"><strong>A problem:</strong> the form sits there for a long time, the email never arrives, or the email is English.</p>
+<p class="note">If the email does not arrive, stop and say so. Do not keep making users.</p>
+
+<h2>6. Pricing &amp; Rates (optional)</h2>
+<p>Open <strong>Odella → Pricing &amp; Rates</strong>.</p>
+<ul>
+  <li><label><input type="checkbox"> The page shows the last National Bank of Georgia sync (date, EUR, and USD) and any products hidden because they have no lari price.</label></li>
+  <li><label><input type="checkbox"> <strong>Sync NBG Rates Now</strong> is safe to press. After it, the notice says the rates were synced, and the figures on the page are the rates stored now.</label></li>
+</ul>
+<p class="ok"><strong>You should see:</strong> a last sync, the hidden-product list (or a line that none are hidden), and a successful sync if you pressed the button.</p>
+<p class="bad"><strong>A problem:</strong> the sync button reports an error, or a product you know has a lari price is listed as hidden.</p>
+
+<h2>What this check does not cover</h2>
+<p>The shop filter, checkout phone, and account tabs are in the previous checklist. English drafts stay unpublished. Payment and shipping stay off, so do not try to pay.</p>
+</body>
+</html>

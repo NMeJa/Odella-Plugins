@@ -20,10 +20,10 @@
 
 ## 3. Tech Stack & Key Plugins
 * **Core**: WordPress + WooCommerce (over 200 published products).
-* **Page Builder**: Elementor & Elementor Pro.
+* **Page Builder**: Elementor 4.4.0 & Elementor Pro 4.4.0.
   * **CSS Print Method**: **External** (`elementor_css_print_method: external`). The mu-plugin inlines a local stylesheet only when the file is ≤ 2 KB. Purge order is Elementor, then LiteSpeed, then the Hostinger CDN, and `tools/probe_css.py` checks for 404s.
   * **Page transitions**: custom. A click fades to white with the O'Della logo (200 ms out, 250 ms in, no minimum wait). Elementor Pro page transitions in kit 16 are off. Logged-out pages prefetch links at eagerness `moderate`, excluding cart, checkout, and account.
-* **Custom Widgets**: `odella-elementor-widgets` plugin (provides custom widgets: `nmj-gallery-grid`, `nmj-add-to-cart`, `nmj-product-price`, `nmj-variation-selector`, `nmj_product_filter`).
+* **Custom Widgets**: `odella-elementor-widgets` plugin 1.0.91 (provides custom widgets: `nmj-gallery-grid`, `nmj-add-to-cart`, `nmj-product-price`, `nmj-variation-selector`, `nmj_product_filter`).
 * **Product Filters**: Odella Product Filter widget (`nmj_product_filter`) on the store archive. Category URLs are the filter. Search is `?q=` and sort is `?orderby=`. Clicks use the cached catalog index in `wp-content/uploads/odella-catalog/`. WOOF is deactivated until 2026-11-22.
 * **Multilingual**: `polylang` + `connect-polylang-elementor`.
 
@@ -43,6 +43,7 @@
   * The Odella Product Filter widget (`nmj_product_filter`, element `f3e0d21`) sits above Loop Grid `c490a4e`.
 * **Shop strings**: `nmj_t()` in `Odella-Plugins/includes/i18n.php`.
 * **Related products**: `Odella-Plugins/includes/related-products.php`. Same deepest category, then its parent only. Widget `11ace090` on single product template `15154`.
+* **Odella admin**: Top-level menu Odella: Speed Check, Catalog & Cache, Pricing & Rates, and Settings. Includes `Odella-Plugins/includes/settings.php`, `admin-menu.php`, `cache-warmer.php`, and `speed-check.php`. Speed Check assets: `Odella-Plugins/assets/js/speed-check.js` and `Odella-Plugins/assets/css/speed-check.css`.
 * **Single Product Template**: Elementor Library ID `15154`
 * **Our Story / About Us Page**: Post ID `58` (`/ka/our-story/`)
 * **Cart**: Post ID `4083` (`/ka/cart/`). Elementor Cart widget.

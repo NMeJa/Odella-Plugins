@@ -4,6 +4,31 @@ See [PROJECT_BRIEF.md](file:///c:/Users/Nick/Projects/Hostinger-Connect/PROJECT_
 
 ## Decisions
 
+### 2026-11-15 — Unified Odella admin menu and encrypted settings
+**Decision:** Speed Check, Catalog & Cache, Pricing & Rates, and Settings live under the top-level Odella menu. PageSpeed and Gemini API keys are encrypted with libsodium in the option `odella_speed_settings` (autoload off). Up to 3 report languages. The default AI prompt is read-only unless Custom is on. Settings is administrators only (`manage_options`). The other three screens are `manage_woocommerce`.  
+**Why:** The tools belong in one menu, and the keys must not sit in source or in an option WordPress loads on every request. A read-only default prompt keeps the language-tab format unless someone turns Custom on.  
+**Trade-off:** A shop manager can run Speed Check, reindex, and see rates. Only an administrator can open Settings. An empty key field on save keeps the stored key.
+
+### 2026-11-15 — Reindex warms the LiteSpeed cache
+**Decision:** Rebuilding the catalog index then warms cold sitemap URLs for mobile and desktop without purging pages that are already warm. The 24h cron warms inside a 45 second budget. The real store URL is `/ka/store/`. `/ka/shop/` is not the store.  
+**Why:** A new index still leaves the first visit to each page cold. Warming only the misses fills those pages and leaves a warm page alone.  
+**Trade-off:** The daily run stops at 45 seconds, so a large cold set can take more than one night. Do not treat `/ka/shop/` as the store.
+
+### 2026-11-15 — Modern Cart quantity is optimistic
+**Decision:** Modern Cart quantity is optimistic, and the cart AJAX request loads only the cart plugins (9 instead of 31). The drawer updates the quantity immediately, waits 280 ms, then sends one `moderncart_update_cart` request. The floating count is updated from that response, not from a second floating-cart request. Measured server time for `moderncart_update_cart` after the change was 105–131 ms (guest and admin, 1 and 5 items). Before, upstream time was about 333–387 ms and the browser waited on two serial requests.  
+**Why:** Each plus or minus used to lock the drawer and wait out two requests, with every plugin loaded.  
+**Trade-off:** The number on screen moves before the server answers. Several quick clicks become one request, so the server stores the last quantity.
+
+### 2026-11-15 — Registration flushes the HTTP 302 before wp_mail
+**Decision:** Registration flushes the HTTP 302 before `wp_mail`. WooCommerce defers the new-account email onto Action Scheduler (hook `woocommerce_send_queued_transactional_email`). The registration POST keeps only WooCommerce, Polylang, the Odella widgets plugin, and LiteSpeed. Measured from the implementer's machine: baseline time to first byte 1014 ms, after the change 688 ms, origin about 420 ms. The password email is queued, not sent inside the POST. The visitor no longer waits on the mail transport. The remaining time is WordPress starting and creating the user. Do not claim the response is under 400 ms.  
+**Why:** The form was holding the browser until the mail transport finished.  
+**Trade-off:** The Georgian password email arrives when Action Scheduler sends it, which can be after the page has already moved on. The POST is quicker, and it is not under 400 ms.
+
+### 2026-11-15 — Live Elementor is 4.4.0 / Pro 4.4.0
+**Decision:** The live site runs Elementor 4.4.0 and Elementor Pro 4.4.0. This supersedes the 2026-11-08 note of 4.3.6 / 4.3.3.  
+**Why:** The versions on the server are the pair that is actually installed.  
+**Trade-off:** None beyond recording the live pair so later work does not treat 4.3.6 / 4.3.3 as current.
+
 ### 2026-11-09 — Georgian pages carry their own headings
 **Decision:** Hello’s automatic page title is off sitewide (`hello_elementor_page_title`). Each page shows its own Georgian heading. The cart is the Elementor Cart widget on page `4083` (`/ka/cart/`). My Account is page `4085` (`/ka/my-account-2/`): registration is on, the visitor enters an email, and WooCommerce emails the password link. The Downloads and Payment methods tabs are removed. English translations of the pages stay deferred until the Georgian site is complete.  
 **Why:** Hello was printing an English title above pages that already have a Georgian heading. The cart URL was a draft, and My Account had no heading and no registration.  
