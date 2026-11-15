@@ -295,7 +295,7 @@ body .elementor-location-header {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
     gap: 20px !important;
     width: 100% !important;
@@ -324,6 +324,7 @@ body .elementor-location-header {
 
 .story-line-end .elementor-heading-title {
     margin-right: auto !important;
+    margin-top: 0.6em !important;
     text-align: left !important;
 }
 
@@ -331,10 +332,23 @@ body .elementor-location-header {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    align-items: center !important;
+    align-items: stretch !important;
     justify-content: space-between !important;
     gap: 40px !important;
     width: 100% !important;
+}
+
+/* The photo column has to be as tall as the copy beside it, or sticky has no room to travel. */
+.story-split > .e-con:first-child {
+    align-self: stretch !important;
+    height: auto !important;
+}
+
+.story-split > .e-con:first-child > img {
+    position: sticky !important;
+    top: 84px !important;
+    height: auto !important;
+    z-index: 2;
 }
 
 .story-photo {
@@ -378,6 +392,33 @@ body .elementor-location-header {
     text-align: center !important;
 }
 
+/* Grow with the viewport above a normal desktop, and stop before the card covers the hero. */
+@media (min-width: 1025px) {
+    .story-hero {
+        min-height: clamp(600px, 38vw, 1000px) !important;
+        padding-block: clamp(0px, calc(9vw - 144px), 130px) !important;
+    }
+
+    .story-card {
+        max-width: clamp(900px, 48vw, 1180px) !important;
+        padding: clamp(60px, 3.4vw, 72px) clamp(40px, 2.4vw, 52px) !important;
+    }
+
+    .story-card,
+    .story-card p,
+    .story-copy,
+    .story-copy p {
+        font-size: clamp(12px, calc(0.7vw + 0.8px), 20px) !important;
+        line-height: 1.55 !important;
+    }
+
+    .story-line-start .elementor-heading-title,
+    .story-line-end .elementor-heading-title {
+        font-size: clamp(28px, 1.75vw, 48px) !important;
+        line-height: 1.2 !important;
+    }
+}
+
 @media (max-width: 1024px) {
     .story-hero {
         min-height: 400px !important;
@@ -399,6 +440,17 @@ body .elementor-location-header {
         align-items: center !important;
         gap: 10px !important;
         margin-bottom: 30px !important;
+        padding: 0 16px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Horizontal scroll-motion pushes the stacked lines off a narrow screen. */
+    .story-line-start,
+    .story-line-end {
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 auto !important;
     }
 
     .story-line-start .elementor-heading-title,
@@ -416,8 +468,22 @@ body .elementor-location-header {
 
     .story-split {
         flex-direction: column !important;
-        align-items: center !important;
+        align-items: stretch !important;
         gap: 30px !important;
+    }
+
+    .story-split > .e-con {
+        width: 100% !important;
+        max-width: 100% !important;
+        align-self: stretch !important;
+        height: auto !important;
+    }
+
+    .story-split > .e-con:first-child > img {
+        position: static !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
     }
 
     .story-photo,
@@ -486,6 +552,50 @@ body .elementor-location-header {
     max-width: 100% !important;
     height: auto !important;
     object-fit: contain !important;
+}
+
+/* Laptop (1280px) and desktop: the row spans the section, the artwork
+   fills the space between the columns at its real size, and the contact
+   and pages columns keep a fixed width so their text is not compressed. */
+@media (min-width: 1280px) {
+    #footer-id .footer-row {
+        max-width: none !important;
+        width: 100% !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 40px !important;
+        padding-inline: 48px !important;
+        box-sizing: border-box !important;
+    }
+
+    #footer-id .footer-side {
+        flex: 0 0 410px !important;
+        width: 410px !important;
+        min-width: 410px !important;
+        max-width: 410px !important;
+    }
+
+    #footer-id .footer-mark {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        max-height: none !important;
+        height: auto !important;
+        overflow: visible !important;
+        align-self: center !important;
+    }
+
+    #footer-id .footer-mark img {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+    }
 }
 
 #footer-id .footer-menus {
@@ -874,4 +984,9 @@ body .elementor-location-header {
 /* The heading sits on top of the photo and was stealing the hover. */
 .pointer-events-none {
   pointer-events: none;
+}
+
+.odella-qty-syncing {
+  opacity: 0.65;
+  transition: opacity 120ms ease;
 }

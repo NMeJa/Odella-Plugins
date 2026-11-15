@@ -9,6 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// Milliseconds in X-Odella-Ms are measured from here to PHP shutdown.
+$odella_mu_started_at = microtime( true );
+
 /**
  * 1. Determine if current request is a public frontend visitor request.
  */
@@ -73,6 +76,124 @@ if ( odella_is_public_frontend_request() ) {
         ];
         return array_values( array_diff( $plugins, $admin_only_plugins ) );
     }, 1 );
+}
+
+/**
+ * Cart drawer AJAX. admin-ajax.php sets DOING_AJAX before wp-load.php, but this
+ * runs while mu-plugins load, so the request URI and $_REQUEST are the signal.
+ * False for CLI and WP-CLI.
+ */
+function odella_is_moderncart_ajax_request(): bool {
+    if ( PHP_SAPI === 'cli' || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+        return false;
+    }
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    if ( strpos( $uri, 'admin-ajax.php' ) === false && ! isset( $_GET['wc-ajax'] ) ) {
+        return false;
+    }
+    $action = $_REQUEST['action'] ?? ( $_GET['wc-ajax'] ?? '' );
+    return is_string( $action ) && in_array( $action, [
+        'moderncart_update_cart',
+        'moderncart_refresh_slide_out_cart',
+        'moderncart_refresh_floating_cart',
+        'moderncart_add_to_cart',
+        'moderncart_remove_product',
+        'moderncart_apply_coupon',
+        'moderncart_remove_coupon',
+    ], true );
+}
+
+/**
+ * Drop listed admin/editor plugins on Modern Cart AJAX. Unknown plugins stay.
+ * A keep-list plugin is never removed, even if its folder resembles a strip prefix.
+ */
+function odella_moderncart_ajax_plugin_is_stripped( string $plugin ): bool {
+    $keep = [
+        'woocommerce/',
+        'modern-cart/',
+        'polylang-pro/',
+        'polylang-wc/',
+        'woocommerce-product-price-based-on-countries/',
+        'woo-variation-swatches/',
+        'woo-variation-swatches-pro/',
+        'odella-elementor-widgets/',
+        'litespeed-cache/',
+    ];
+    foreach ( $keep as $prefix ) {
+        if ( strpos( $plugin, $prefix ) === 0 ) {
+            return false;
+        }
+    }
+
+    $prefixes = [
+        'woo-orders-spreadsheet-table-premium/',
+        'woo-products-bulk-editor-premium/',
+        'bulky-woocommerce-bulk-edit-products/',
+        'acf-quickedit-fields/',
+        'acf-options-for-polylang/',
+        'advanced-custom-fields-pro/',
+        'enable-media-replace/',
+        'filebird-pro/',
+        'fluentform/',
+        'fluentformpro/',
+        'instagram-sync-settings/',
+        'seo-by-rank-math/',
+        'seo-by-rank-math-pro/',
+        'simple-custom-post-order/',
+        'taxonomy-terms-order/',
+        'wp-retina-2x-pro/',
+        'hostinger/',
+        'adv-geoip-redirect/',
+        'checkout-country-flags-for-woocommerce/',
+        'phone-validator-with-flags-for-woocommerce/',
+        'woocommerce-checkout-manager/',
+        'woocommerce-paypal-payments/',
+        'elementor/',
+        'elementor-pro/',
+        'connect-polylang-elementor/',
+    ];
+    foreach ( $prefixes as $prefix ) {
+        if ( strpos( $plugin, $prefix ) === 0 ) {
+            return true;
+        }
+    }
+
+    return strpos( $plugin, 'bulk-edit-' ) === 0 || strpos( $plugin, 'wp-sheet-editor-' ) === 0;
+}
+
+/**
+ * @param mixed $plugins
+ * @return mixed
+ */
+function odella_filter_moderncart_ajax_plugins( $plugins ) {
+    if ( ! is_array( $plugins ) ) {
+        return $plugins;
+    }
+    $filtered = [];
+    foreach ( $plugins as $plugin ) {
+        if ( ! is_string( $plugin ) || ! odella_moderncart_ajax_plugin_is_stripped( $plugin ) ) {
+            $filtered[] = $plugin;
+        }
+    }
+    $GLOBALS['odella_moderncart_plugin_count'] = count( $filtered );
+    return $filtered;
+}
+
+if ( odella_is_moderncart_ajax_request() ) {
+    // Keep the body buffered so shutdown can still attach the timing headers.
+    ob_start();
+    add_filter( 'option_active_plugins', 'odella_filter_moderncart_ajax_plugins', 1 );
+    add_action( 'plugins_loaded', static function () use ( $odella_mu_started_at ) {
+        add_action( 'shutdown', static function () use ( $odella_mu_started_at ) {
+            if ( headers_sent() ) {
+                return;
+            }
+            $count = isset( $GLOBALS['odella_moderncart_plugin_count'] ) ? (int) $GLOBALS['odella_moderncart_plugin_count'] : 0;
+            $ms = (int) round( ( microtime( true ) - $odella_mu_started_at ) * 1000 );
+            header( 'X-Odella-Plugins: ' . $count );
+            header( 'X-Odella-Ms: ' . $ms );
+        }, 0 );
+    }, 0 );
 }
 
 /**
