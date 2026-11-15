@@ -1,29 +1,17 @@
 Odella Website:
 
-- Mobile version speed Problem
+- Cart update for when increasing the amount takes too long.
 
-- Speed Problem on the Shop Page
+- add two things. when reindex is pressed make sure that it calls the recaching too because after workig on the products and changing stuff the website became slow again.
 
-- Product Page open speed problem
+- Add is Slow button which will investigate the default reasons why this website can be slow. 
+  
+  - if the culprit is cache redo the cache
+  
+  - if the culprit is something else which the script can't account of try to understand the reason and Maybe even give the results to the google gemini ai free api key to make the result be coherent.
+  
+  - the api key will include the pagespeed api key too to use that one too.
 
-- Full Scroll Problem
+- see why registration takes so long.
 
-- Pricing doesn't show up on some Overall problematic
-
-- can Related Products be a little more controlled: Only show the same category of products
-
-- Load More button needs translation and the visual change
-
-- Filter needs to be changed and we need to discuss this change with grilling
-
-- Proceed to checkout has the name hide problem on very wide screens
-
-- Proceed to checkout +995 has problem.
-
-- Check out for some reason it tells me that some products are not possible to equire. It shouldn't happen
-
-- Terms of service and Privicy policy page is F up on wide screens
-
-- My profile is fucked up
-
-- the Cart page is non existant
+- 

@@ -218,3 +218,18 @@ Implement roadmap 05-pages.md Phase 5D: trash drafts 5088, 5759 and 5768 (Trash 
 ```
 Do roadmap 05-pages.md Phase 5E (docs). [RULES]
 ```
+
+---
+
+## 7 · Roadmap 06 — Speed Check ("Is Slow?"), Reindex Warmer, Modern Cart Speed & Registration
+
+**06 — Master Orchestrator Prompt (Grok High-Effort Reviewer + Medium/Low Subagents for all phases 6A–6F)**
+
+```
+Execute roadmaps/06-speed-and-cart.md from start to finish (Phases 6A → 6B → 6C → 6D → 6E → 6F), one phase after another, using the Reviewer + Subagent architecture defined in that file:
+
+1. YOUR ROLE (Grok High-Effort): You are the Lead Architect and Code Reviewer. Read AGENTS.md, PROJECT_BRIEF.md, DECISIONS.md, roadmaps/README.md, and roadmaps/06-speed-and-cart.md first. Do NOT write all the code yourself in the main context.
+2. WORKER SUBAGENTS (Grok Medium or Low Effort): For each phase (6A, 6B, 6C, 6D, 6E, 6F), spawn a subagent with the effort level specified in the roadmap (Medium for 6A–6E, Low for 6F) to do the implementation, deploy via python tools\deploy.py --target plugin|mu|theme, and run the phase's automated verification commands.
+3. REVIEW GATE AFTER EACH PHASE: When a subagent finishes and reports back, review its git diff, run/verify python tools\deploy.py --check --all and the phase's Verify checklist (wp eval tests, benchmarks, curl probes), and check for bugs, security/capability issues, or drift. Decide whether to send the subagent back to fix issues or approve, commit that phase with the roadmap's exact commit message, and move to the next phase. Do not pause for owner UI steps mid-pipeline — automate all CLI/AJAX/encryption/timing verifications and collect owner UI steps for the end.
+4. FINAL REPORT: Once all phases 6A–6F are verified and committed, generate a complete summary report for me with before/after benchmarks (Cart AJAX 6C and Registration 6E) and tell me step-by-step what I need to configure and test (including roadmaps/manual-test-04-speed-and-cart.html).
+```

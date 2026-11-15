@@ -12,6 +12,7 @@ Written 2026-11-08 from grilling sessions with the owner. Each file is a self-co
 | 4 | [03-shop-ux.md](03-shop-ux.md) | 01 Phase 0 + Phase 4, 02 Phase A | New AJAX filter widget replacing WOOF, Load More, Related Products, KA translation map |
 | 5 | [04-checkout-cart.md](04-checkout-cart.md) rest | 02 Phase A, 03 Phase 3A | No add-to-cart for unpriced products, +995 phone field, fresh cart drawer |
 | 6 | [05-pages.md](05-pages.md) | 04 §4A, §4D | Cart page, My Account, Hello page titles, duplicate drafts |
+| 7 | [06-speed-and-cart.md](06-speed-and-cart.md) | 01–05 | Unified `Odella` menu & encrypted settings, Reindex + cache warmer, Modern Cart instant quantity, "Is Slow?" diagnostic + PSI + multi-language Gemini report, fast registration |
 
 Phases 1–4 of roadmap 01 may run before or after roadmap 02; Phase 0 must come first because every other phase uses its tools.
 
