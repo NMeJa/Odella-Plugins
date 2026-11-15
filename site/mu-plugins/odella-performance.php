@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
  * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.5.1
+ * Version: 1.5.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -54,28 +54,60 @@ function odella_is_home_landing(): bool {
 }
 
 /**
- * 2. Skip loading heavy backend-only bulk spreadsheet / admin utility plugins on public frontend visits.
- *    All plugins remain 100% active inside /wp-admin/, WP-CLI, and cron.
+ * Folder prefixes that are wp-admin tools. Matched by prefix so a renamed
+ * bootstrap file, or a plugin installed later in the same family, still stays
+ * off public pages. Cron, WP-CLI, and /wp-admin/ do not use this list.
+ *
+ * ACF Pro stays loaded: product and landing fields are attached to public
+ * post types. Retina, term order, and post order stay too, because they
+ * change what visitors see.
+ *
+ * @return array<int, string>
+ */
+function odella_admin_only_plugin_prefixes(): array {
+    return [
+        'acf-options-for-polylang/',
+        'acf-quickedit-fields/',
+        'bulk-edit-',
+        'bulky-woocommerce-bulk-edit-products/',
+        'database-cleaner',
+        'enable-media-replace/',
+        'filebird-pro/',
+        'hostinger/',
+        'instagram-sync-settings/',
+        'media-cleaner',
+        'media-file-renamer',
+        'woo-orders-spreadsheet-table-premium/',
+        'woo-products-bulk-editor-premium/',
+        'wp-sheet-editor-',
+    ];
+}
+
+function odella_is_admin_only_plugin( string $plugin ): bool {
+    foreach ( odella_admin_only_plugin_prefixes() as $prefix ) {
+        if ( strpos( $plugin, $prefix ) === 0 ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * 2. Skip admin tools on public frontend visits.
+ *    All plugins remain active inside /wp-admin/, WP-CLI, and cron.
  */
 if ( odella_is_public_frontend_request() ) {
     add_filter( 'option_active_plugins', function( $plugins ) {
         if ( ! is_array( $plugins ) ) {
             return $plugins;
         }
-        $admin_only_plugins = [
-            'bulk-edit-custom-tables-premium/custom-tables.php',
-            'bulk-edit-posts-on-frontend-premium/frontend-editor.php',
-            'woo-orders-spreadsheet-table-premium/woocommerce-orders.php',
-            'woo-products-bulk-editor-premium/products.php',
-            'wp-sheet-editor-automations-premium/automations.php',
-            'wp-sheet-editor-media-library-premium/media-library.php',
-            'wp-sheet-editor-premium/wp-sheet-editor.php',
-            'acf-quickedit-fields/index.php',
-            'enable-media-replace/enable-media-replace.php',
-            'hostinger/hostinger.php',
-            'bulky-woocommerce-bulk-edit-products/bulky-woocommerce-bulk-edit-products.php',
-        ];
-        return array_values( array_diff( $plugins, $admin_only_plugins ) );
+        $kept = [];
+        foreach ( $plugins as $plugin ) {
+            if ( ! is_string( $plugin ) || ! odella_is_admin_only_plugin( $plugin ) ) {
+                $kept[] = $plugin;
+            }
+        }
+        return $kept;
     }, 1 );
 }
 
@@ -126,24 +158,19 @@ function odella_moderncart_ajax_plugin_is_stripped( string $plugin ): bool {
         }
     }
 
+    if ( odella_is_admin_only_plugin( $plugin ) ) {
+        return true;
+    }
+
     $prefixes = [
-        'woo-orders-spreadsheet-table-premium/',
-        'woo-products-bulk-editor-premium/',
-        'bulky-woocommerce-bulk-edit-products/',
-        'acf-quickedit-fields/',
-        'acf-options-for-polylang/',
         'advanced-custom-fields-pro/',
-        'enable-media-replace/',
-        'filebird-pro/',
         'fluentform/',
         'fluentformpro/',
-        'instagram-sync-settings/',
         'seo-by-rank-math/',
         'seo-by-rank-math-pro/',
         'simple-custom-post-order/',
         'taxonomy-terms-order/',
         'wp-retina-2x-pro/',
-        'hostinger/',
         'adv-geoip-redirect/',
         'checkout-country-flags-for-woocommerce/',
         'phone-validator-with-flags-for-woocommerce/',
@@ -159,7 +186,7 @@ function odella_moderncart_ajax_plugin_is_stripped( string $plugin ): bool {
         }
     }
 
-    return strpos( $plugin, 'bulk-edit-' ) === 0 || strpos( $plugin, 'wp-sheet-editor-' ) === 0;
+    return false;
 }
 
 /**
