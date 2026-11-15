@@ -145,6 +145,7 @@
         watchProgress(widget);
         rememberCard();
         loadIndex();
+        publishFilterMetrics(widget);
         if (!bound) {
             bound = true;
             window.addEventListener('popstate', function () {
@@ -153,25 +154,107 @@
                     go(live, window.location.href, false);
                 }
             });
+            document.addEventListener('click', function (event) {
+                var opener = event.target.closest ? event.target.closest('.nmj-pf-open') : null;
+                if (!opener || opener.closest('.nmj-pf')) {
+                    return;
+                }
+                var live = document.querySelector('.nmj-pf');
+                var liveButton = live && live.querySelector('.nmj-pf-toggle');
+                var livePanel = live && live.querySelector('.nmj-pf-panel');
+                if (!live || !liveButton || !livePanel) {
+                    return;
+                }
+                event.preventDefault();
+                setOpen(live, liveButton, livePanel, live.querySelector('.nmj-pf-overlay'), liveButton.getAttribute('aria-expanded') !== 'true');
+                window.setTimeout(function () {
+                    blurOpener();
+                }, 0);
+            });
+        }
+    }
+
+    function blurOpener() {
+        var active = document.activeElement;
+        if (!active || !active.closest) {
+            return;
+        }
+        if (active.closest('.nmj-pf-open') || active.classList.contains('nmj-pf-open')) {
+            active.blur();
+        }
+    }
+
+    function publishFilterMetrics(widget) {
+        var styles = window.getComputedStyle(widget);
+        var width = styles.getPropertyValue('--nmj-pf-panel-width').trim();
+        var height = styles.getPropertyValue('--nmj-pf-sheet-height').trim();
+        if (width) {
+            document.documentElement.style.setProperty('--nmj-pf-panel-width', width);
+        }
+        if (height) {
+            document.documentElement.style.setProperty('--nmj-pf-sheet-height', height);
+        }
+    }
+
+    var closeTimer = 0;
+
+    function finishClose(widget, panel, overlay) {
+        if (widget.classList.contains('is-open')) {
+            return;
+        }
+        panel.hidden = true;
+        if (overlay) {
+            overlay.hidden = true;
         }
     }
 
     function setOpen(widget, button, panel, overlay, open) {
-        widget.classList.toggle('is-open', open);
+        publishFilterMetrics(widget);
         button.setAttribute('aria-expanded', open ? 'true' : 'false');
-        panel.hidden = !open;
-        if (overlay) {
-            overlay.hidden = !open;
-        }
-        document.body.style.overflow = open ? 'hidden' : '';
+        document.querySelectorAll('.nmj-pf-open').forEach(function (opener) {
+            opener.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        window.clearTimeout(closeTimer);
         if (open) {
+            panel.hidden = false;
+            if (overlay) {
+                overlay.hidden = false;
+            }
+            document.body.style.overflow = 'hidden';
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    if (button.getAttribute('aria-expanded') !== 'true') {
+                        return;
+                    }
+                    widget.classList.add('is-open');
+                    document.documentElement.classList.add('nmj-pf-is-open');
+                });
+            });
             var focusable = panel.querySelector('input, select, a, button');
             if (focusable) {
                 focusable.focus();
             }
-        } else {
-            button.focus();
+            return;
         }
+        widget.classList.remove('is-open');
+        document.documentElement.classList.remove('nmj-pf-is-open');
+        document.body.style.overflow = '';
+        if (document.activeElement && panel.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+        blurOpener();
+        var onEnd = function (event) {
+            if (event.target !== panel || event.propertyName !== 'transform') {
+                return;
+            }
+            panel.removeEventListener('transitionend', onEnd);
+            finishClose(widget, panel, overlay);
+        };
+        panel.addEventListener('transitionend', onEnd);
+        closeTimer = window.setTimeout(function () {
+            panel.removeEventListener('transitionend', onEnd);
+            finishClose(widget, panel, overlay);
+        }, 320);
     }
 
     function trap(panel, event) {

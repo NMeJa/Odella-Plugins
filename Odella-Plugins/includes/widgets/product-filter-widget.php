@@ -235,6 +235,38 @@ class Product_Filter_Widget extends Widget_Base
         ]);
 
         $this->end_controls_section();
+
+        $this->start_controls_section('section_custom_css', [
+            'label' => esc_html__('CSS', 'nmj'),
+            'tab' => Controls_Manager::TAB_STYLE,
+        ]);
+
+        $this->add_control('css_help', [
+            'type' => Controls_Manager::RAW_HTML,
+            'raw' => '<p>' . esc_html__('Each box is the inside of the braces and is added on top of the current style. An empty box changes nothing. In Custom CSS, the word selector means this widget.', 'nmj') . '</p>',
+            'content_classes' => 'elementor-descriptor',
+        ]);
+
+        foreach ($this->css_targets() as $key => $target) {
+            $this->add_control($key, [
+                'label' => $target['label'],
+                'type' => Controls_Manager::TEXTAREA,
+                'rows' => 3,
+                'placeholder' => 'color: #00A79D;',
+                'description' => $target['hint'],
+            ]);
+        }
+
+        $this->add_control('css_custom', [
+            'label' => esc_html__('Custom CSS', 'nmj'),
+            'type' => Controls_Manager::TEXTAREA,
+            'rows' => 8,
+            'placeholder' => 'selector .nmj-pf-panel .nmj-pf-row { letter-spacing: 0.04em; }',
+            'description' => esc_html__('Full CSS, selectors included. Printed after the class boxes, so it wins.', 'nmj'),
+            'separator' => 'before',
+        ]);
+
+        $this->end_controls_section();
     }
 
     protected function render(): void
@@ -253,6 +285,7 @@ class Product_Filter_Widget extends Widget_Base
             $total = (int) $wp_query->found_posts;
         }
         $label = $this->button_label($settings);
+        $this->print_custom_css($settings, $widget_id);
         $grid = preg_replace('/[^A-Za-z0-9]/', '', (string) ($settings['grid_element_id'] ?? 'c490a4e'));
         if ($grid === '') {
             $grid = 'c490a4e';
@@ -303,6 +336,176 @@ class Product_Filter_Widget extends Widget_Base
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Visible pieces only. The slide, the open state, and the loading
+     * spinner stay in the stylesheet so a color edit cannot stop them.
+     *
+     * @return array<string, array{label: string, hint: string, selectors: string[]}>
+     */
+    private function css_targets(): array
+    {
+        return [
+            'css_root' => [
+                'label' => esc_html__('Whole filter', 'nmj'),
+                'hint' => '.nmj-pf',
+                'selectors' => ['.nmj-pf'],
+            ],
+            'css_bar' => [
+                'label' => esc_html__('Bar', 'nmj'),
+                'hint' => '.nmj-pf-bar',
+                'selectors' => ['.nmj-pf-bar'],
+            ],
+            'css_toggle' => [
+                'label' => esc_html__('Filter pill', 'nmj'),
+                'hint' => '.nmj-pf-toggle',
+                'selectors' => ['.nmj-pf-toggle'],
+            ],
+            'css_current' => [
+                'label' => esc_html__('Current category', 'nmj'),
+                'hint' => '.nmj-pf-current',
+                'selectors' => ['.nmj-pf-current'],
+            ],
+            'css_clear' => [
+                'label' => esc_html__('Clear link', 'nmj'),
+                'hint' => '.nmj-pf-clear',
+                'selectors' => ['.nmj-pf-clear'],
+            ],
+            'css_count' => [
+                'label' => esc_html__('Counts', 'nmj'),
+                'hint' => '.nmj-pf-count, .nmj-pf-term-count',
+                'selectors' => ['.nmj-pf-count', '.nmj-pf-term-count'],
+            ],
+            'css_chips' => [
+                'label' => esc_html__('Chips', 'nmj'),
+                'hint' => '.nmj-pf-chips',
+                'selectors' => ['.nmj-pf-chips'],
+            ],
+            'css_chip' => [
+                'label' => esc_html__('Chip', 'nmj'),
+                'hint' => '.nmj-pf-chip',
+                'selectors' => ['.nmj-pf-chip'],
+            ],
+            'css_empty' => [
+                'label' => esc_html__('Empty state', 'nmj'),
+                'hint' => '.nmj-pf-empty',
+                'selectors' => ['.nmj-pf-empty'],
+            ],
+            'css_overlay' => [
+                'label' => esc_html__('Overlay', 'nmj'),
+                'hint' => '.nmj-pf-overlay',
+                'selectors' => ['.nmj-pf-overlay'],
+            ],
+            'css_panel' => [
+                'label' => esc_html__('Panel', 'nmj'),
+                'hint' => '.nmj-pf-panel',
+                'selectors' => ['.nmj-pf-panel'],
+            ],
+            'css_search' => [
+                'label' => esc_html__('Search field', 'nmj'),
+                'hint' => '.nmj-pf-search input',
+                'selectors' => ['.nmj-pf-search input'],
+            ],
+            'css_sort' => [
+                'label' => esc_html__('Sort field', 'nmj'),
+                'hint' => '.nmj-pf-sort select',
+                'selectors' => ['.nmj-pf-sort select'],
+            ],
+            'css_tree' => [
+                'label' => esc_html__('Category list', 'nmj'),
+                'hint' => '.nmj-pf-tree',
+                'selectors' => ['.nmj-pf-tree'],
+            ],
+            'css_row' => [
+                'label' => esc_html__('Row', 'nmj'),
+                'hint' => '.nmj-pf-row',
+                'selectors' => ['.nmj-pf-row'],
+            ],
+            'css_row_hover' => [
+                'label' => esc_html__('Row hover', 'nmj'),
+                'hint' => '.nmj-pf-row:hover, .nmj-pf-row:focus-within',
+                'selectors' => ['.nmj-pf-row:hover', '.nmj-pf-row:focus-within'],
+            ],
+            'css_link' => [
+                'label' => esc_html__('Link', 'nmj'),
+                'hint' => '.nmj-pf-link, .nmj-pf-all',
+                'selectors' => ['.nmj-pf-link', '.nmj-pf-all'],
+            ],
+            'css_link_current' => [
+                'label' => esc_html__('Current link', 'nmj'),
+                'hint' => '.nmj-pf-link[aria-current="page"]',
+                'selectors' => ['.nmj-pf-link[aria-current="page"]'],
+            ],
+            'css_row_current' => [
+                'label' => esc_html__('Current row', 'nmj'),
+                'hint' => '.nmj-pf-row:has(.nmj-pf-link[aria-current="page"])',
+                'selectors' => ['.nmj-pf-row:has(.nmj-pf-link[aria-current="page"])'],
+            ],
+            'css_chevron' => [
+                'label' => esc_html__('Chevron', 'nmj'),
+                'hint' => '.nmj-pf-chevron',
+                'selectors' => ['.nmj-pf-chevron', '.nmj-pf-chevron:hover', '.nmj-pf-chevron:focus'],
+            ],
+            'css_chevron_arrow' => [
+                'label' => esc_html__('Chevron arrow', 'nmj'),
+                'hint' => '.nmj-pf-chevron::before',
+                'selectors' => ['.nmj-pf-chevron::before'],
+            ],
+            'css_sub' => [
+                'label' => esc_html__('Nested list', 'nmj'),
+                'hint' => '.nmj-pf-sub',
+                'selectors' => ['.nmj-pf-sub'],
+            ],
+            'css_progress' => [
+                'label' => esc_html__('Shown-of line', 'nmj'),
+                'hint' => '.nmj-pf-progress',
+                'selectors' => ['.nmj-pf-progress'],
+            ],
+        ];
+    }
+
+    private function print_custom_css(array $settings, string $widget_id): void
+    {
+        $wrapper = '.elementor-element-' . preg_replace('/[^A-Za-z0-9]/', '', $widget_id);
+        $css = '';
+        foreach ($this->css_targets() as $key => $target) {
+            $body = $this->css_declarations((string) ($settings[$key] ?? ''));
+            if ($body === '') {
+                continue;
+            }
+            $selectors = array_map(static function (string $selector) use ($wrapper): string {
+                return $wrapper . ' ' . $selector;
+            }, $target['selectors']);
+            $css .= implode(',', $selectors) . '{' . $body . '}';
+        }
+        $css .= $this->css_sheet((string) ($settings['css_custom'] ?? ''), $wrapper);
+        if ($css === '') {
+            return;
+        }
+        echo '<style id="nmj-pf-user-' . esc_attr($widget_id) . '">' . $css . '</style>';
+    }
+
+    private function css_declarations(string $css): string
+    {
+        $css = $this->css_plain($css);
+        return str_replace(['{', '}'], '', $css);
+    }
+
+    private function css_sheet(string $css, string $wrapper): string
+    {
+        $css = $this->css_plain($css);
+        if ($css === '') {
+            return '';
+        }
+        return preg_replace('/\bselector\b/', $wrapper, $css) ?? '';
+    }
+
+    private function css_plain(string $css): string
+    {
+        $css = wp_strip_all_tags($css);
+        $css = str_ireplace(['</style', '<script', '<?'], '', $css);
+        return trim($css);
     }
 
     private function button_label(array $settings): string

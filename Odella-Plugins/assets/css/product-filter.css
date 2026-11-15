@@ -37,6 +37,24 @@
     cursor: pointer;
 }
 
+/* An ordinary Elementor button with this class opens the filter and
+   travels with the panel. Its own styles stay in Elementor. */
+.nmj-pf-open {
+    pointer-events: auto;
+    transition: translate 250ms ease, bottom 250ms ease !important;
+}
+
+html.nmj-pf-is-open .nmj-pf-open {
+    translate: var(--nmj-pf-panel-width, 360px) 0 !important;
+    z-index: 100001 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nmj-pf-open {
+        transition: none !important;
+    }
+}
+
 .nmj-pf-clear {
     color: inherit;
     text-decoration: none;
@@ -148,27 +166,40 @@
     padding: 8px 0;
 }
 
-.nmj-pf-chevron {
+.nmj-pf-chevron,
+.nmj-pf-chevron:hover,
+.nmj-pf-chevron:focus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
     width: 32px;
     height: 32px;
+    margin: 0;
+    padding: 0;
     border: 0;
+    border-radius: 0;
     background: transparent;
+    box-shadow: none;
+    color: var(--nmj-pf-active-text);
+    font-size: 0;
+    line-height: 0;
     cursor: pointer;
 }
 
 .nmj-pf-chevron::before {
     content: "";
     display: block;
-    width: 8px;
-    height: 8px;
-    margin: 0 auto;
-    border-right: 1.5px solid currentColor;
-    border-bottom: 1.5px solid currentColor;
-    transform: rotate(-45deg);
+    width: 10px;
+    height: 10px;
+    margin: 0;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translate(-1px, -1px) rotate(-45deg);
 }
 
 .nmj-pf-chevron[aria-expanded="true"]::before {
-    transform: rotate(45deg);
+    transform: translateY(-1px) rotate(45deg);
 }
 
 .nmj-pf-sub {
@@ -219,6 +250,20 @@
 }
 
 @media (max-width: 767px) {
+    .nmj-pf-open {
+        position: fixed !important;
+        left: 16px !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: 0 !important;
+    }
+
+    html.nmj-pf-is-open .nmj-pf-open {
+        translate: none !important;
+        left: 16px !important;
+        bottom: var(--nmj-pf-sheet-height, 85vh) !important;
+    }
+
     .nmj-pf-panel {
         top: auto;
         bottom: 0;
