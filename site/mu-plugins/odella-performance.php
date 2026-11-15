@@ -73,6 +73,7 @@ if ( odella_is_public_frontend_request() ) {
             'acf-quickedit-fields/index.php',
             'enable-media-replace/enable-media-replace.php',
             'hostinger/hostinger.php',
+            'bulky-woocommerce-bulk-edit-products/bulky-woocommerce-bulk-edit-products.php',
         ];
         return array_values( array_diff( $plugins, $admin_only_plugins ) );
     }, 1 );
@@ -177,6 +178,83 @@ function odella_filter_moderncart_ajax_plugins( $plugins ) {
     }
     $GLOBALS['odella_moderncart_plugin_count'] = count( $filtered );
     return $filtered;
+}
+
+/**
+ * Account registration POST only. False for CLI, WP-CLI, admin-ajax, wp-admin,
+ * cron, REST, and checkout. Runs before plugins load, so it uses the request
+ * URI and $_POST rather than DOING_* constants that are not defined yet.
+ */
+function odella_is_registration_post(): bool {
+    if ( PHP_SAPI === 'cli' || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
+        return false;
+    }
+    if ( ( defined( 'DOING_CRON' ) && DOING_CRON ) || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+        return false;
+    }
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    if (
+        strpos( $uri, 'admin-ajax.php' ) !== false ||
+        strpos( $uri, '/wp-admin' ) !== false ||
+        strpos( $uri, 'wp-cron.php' ) !== false ||
+        strpos( $uri, 'wp-json' ) !== false ||
+        strpos( $script, '/wp-admin' ) !== false
+    ) {
+        return false;
+    }
+    if ( ( $_SERVER['REQUEST_METHOD'] ?? '' ) !== 'POST' || strpos( $uri, 'my-account-2' ) === false ) {
+        return false;
+    }
+    if ( ! isset( $_POST['register'], $_POST['woocommerce-register-nonce'] ) ) {
+        return false;
+    }
+    if ( isset( $_POST['woocommerce-process-checkout-nonce'] ) ) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Registration does not need the cart keep-list (Modern Cart, swatches, country
+ * prices). Keep WooCommerce, Polylang, the widgets plugin, and LiteSpeed.
+ * Everything else is dropped, including the heavy plugins Modern Cart AJAX drops.
+ */
+function odella_registration_plugin_is_stripped( string $plugin ): bool {
+    $keep = [
+        'woocommerce/',
+        'polylang-pro/',
+        'polylang-wc/',
+        'odella-elementor-widgets/',
+        'litespeed-cache/',
+    ];
+    foreach ( $keep as $prefix ) {
+        if ( strpos( $plugin, $prefix ) === 0 ) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @param mixed $plugins
+ * @return mixed
+ */
+function odella_filter_registration_plugins( $plugins ) {
+    if ( ! is_array( $plugins ) ) {
+        return $plugins;
+    }
+    $filtered = [];
+    foreach ( $plugins as $plugin ) {
+        if ( ! is_string( $plugin ) || ! odella_registration_plugin_is_stripped( $plugin ) ) {
+            $filtered[] = $plugin;
+        }
+    }
+    return $filtered;
+}
+
+if ( odella_is_registration_post() ) {
+    add_filter( 'option_active_plugins', 'odella_filter_registration_plugins', 1 );
 }
 
 if ( odella_is_moderncart_ajax_request() ) {

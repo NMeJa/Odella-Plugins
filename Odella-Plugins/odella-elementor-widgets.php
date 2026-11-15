@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Odella Elementor Widgets
  * Description:       A growing library of custom Elementor widgets with WooCommerce support.
- * Version:           1.0.88
+ * Version:           1.0.91
  * Requires at least: 6.3
  * Requires PHP:      8.1
  * Author:            NMJ
@@ -18,7 +18,7 @@
 defined('ABSPATH') || exit;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-define('NMJ_VERSION', '1.0.88');
+define('NMJ_VERSION', '1.0.91');
 define('NMJ_FILE', __FILE__);
 define('NMJ_PATH', plugin_dir_path(__FILE__));
 define('NMJ_URL', plugin_dir_url(__FILE__));
@@ -42,6 +42,13 @@ add_action('plugins_loaded', static function () {
         if (function_exists('odella_is_moderncart_ajax_request') && odella_is_moderncart_ajax_request()) {
             require_once NMJ_PATH . 'includes/i18n.php';
             require_once NMJ_PATH . 'includes/cart-refresh.php';
+            return;
+        }
+
+        // Registration drops Elementor. Load the account flush without booting widgets.
+        if (function_exists('odella_is_registration_post') && odella_is_registration_post()) {
+            require_once NMJ_PATH . 'includes/i18n.php';
+            require_once NMJ_PATH . 'includes/account.php';
             return;
         }
 
