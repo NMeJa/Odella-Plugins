@@ -228,7 +228,7 @@ function ops_export_cell(WC_Product $product, string $key, array $by_id, bool $p
                     $names[] = $term->name;
                 }
             }
-            return implode(', ', $names);
+            return implode('; ', $names);
         case 'featured':
             return ops_export_attachment_url((int) $product->get_image_id(), $pack_images, $image_files);
         case 'hover':
@@ -245,7 +245,7 @@ function ops_export_cell(WC_Product $product, string $key, array $by_id, bool $p
                     $urls[] = $url;
                 }
             }
-            return implode(' | ', $urls);
+            return implode('; ', $urls);
         case 'short_description':
             return ops_export_html((string) $product->get_short_description());
         case 'short_description_en':
@@ -294,7 +294,7 @@ function ops_export_meta_pictures(int $id, array $field, bool $pack_images, arra
             $urls[] = $url;
         }
     }
-    return implode(' | ', $urls);
+    return implode('; ', $urls);
 }
 
 /**
@@ -403,7 +403,7 @@ function ops_export_validations(array $layout, int $category_count, int $tag_cou
 
 function ops_http_urls(string $text): array
 {
-    preg_match_all('#https://[^\s|]+#i', $text, $matches);
+    preg_match_all('#https://[^\s;]+#i', $text, $matches);
     return $matches[0] ?? [];
 }
 

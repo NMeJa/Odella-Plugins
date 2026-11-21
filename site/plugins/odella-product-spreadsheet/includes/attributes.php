@@ -276,9 +276,12 @@ function ops_parse_attribute_list(string $cell, array $catalog): array
     }
     $chosen = [];
     $errors = [];
-    foreach (preg_split('/\s*,\s*/u', $trim) ?: [] as $token) {
+    foreach (preg_split('/\s*;\s*/u', $trim) ?: [] as $token) {
         $token = trim((string) $token);
-        if ($token === '' || !preg_match('/^(.+?):\s*(.+)$/u', $token, $match)) {
+        if ($token === '') {
+            continue;
+        }
+        if (!preg_match('/^(.+?):\s*(.+)$/u', $token, $match)) {
             $errors[] = 'Write an attribute as Size: 46x46.';
             continue;
         }
@@ -355,7 +358,7 @@ function ops_attribute_export(int $id): string
             }
         }
     }
-    return implode(', ', $tokens);
+    return implode('; ', $tokens);
 }
 
 /**
@@ -700,6 +703,7 @@ function ops_apply_variations(array $plans, array $created_by_sku = [], array $d
         $kept_ka_vars = [];
         $kept_en_vars = [];
         $has_priced_variation = false;
+        $group_dirty = false;
 
         foreach ($group_plans as $plan) {
             $target_attrs = [];
@@ -756,66 +760,109 @@ function ops_apply_variations(array $plans, array $created_by_sku = [], array $d
                 $id = 0;
             }
 
-            if ($plan['sku'] !== '' && $plan['sku'] !== $variation->get_sku()) {
-                if ($variation->get_id() > 0) {
-                    update_post_meta($variation->get_id(), '_sku', (string) $plan['sku']);
-                }
-                try {
-                    $variation->set_sku((string) $plan['sku']);
-                } catch (Throwable $e) {
-                    // Allow variation SKU even if matching parent/legacy SKU
-                }
-            }
-            if ($plan['regular'] !== null) {
-                $variation->set_regular_price((string) $plan['regular']);
-            }
-            if ($plan['sale'] !== null) {
-                $variation->set_sale_price((string) $plan['sale']);
-            }
-            if ($plan['status'] !== '') {
-                $variation->set_status((string) $plan['status']);
-            } elseif ($id === 0) {
-                $variation->set_status('publish');
-            }
-            if ($target_attrs) {
-                $variation->set_attributes($target_attrs);
-            }
-            $variation->save();
-            $ka_var_id = (int) $variation->get_id();
+            $old_sku = $id > 0 ? (string) $variation->get_sku() : '';
+            $old_reg = $id > 0 ? (string) $variation->get_regular_price() : '';
+            $old_sale = $id > 0 ? (string) $variation->get_sale_price() : '';
+            $old_status = $id > 0 ? (string) $variation->get_status() : '';
+            $old_attrs = $id > 0 ? ops_get_raw_variation_attrs($id) : [];
 
-            if ($plan['sku'] !== '' && $variation->get_sku() !== $plan['sku']) {
-                update_post_meta($ka_var_id, '_sku', (string) $plan['sku']);
+            $sku_changed = ($plan['sku'] !== '' && $plan['sku'] !== $old_sku);
+            $reg_changed = ($plan['regular'] !== null && !ops_prices_equal((string) $plan['regular'], $old_reg));
+            $sale_changed = ($plan['sale'] !== null && !ops_prices_equal((string) $plan['sale'], $old_sale));
+            $status_changed = ($plan['status'] !== '' && $plan['status'] !== $old_status);
+            $attrs_changed = false;
+            if ($target_attrs) {
+                foreach ($target_attrs as $tax => $slug) {
+                    if ((string) ($old_attrs[$tax] ?? '') !== $slug) {
+                        $attrs_changed = true;
+                        break;
+                    }
+                }
             }
-            foreach ($target_attrs as $tax => $slug) {
-                update_post_meta($ka_var_id, 'attribute_' . $tax, $slug);
+            $var_dirty = ($id === 0) || $sku_changed || $reg_changed || $sale_changed || $status_changed || $attrs_changed;
+
+            if ($var_dirty) {
+                if ($sku_changed) {
+                    if ($variation->get_id() > 0) {
+                        update_post_meta($variation->get_id(), '_sku', (string) $plan['sku']);
+                    }
+                    try {
+                        $variation->set_sku((string) $plan['sku']);
+                    } catch (Throwable $e) {
+                        // Allow variation SKU even if matching parent/legacy SKU
+                    }
+                }
+                if ($plan['regular'] !== null) {
+                    $variation->set_regular_price((string) $plan['regular']);
+                }
+                if ($plan['sale'] !== null) {
+                    $variation->set_sale_price((string) $plan['sale']);
+                }
+                if ($plan['status'] !== '') {
+                    $variation->set_status((string) $plan['status']);
+                } elseif ($id === 0) {
+                    $variation->set_status('publish');
+                }
+                if ($target_attrs) {
+                    $variation->set_attributes($target_attrs);
+                }
+                $variation->save();
+                $ka_var_id = (int) $variation->get_id();
+
+                if ($plan['sku'] !== '' && $variation->get_sku() !== $plan['sku']) {
+                    update_post_meta($ka_var_id, '_sku', (string) $plan['sku']);
+                }
+                foreach ($target_attrs as $tax => $slug) {
+                    update_post_meta($ka_var_id, 'attribute_' . $tax, $slug);
+                }
+                if (function_exists('pll_set_post_language')) {
+                    pll_set_post_language($ka_var_id, 'ka');
+                }
+                if (function_exists('odella_pricing_sync_zone_prices')) {
+                    odella_pricing_sync_zone_prices($ka_var_id);
+                }
+                $group_dirty = true;
+            } else {
+                $ka_var_id = $id;
             }
-            if (function_exists('pll_set_post_language')) {
-                pll_set_post_language($ka_var_id, 'ka');
-            }
-            if (function_exists('odella_pricing_sync_zone_prices')) {
-                odella_pricing_sync_zone_prices($ka_var_id);
-            }
+
             if ((float) $variation->get_regular_price() > 0 && $variation->get_status() === 'publish') {
                 $has_priced_variation = true;
             }
             $kept_ka_vars[$ka_var_id] = true;
 
-            // Mirror variation onto linked English Polylang product if present
+            // Mirror variation onto linked English Polylang product if present (skips save internally if unchanged)
+            $en_var_changed = false;
             if ($en_parent_id > 0) {
-                $en_var_id = ops_sync_en_variation($en_parent_id, $variation, $plan['terms'] ?? [], (string) $plan['sku'], $kept_en_vars);
+                $en_var_id = ops_sync_en_variation($en_parent_id, $variation, $plan['terms'] ?? [], (string) $plan['sku'], $kept_en_vars, $en_var_changed);
                 if ($en_var_id > 0) {
                     $kept_en_vars[$en_var_id] = true;
                 }
+                if ($en_var_changed) {
+                    $group_dirty = true;
+                }
             }
 
-            $changes[] = [
-                'id' => (string) $parent_id,
-                'sku' => (string) $variation->get_sku(),
-                'name' => $parent->get_name(),
-                'field' => 'Variation ' . $ka_var_id,
-                'before' => $id > 0 ? (string) $id : ($requested_id > 0 ? (string) $requested_id . ' (recreated)' : '(new)'),
-                'after' => (string) $ka_var_id,
-            ];
+            if ($var_dirty) {
+                $diff_parts = [];
+                if ($id === 0) {
+                    $diff_parts[] = 'created';
+                } else {
+                    if ($sku_changed) $diff_parts[] = 'SKU ' . $old_sku . ' -> ' . $plan['sku'];
+                    if ($reg_changed) $diff_parts[] = 'Price ' . $old_reg . ' -> ' . $plan['regular'];
+                    if ($sale_changed) $diff_parts[] = 'Sale ' . $old_sale . ' -> ' . $plan['sale'];
+                    if ($status_changed) $diff_parts[] = 'Status ' . $old_status . ' -> ' . $plan['status'];
+                    if ($attrs_changed) $diff_parts[] = 'Attributes';
+                }
+                $changes[] = [
+                    'id' => (string) $parent_id,
+                    'sku' => (string) $variation->get_sku(),
+                    'name' => $parent->get_name(),
+                    'field' => 'Variation ' . $ka_var_id,
+                    'before' => $id > 0 ? (string) $id : ($requested_id > 0 ? (string) $requested_id . ' (recreated)' : '(new)'),
+                    'after' => implode(', ', $diff_parts) ?: (string) $ka_var_id,
+                ];
+            }
         }
 
         // 3. Remove stale/duplicate variations on EN parent using direct $wpdb query (never get_posts)
@@ -832,6 +879,7 @@ function ops_apply_variations(array $plans, array $created_by_sku = [], array $d
                     continue;
                 }
                 wp_delete_post($evid, true);
+                $group_dirty = true;
             }
         }
 
@@ -845,7 +893,20 @@ function ops_apply_variations(array $plans, array $created_by_sku = [], array $d
                     continue;
                 }
                 wp_delete_post($kvid, true);
+                $group_dirty = true;
+                $changes[] = [
+                    'id' => (string) $parent_id,
+                    'sku' => (string) $parent->get_sku(),
+                    'name' => $parent->get_name(),
+                    'field' => 'Variation ' . $kvid,
+                    'before' => (string) $kvid,
+                    'after' => '(removed)',
+                ];
             }
+        }
+
+        if (!$group_dirty) {
+            continue;
         }
 
         // 5. Re-assert parent attributes (KA + EN), clear transients, and sync variable price ranges
@@ -898,7 +959,7 @@ function ops_apply_variations(array $plans, array $created_by_sku = [], array $d
  * @param array<string, array{id: int, name: string, slug: string}> $ka_terms
  * @param array<int, bool> $already_kept_en
  */
-function ops_sync_en_variation(int $en_parent_id, WC_Product_Variation $ka_var, array $ka_terms, string $sku, array $already_kept_en = []): int
+function ops_sync_en_variation(int $en_parent_id, WC_Product_Variation $ka_var, array $ka_terms, string $sku, array $already_kept_en = [], bool &$changed = false): int
 {
     $en_parent = wc_get_product($en_parent_id);
     if (!$en_parent instanceof WC_Product) {
@@ -973,9 +1034,36 @@ function ops_sync_en_variation(int $en_parent_id, WC_Product_Variation $ka_var, 
         $is_new_en = true;
     }
 
-    $en_var->set_regular_price((string) $ka_var->get_regular_price());
-    $en_var->set_sale_price((string) $ka_var->get_sale_price());
-    $en_var->set_status((string) $ka_var->get_status());
+    $target_reg = (string) $ka_var->get_regular_price();
+    $target_sale = (string) $ka_var->get_sale_price();
+    $target_status = (string) $ka_var->get_status();
+    if (!$is_new_en) {
+        $en_existing_id = (int) $en_var->get_id();
+        $en_attrs_now = ops_get_raw_variation_attrs($en_existing_id);
+        $en_attrs_match = true;
+        foreach ($en_target_attrs as $tax => $en_slug) {
+            if ((string) ($en_attrs_now[$tax] ?? '') !== $en_slug) {
+                $en_attrs_match = false;
+                break;
+            }
+        }
+        $en_sku_now = (string) $en_var->get_sku();
+        $en_sku_match = ($sku === '' || $en_sku_now === $sku);
+        if ($en_attrs_match
+            && $en_sku_match
+            && ops_prices_equal($target_reg, (string) $en_var->get_regular_price())
+            && ops_prices_equal($target_sale, (string) $en_var->get_sale_price())
+            && $target_status === (string) $en_var->get_status()
+        ) {
+            $changed = false;
+            return $en_existing_id;
+        }
+    }
+
+    $changed = true;
+    $en_var->set_regular_price($target_reg);
+    $en_var->set_sale_price($target_sale);
+    $en_var->set_status($target_status);
     if ($en_target_attrs) {
         $en_var->set_attributes($en_target_attrs);
     }

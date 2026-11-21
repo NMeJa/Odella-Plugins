@@ -16,7 +16,7 @@ function ops_category_paths(string $cell): array
     if ($cell === '') {
         return [];
     }
-    $chunks = preg_split('/\s*,\s*/u', $cell) ?: [];
+    $chunks = preg_split('/\s*;\s*/u', $cell) ?: [];
     $paths = [];
     foreach ($chunks as $chunk) {
         $chunk = trim((string) $chunk);
@@ -125,7 +125,7 @@ function ops_category_export_label(array $assigned, array $by_id): string
         }
     }
     sort($labels, SORT_STRING);
-    return implode(', ', $labels);
+    return implode('; ', $labels);
 }
 
 /**
@@ -145,7 +145,7 @@ function ops_match_tags(string $cell, array $existing): array
     $names = [];
     $ids = [];
     $errors = [];
-    foreach (preg_split('/\s*,\s*/u', $cell) ?: [] as $piece) {
+    foreach (preg_split('/\s*;\s*/u', $cell) ?: [] as $piece) {
         $piece = trim(preg_replace('/\s+/u', ' ', (string) $piece) ?? '');
         if ($piece === '') {
             continue;

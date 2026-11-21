@@ -193,7 +193,9 @@ function ops_apply_plan(array $plan, array $zip_files): array
         }
     }
 
-    $product->save();
+    if ($created || !empty($changes)) {
+        $product->save();
+    }
     $changes = array_merge($changes, ops_apply_zone($id, $sku, $name, 'eur', 'eurozone', 'EUR regular price', 'EUR sale price', $plan));
     $changes = array_merge($changes, ops_apply_zone($id, $sku, $name, 'usd', 'global', 'USD regular price', 'USD sale price', $plan));
     $changes = array_merge($changes, ops_apply_meta_items($id, $sku, $name, is_array($plan['meta'] ?? null) ? $plan['meta'] : [], $zip_files));
@@ -211,7 +213,8 @@ function ops_apply_plan(array $plan, array $zip_files): array
             $changes[] = ops_change_row($id, $sku, $name, 'Attributes', $before, $after);
         }
     }
-    $changes = array_merge($changes, ops_sync_english_translation($id, $plan));
+    $ka_changed = $created || !empty($changes);
+    $changes = array_merge($changes, ops_sync_english_translation($id, $plan, $ka_changed));
     return ['id' => $id, 'created' => $created, 'changes' => $changes];
 }
 
@@ -221,7 +224,7 @@ function ops_apply_plan(array $plan, array $zip_files): array
  * @param array<string, mixed> $plan
  * @return array<int, array<string, string>>
  */
-function ops_sync_english_translation(int $ka_id, array $plan): array
+function ops_sync_english_translation(int $ka_id, array $plan, bool $ka_changed = true): array
 {
     $changes = [];
     if ($ka_id <= 0 || !function_exists('pll_get_post') || !function_exists('pll_set_post_language') || !function_exists('pll_save_post_translations')) {
@@ -264,17 +267,26 @@ function ops_sync_english_translation(int $ka_id, array $plan): array
     }
 
     // Update translatable fields
+    $en_text_changed = false;
     if (isset($vals['name_en']) && trim((string) $vals['name_en']) !== '' && (string) $vals['name_en'] !== $en_product->get_name()) {
         $changes[] = ops_change_row($en_id, (string) $ka_product->get_sku(), (string) $vals['name_en'], 'Name (EN)', $en_product->get_name(), (string) $vals['name_en']);
         $en_product->set_name((string) $vals['name_en']);
+        $en_text_changed = true;
     }
     if (array_key_exists('short_description_en', $vals) && !ops_descriptions_match((string) $en_product->get_short_description(), (string) $vals['short_description_en'])) {
         $changes[] = ops_change_row($en_id, (string) $ka_product->get_sku(), $en_product->get_name(), 'Short description (EN)', wp_strip_all_tags((string) $en_product->get_short_description()), wp_strip_all_tags((string) $vals['short_description_en']));
         $en_product->set_short_description(ops_kses((string) $vals['short_description_en']));
+        $en_text_changed = true;
     }
     if (array_key_exists('description_en', $vals) && !ops_descriptions_match((string) $en_product->get_description(), (string) $vals['description_en'])) {
         $changes[] = ops_change_row($en_id, (string) $ka_product->get_sku(), $en_product->get_name(), 'Description (EN)', wp_strip_all_tags((string) $en_product->get_description()), wp_strip_all_tags((string) $vals['description_en']));
         $en_product->set_description(ops_kses((string) $vals['description_en']));
+        $en_text_changed = true;
+    }
+
+    // Skip saving & meta sync completely when neither KA nor EN fields changed
+    if (!$en_created && !$ka_changed && !$en_text_changed) {
+        return $changes;
     }
 
     // Auto-assign linked English categories from Georgian categories via Polylang

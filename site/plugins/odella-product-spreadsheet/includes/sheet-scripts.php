@@ -170,7 +170,7 @@ function odellaOnePicture_(products, headers, name, lastRow) {
 
 function odellaUrls_(value) {
   var found = [];
-  var matches = String(value || '').match(/https:\/\/[^\s|]+/gi) || [];
+  var matches = String(value || '').match(/https:\/\/[^\s;]+/gi) || [];
   for (var i = 0; i < matches.length; i++) found.push(matches[i]);
   return found;
 }
@@ -206,7 +206,7 @@ function odellaOptions_(sheetName) {
 
 function odellaPickerHtml_(options, current, sheetName, a1) {
   var selected = {};
-  current.split(',').forEach(function (part) {
+  current.split(';').forEach(function (part) {
     var text = String(part || '').trim();
     if (text) selected[text] = true;
   });
@@ -226,7 +226,7 @@ function odellaEscape_(text) {
 }
 
 function odellaApplyPick(sheetName, a1, values) {
-  SpreadsheetApp.getActive().getSheetByName(sheetName).getRange(a1).setValue((values || []).join(', '));
+  SpreadsheetApp.getActive().getSheetByName(sheetName).getRange(a1).setValue((values || []).join('; '));
 }
 
 function odellaBuildVariations() {
@@ -287,7 +287,7 @@ function odellaBuildVariations() {
 
 function odellaAttributeGroups_(text) {
   var groups = {};
-  String(text || '').split(',').forEach(function (part) {
+  String(text || '').split(';').forEach(function (part) {
     var bits = String(part || '').split(':');
     if (bits.length < 2) return;
     var label = bits.shift().trim();
@@ -387,7 +387,7 @@ function odellaTakeDrop_(sheet, image) {
   }
   if (target.kind === 'gallery') {
     var current = String(sheet.getRange(cell.getRow(), cell.getColumn()).getValue() || '').trim();
-    sheet.getRange(cell.getRow(), cell.getColumn()).setValue(current ? current + ' | ' + stored : stored);
+    sheet.getRange(cell.getRow(), cell.getColumn()).setValue(current ? current + '; ' + stored : stored);
     image.setAltTextDescription('odella|gallery|' + cell.getRow() + '|' + stored);
   } else {
     sheet.getRange(cell.getRow(), cell.getColumn()).setValue(stored);
@@ -436,7 +436,7 @@ function odellaSyncGallery_(sheet) {
 }
 
 function odellaSyncGalleryRow_(sheet, headers, galleryCol, row, images) {
-  var parts = String(sheet.getRange(row, galleryCol).getValue() || '').split(/\s*\|\s*/);
+  var parts = String(sheet.getRange(row, galleryCol).getValue() || '').split(/\s*;\s*/);
   var cleaned = [];
   for (var i = 0; i < parts.length; i++) if (String(parts[i] || '').trim()) cleaned.push(String(parts[i]).trim());
   parts = cleaned;
@@ -458,7 +458,7 @@ function odellaSyncGalleryRow_(sheet, headers, galleryCol, row, images) {
     var hold = parts[dest];
     parts[dest] = parts[current];
     parts[current] = hold;
-    sheet.getRange(row, galleryCol).setValue(parts.join(' | '));
+    sheet.getRange(row, galleryCol).setValue(parts.join('; '));
   }
   for (var n = 0; n < images.length; n++) {
     var token = images[n].getAltTextDescription().split('|').slice(3).join('|');
@@ -552,7 +552,7 @@ function odellaSidebarHtml_() {
     + 'stamp=next;'
     + 'var html="";'
     + 'if(state.kind==="list"){'
-    + 'var chosen={}; String(state.value||"").split(",").forEach(function(part){var text=part.trim(); if(text) chosen[text]=true;});'
+    + 'var chosen={}; String(state.value||"").split(";").forEach(function(part){var text=part.trim(); if(text) chosen[text]=true;});'
     + 'html="<b>"+state.header+"</b> "+state.a1;'
     + 'state.options.forEach(function(option){html+="<label><input type=checkbox value=\\""+option.replace(/"/g,"&quot;")+"\\" "+(chosen[option]?"checked":"")+"> "+option.replace(/</g,"&lt;")+"</label>";});'
     + 'html+="<button onclick=\\"save()\\">Save ticks</button>";'
@@ -658,7 +658,7 @@ Public Sub OdellaApplyPick()
     Set target = Worksheets(CStr(pick.Range("Z1").Value)).Range(CStr(pick.Range("Z2").Value))
     For Each cb In pick.CheckBoxes
         If cb.Value = xlOn Then
-            If chosen <> "" Then chosen = chosen & ", "
+            If chosen <> "" Then chosen = chosen & "; "
             chosen = chosen & cb.Caption
         End If
     Next cb
@@ -793,7 +793,7 @@ End Function
 
 Private Function OdellaHasItem(ByVal list As String, ByVal item As String) As Boolean
     Dim part As Variant
-    For Each part In Split(list, ",")
+    For Each part In Split(list, ";")
         If StrComp(Trim$(CStr(part)), item, vbTextCompare) = 0 Then
             OdellaHasItem = True
             Exit Function
@@ -804,7 +804,7 @@ End Function
 Private Function OdellaSplitUrls(ByVal text As String, ByRef urls() As String) As Long
     Dim part As Variant, n As Long
     n = 0
-    For Each part In Split(Replace(text, vbLf, "|"), "|")
+    For Each part In Split(Replace(text, vbLf, ";"), ";")
         If InStr(1, CStr(part), "https://", vbTextCompare) > 0 Then
             n = n + 1
             ReDim Preserve urls(1 To n)
@@ -834,7 +834,7 @@ Private Function OdellaGroups(ByVal text As String) As Object
     Dim groups As Object, part As Variant, bits() As String
     Dim label As String, value As String
     Set groups = CreateObject("Scripting.Dictionary")
-    For Each part In Split(text, ",")
+    For Each part In Split(text, ";")
         If InStr(1, CStr(part), ":") > 0 Then
             bits = Split(CStr(part), ":")
             label = Trim$(bits(0))
@@ -972,7 +972,7 @@ Private Sub OdellaTakeDrop(ws As Worksheet, shp As Shape)
         If Trim$(CStr(ws.Cells(cell.Row, cell.Column).Value)) = "" Then
             ws.Cells(cell.Row, cell.Column).Value = fileName
         Else
-            ws.Cells(cell.Row, cell.Column).Value = Trim$(CStr(ws.Cells(cell.Row, cell.Column).Value)) & " | " & fileName
+            ws.Cells(cell.Row, cell.Column).Value = Trim$(CStr(ws.Cells(cell.Row, cell.Column).Value)) & "; " & fileName
         End If
         shp.AlternativeText = "odella|gallery|" & cell.Row & "|" & fileName
         OdellaParkGallery ws, shp
@@ -1070,7 +1070,7 @@ Private Sub OdellaParkGallery(ws As Worksheet, shp As Shape)
     If UBound(bits) < 3 Then Exit Sub
     row = CLng(bits(2))
     token = bits(3)
-    parts = Split(Replace(CStr(ws.Cells(row, OdellaHeaderCol(ws, "Gallery images")).Value), ",", "|"), "|")
+    parts = Split(Replace(CStr(ws.Cells(row, OdellaHeaderCol(ws, "Gallery images")).Value), vbLf, ";"), ";")
     For at = LBound(parts) To UBound(parts)
         If StrComp(Trim$(CStr(parts(at))), token, vbTextCompare) = 0 Then
             OdellaParkOn ws, shp, OdellaEnsureGalleryPreview(ws, at - LBound(parts) + 1), row
@@ -1803,7 +1803,7 @@ function odellaOne(sheet, row, sourceCol, previewTitle) {
 }
 
 function odellaGallery(sheet, row, galleryCol) {
-  var parts = String(sheet.GetRange(odellaLetter(galleryCol) + row).GetValue() || "").split(/\s*[|,]\s*/);
+  var parts = String(sheet.GetRange(odellaLetter(galleryCol) + row).GetValue() || "").split(/\s*;\s*/);
   var clean = [];
   for (var i = 0; i < parts.length; i++) if (String(parts[i] || "").trim()) clean.push(String(parts[i]).trim());
   for (var n = 0; n < clean.length; n++) {
@@ -1833,7 +1833,7 @@ function odellaLists() {
   pick.GetRange("B1").SetValue("yes");
   pick.GetRange("C1").SetValue("Type yes in column B, click the product cell again, then run odellaApplyList. Cell " + here.cell.GetAddress());
   var chosen = {};
-  String(here.cell.GetValue() || "").split(",").forEach(function (part) {
+  String(here.cell.GetValue() || "").split(";").forEach(function (part) {
     var text = String(part || "").trim();
     if (text) chosen[text] = true;
   });
@@ -1862,7 +1862,7 @@ function odellaApplyList() {
     var mark = String(pick.GetRange("B" + row).GetValue() || "").trim().toLowerCase();
     if (mark === "yes" || mark === "y" || mark === "1") values.push(option);
   }
-  products.GetRange(address).SetValue(values.join(", "));
+  products.GetRange(address).SetValue(values.join("; "));
   products.SetActive();
 }
 
@@ -1878,7 +1878,7 @@ function odellaMoveGallery(step) {
   var index = odellaPreviewIndex(odellaHeader(here.sheet, here.col));
   var gallery = odellaCol(here.sheet, "Gallery images");
   if (index < 0 || !gallery) return;
-  var parts = String(here.sheet.GetRange(odellaLetter(gallery) + here.row).GetValue() || "").split(/\s*[|,]\s*/);
+  var parts = String(here.sheet.GetRange(odellaLetter(gallery) + here.row).GetValue() || "").split(/\s*;\s*/);
   var clean = [];
   for (var i = 0; i < parts.length; i++) if (String(parts[i] || "").trim()) clean.push(String(parts[i]).trim());
   var dest = index + step;
@@ -1886,7 +1886,7 @@ function odellaMoveGallery(step) {
   var hold = clean[dest];
   clean[dest] = clean[index];
   clean[index] = hold;
-  here.sheet.GetRange(odellaLetter(gallery) + here.row).SetValue(clean.join(" | "));
+  here.sheet.GetRange(odellaLetter(gallery) + here.row).SetValue(clean.join("; "));
   odellaGallery(here.sheet, here.row, gallery);
 }
 

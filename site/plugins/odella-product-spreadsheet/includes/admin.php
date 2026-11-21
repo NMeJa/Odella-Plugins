@@ -120,6 +120,7 @@ function ops_admin_page(): void
             <table class="form-table" role="presentation">
                 <tr><th scope="row"><label for="ops-sheet">Spreadsheet</label></th><td><input id="ops-sheet" type="file" name="sheet" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" required /></td></tr>
                 <tr><th scope="row"><label for="ops-zip">Picture zip</label></th><td><input id="ops-zip" type="file" name="pictures" accept=".zip,application/zip" /><p class="description">Required only when a cell contains a file name. The website cannot see a path on your computer.</p></td></tr>
+                <tr><th scope="row"><label for="ops-batch-size">Batch size</label></th><td><input id="ops-batch-size" type="number" name="batch_size" value="5" min="1" max="50" step="1" class="small-text" /><p class="description">Number of products (or variation parent groups) saved per request (1–50, default 5). Lower values prevent server 500/503 timeouts; higher values run faster when few images or fields change.</p></td></tr>
                 <tr><th scope="row">Missing products</th><td><label><input type="checkbox" name="trash_missing" value="1" /> Move existing products that are not in this file to Trash</label><p class="description">Off by default. Only runs if every row in the file succeeds. Also moves linked English translations to Trash (recoverable from Products → Trash).</p></td></tr>
             </table>
             <p><button id="ops-import-btn" class="button button-primary" type="submit">Check and import</button></p>
@@ -697,6 +698,8 @@ function ops_ajax_import_start(): void
     $total_products = count($checked['plans']);
     $total_variations = count($variation_checked['plans']);
     $trash_missing = !empty($_POST['trash_missing']);
+    $raw_batch = isset($_POST['batch_size']) ? (int) $_POST['batch_size'] : 5;
+    $batch_size = max(1, min(50, $raw_batch > 0 ? $raw_batch : 5));
 
     $job_id = 'job-' . bin2hex(random_bytes(8));
     $job_path = ops_import_job_path($job_id);
@@ -711,6 +714,7 @@ function ops_ajax_import_start(): void
         'desired_statuses' => $desired_statuses,
         'total_products' => $total_products,
         'total_variations' => $total_variations,
+        'batch_size' => $batch_size,
         'zip_files' => $zip_files,
         'zip_dir' => $zip_dir,
         'trash_missing' => $trash_missing,
@@ -734,6 +738,7 @@ function ops_ajax_import_start(): void
         'phase' => $phase,
         'total_products' => $total_products,
         'total_variations' => $total_variations,
+        'batch_size' => $batch_size,
         'trash_missing' => $trash_missing,
         'warnings' => $checked['warnings'],
     ]);
@@ -759,8 +764,9 @@ function ops_ajax_import_step(): void
         wp_send_json_error(['message' => 'Invalid import job state.']);
     }
 
-    $product_batch = 5;
-    $var_group_batch = 5;
+    $batch_size = max(1, min(50, (int) ($job['batch_size'] ?? 5)));
+    $product_batch = $batch_size;
+    $var_group_batch = $batch_size;
 
     if ($job['phase'] === 'products') {
         $offset = (int) $job['product_offset'];
@@ -1028,10 +1034,11 @@ function ops_render_import_ajax_script(): void
                 var jobId = startData.job_id;
                 var totalP = startData.total_products || 0;
                 var totalV = startData.total_variations || 0;
+                var batchSize = startData.batch_size || 5;
                 var trashExtra = startData.trash_missing ? 1 : 0;
                 var totalUnits = Math.max(1, totalP + totalV + trashExtra);
 
-                setProgress(5, 'Applying changes in batches of 5…', 'Products: 0 / ' + totalP + (totalV ? ' · Variations: 0 / ' + totalV : '') + ' · Changes saved: 0', '#2271b1');
+                setProgress(5, 'Applying changes in batches of ' + batchSize + '…', 'Products: 0 / ' + totalP + (totalV ? ' · Variations: 0 / ' + totalV : '') + ' · Changes saved: 0', '#2271b1');
 
                 while (true) {
                     var step = await postStep(jobId, 0);
@@ -1045,8 +1052,8 @@ function ops_render_import_ajax_script(): void
                     var label = step.done
                         ? 'Import complete!'
                         : (step.phase === 'variations'
-                            ? 'Applying variations in batches…'
-                            : (step.phase === 'trash' ? 'Moving missing products to Trash…' : 'Applying products in batches of 5…'));
+                            ? 'Applying variations in batches of ' + batchSize + '…'
+                            : (step.phase === 'trash' ? 'Moving missing products to Trash…' : 'Applying products in batches of ' + batchSize + '…'));
                     var sub = 'Products: ' + (step.products_done || 0) + ' / ' + totalP
                         + (totalV ? (' · Variations: ' + (step.variations_done || 0) + ' / ' + totalV) : '')
                         + ' · Changes saved: ' + (step.changes_count || 0);

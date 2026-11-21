@@ -154,13 +154,13 @@
   }
 
   function translateCategoriesToEn(kaCell) {
-    const parts = String(kaCell || "").split(/\s*,\s*/).map((s) => s.trim()).filter(Boolean);
+    const parts = String(kaCell || "").split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean);
     const out = [];
     parts.forEach((p) => {
       const en = state.category_en_map[p.toLowerCase()];
       if (en && !out.includes(en)) out.push(en);
     });
-    return out.join(", ");
+    return out.join("; ");
   }
 
   function syncCategoriesEn() {
@@ -226,7 +226,7 @@
   function splitPictures(cell) {
     return String(cell || "")
       .replace(/\r\n/g, "\n")
-      .split(/\s*(?:\||,|\n)\s*/)
+      .split(/\s*(?:;|\n)\s*/)
       .map((s) => s.trim())
       .filter(Boolean);
   }
@@ -256,7 +256,7 @@
 
   // ---------- Preflight Validation & Client Warnings ----------
   function expectedVariationCount(attrCell) {
-    const parts = String(attrCell || "").split(/\s*,\s*/).map((s) => s.trim()).filter(Boolean);
+    const parts = String(attrCell || "").split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean);
     const groups = new Map();
     parts.forEach((p) => {
       const idx = p.indexOf(":");
@@ -308,6 +308,7 @@
     const usdRegC = colIdx("USD regular price");
     const featC = colIdx("Featured image");
     const hovC = colIdx("Hover image");
+    const galC = colIdx("Gallery images");
     const sdC = colIdx("Short description");
     const dC = colIdx("Description");
     const dEnC = state.headers.findIndex((h) => ["description (en)", "description_en"].includes(h.trim().toLowerCase()));
@@ -360,11 +361,12 @@
       if (isNew && !name) addErr(r, nameC, "New product needs a Name.");
 
       const catRaw = catC >= 0 ? (row[catC] || "").trim() : "";
+      let rowFixable = false;
       if (!catRaw) {
         addWarn(r, catC, "missing_category", "Category is empty.");
       } else if (catRaw.toLowerCase() !== "(clear)") {
-        if (catRaw.includes(";") || /(^|,\s*)კაცი->/.test(catRaw)) autoFixable++;
-        const parts = catRaw.split(/\s*,\s*/).map((s) => s.trim()).filter(Boolean);
+        if (catRaw.includes(",") || /(^|;\s*)კაცი->/.test(catRaw)) rowFixable = true;
+        const parts = catRaw.split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean);
         parts.forEach((part) => {
           if (!catSet.has(part.toLowerCase())) {
             addErr(r, catC, `Unknown category: "${part}"`);
@@ -373,18 +375,24 @@
       }
 
       if (tagC >= 0 && row[tagC] && row[tagC].trim() !== "" && row[tagC].trim().toLowerCase() !== "(clear)") {
-        const parts = row[tagC].trim().split(/\s*,\s*/).filter(Boolean);
+        if (row[tagC].includes(",")) rowFixable = true;
+        const parts = row[tagC].trim().split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean);
         parts.forEach((part) => {
           if (tagSet.size && !tagSet.has(part.toLowerCase())) addErr(r, tagC, `Unknown tag: "${part}"`);
         });
       }
 
       if (attrC >= 0 && row[attrC] && row[attrC].trim() !== "" && row[attrC].trim().toLowerCase() !== "(clear)") {
-        const parts = row[attrC].trim().split(/\s*,\s*/).filter(Boolean);
+        if (row[attrC].includes(",")) rowFixable = true;
+        const parts = row[attrC].trim().split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean);
         parts.forEach((part) => {
           if (attrSet.size && !attrSet.has(part.toLowerCase())) addErr(r, attrC, `Unknown attribute: "${part}"`);
         });
       }
+      if (galC >= 0 && row[galC] && (row[galC].includes("|") || row[galC].includes(","))) {
+        rowFixable = true;
+      }
+      if (rowFixable) autoFixable++;
 
       if (typeC >= 0 && row[typeC] && !["simple", "variable", "grouped", "external"].includes(pType)) {
         addErr(r, typeC, "Must be simple, variable, grouped, or external.");
@@ -529,26 +537,61 @@
 
   function runAutoFix() {
     const catC = colIdx("Categories");
-    if (catC < 0) return;
+    const tagC = colIdx("Tags");
+    const attrC = colIdx("Attributes");
+    const galC = colIdx("Gallery images");
     let fixed = 0;
     state.products.forEach((row) => {
-      const raw = (row[catC] || "").trim();
-      if (!raw) return;
-      let next = raw
-        .replace(/\s*;\s*/g, ", ")
-        .replace(/,\s*$/, "")
-        .replace(/(^|,\s*)კაცი->/g, "$1მამაკაცი->")
-        .replace(/\s*,\s*/g, ", ")
-        .trim();
-      if (next !== raw) {
-        row[catC] = next;
-        fixed++;
+      let rowChanged = false;
+      if (catC >= 0) {
+        const raw = (row[catC] || "").trim();
+        if (raw && raw.toLowerCase() !== "(clear)") {
+          const next = raw
+            .replace(/\s*,\s*/g, "; ")
+            .replace(/;\s*$/, "")
+            .replace(/(^|;\s*)კაცი->/g, "$1მამაკაცი->")
+            .replace(/\s*;\s*/g, "; ")
+            .trim();
+          if (next !== raw) {
+            row[catC] = next;
+            rowChanged = true;
+          }
+        }
       }
+      [tagC, attrC].forEach((c) => {
+        if (c < 0) return;
+        const raw = (row[c] || "").trim();
+        if (!raw || raw.toLowerCase() === "(clear)") return;
+        const next = raw
+          .replace(/\s*,\s*/g, "; ")
+          .replace(/;\s*$/, "")
+          .replace(/\s*;\s*/g, "; ")
+          .trim();
+        if (next !== raw) {
+          row[c] = next;
+          rowChanged = true;
+        }
+      });
+      if (galC >= 0) {
+        const raw = (row[galC] || "").trim();
+        if (raw && raw.toLowerCase() !== "(clear)") {
+          const next = raw
+            .replace(/\s*(?:\||,)\s*/g, "; ")
+            .replace(/;\s*$/, "")
+            .replace(/\s*;\s*/g, "; ")
+            .trim();
+          if (next !== raw) {
+            row[galC] = next;
+            rowChanged = true;
+          }
+        }
+      }
+      if (rowChanged) fixed++;
     });
     if (fixed > 0) {
       setDirty(true);
       renderGrid();
-      toast(`Auto-fixed ${fixed} row(s) (semicolons & category prefixes).`);
+      toast(`Auto-fixed ${fixed} row(s) (normalized separators to "; " & category prefixes).`);
     }
   }
 
@@ -1233,7 +1276,7 @@
           box.className = "multi-cell";
           box.style.cursor = "default";
           box.title = "Auto-mapped from Georgian Categories via Polylang";
-          const parts = val.trim() ? val.split(/\s*,\s*/).filter(Boolean) : [];
+          const parts = val.trim() ? val.split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean) : [];
           if (!parts.length) {
             const ph = document.createElement("span");
             ph.className = "multi-placeholder";
@@ -1439,7 +1482,7 @@
     const box = document.createElement("div");
     box.className = "multi-cell";
     box.title = "Double-click to open multi-select";
-    const parts = val.trim() ? val.split(/\s*,\s*/).filter(Boolean) : [];
+    const parts = val.trim() ? val.split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean) : [];
     const validSet =
       hLow === "categories"
         ? new Set(state.categories.map((x) => x.toLowerCase()))
@@ -1542,7 +1585,7 @@
           bL.addEventListener("click", (e) => {
             e.stopPropagation();
             [tokens[idx - 1], tokens[idx]] = [tokens[idx], tokens[idx - 1]];
-            state.products[rIdx][ci] = tokens.join(" | ");
+            state.products[rIdx][ci] = tokens.join("; ");
             setDirty(true);
             renderGrid();
           });
@@ -1556,7 +1599,7 @@
           bR.addEventListener("click", (e) => {
             e.stopPropagation();
             [tokens[idx + 1], tokens[idx]] = [tokens[idx], tokens[idx + 1]];
-            state.products[rIdx][ci] = tokens.join(" | ");
+            state.products[rIdx][ci] = tokens.join("; ");
             setDirty(true);
             renderGrid();
           });
@@ -1569,7 +1612,7 @@
         bDel.addEventListener("click", (e) => {
           e.stopPropagation();
           tokens.splice(idx, 1);
-          state.products[rIdx][ci] = isGallery ? tokens.join(" | ") : (tokens[0] || "");
+          state.products[rIdx][ci] = isGallery ? tokens.join("; ") : (tokens[0] || "");
           setDirty(true);
           renderGrid();
         });
@@ -1663,7 +1706,7 @@
         : state.attribute_tokens;
 
     const current = (state.products[rIdx][ci] || "")
-      .split(/\s*,\s*/)
+      .split(/\s*;\s*/)
       .map((s) => s.trim())
       .filter(Boolean);
 
@@ -1781,7 +1824,7 @@
       if (isGallery) {
         const cur = splitPictures(state.products[rIdx][ci] || "");
         cur.push(token);
-        state.products[rIdx][ci] = cur.join(" | ");
+        state.products[rIdx][ci] = cur.join("; ");
       } else {
         state.products[rIdx][ci] = token;
       }
@@ -1819,7 +1862,7 @@
     // Parse current product Attributes cell into selected Set("Group: Value")
     const selectedAttrs = new Set(
       (attrC >= 0 ? row[attrC] || "" : "")
-        .split(/\s*,\s*/)
+        .split(/\s*;\s*/)
         .map((s) => s.trim())
         .filter(Boolean)
     );
@@ -2168,7 +2211,7 @@
       });
       if (!varTokens.length) return;
       const existing = (row[attrC] || "")
-        .split(/\s*,\s*/)
+        .split(/\s*;\s*/)
         .map((s) => s.trim())
         .filter(Boolean);
       const merged = [];
@@ -2187,7 +2230,7 @@
           merged.push(t);
         }
       });
-      row[attrC] = merged.join(", ");
+      row[attrC] = merged.join("; ");
     });
   }
 
@@ -2280,7 +2323,7 @@
           if (val) finalAttrs.add(`${g}: ${val}`);
         });
       });
-      state.products[rIdx][attrC] = Array.from(finalAttrs).join(", ");
+      state.products[rIdx][attrC] = Array.from(finalAttrs).join("; ");
     }
     if ($("chkClearParentPrice").checked) {
       if (regC >= 0) state.products[rIdx][regC] = "";
@@ -2878,7 +2921,7 @@
     } else {
       res.matches.forEach((m) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${m.row}</td><td class="mono">${esc(m.sku)}</td><td>${esc(m.name)}</td><td class="mono">${esc(m.files.join(" | "))}</td>`;
+        tr.innerHTML = `<td>${m.row}</td><td class="mono">${esc(m.sku)}</td><td>${esc(m.name)}</td><td class="mono">${esc(m.files.join("; "))}</td>`;
         body.appendChild(tr);
       });
     }
@@ -3049,7 +3092,7 @@
       const options =
         hLow === "categories" ? state.categories : hLow === "tags" ? state.tags : state.attribute_tokens;
       const current = ($("bulkColVal").value || "")
-        .split(/\s*,\s*/)
+        .split(/\s*;\s*/)
         .map((s) => s.trim())
         .filter(Boolean);
       colFilterCtx = null;
@@ -3127,7 +3170,7 @@
             tagged++;
             return nextTok;
           });
-          state.products[r][c] = isGal ? parts.join(" | ") : (parts[0] || "");
+          state.products[r][c] = isGal ? parts.join("; ") : (parts[0] || "");
         });
       });
       if (tagged) {
@@ -3203,12 +3246,12 @@
       }
       if (!multiCtx) return;
       if (multiCtx.bulkTarget) {
-        $("bulkColVal").value = Array.from(multiCtx.selected).join(", ");
+        $("bulkColVal").value = Array.from(multiCtx.selected).join("; ");
         closeMultiPopover();
         return;
       }
       pushUndo();
-      state.products[multiCtx.rIdx][multiCtx.ci] = Array.from(multiCtx.selected).join(", ");
+      state.products[multiCtx.rIdx][multiCtx.ci] = Array.from(multiCtx.selected).join("; ");
       setDirty(true);
       closeMultiPopover();
       renderGrid();

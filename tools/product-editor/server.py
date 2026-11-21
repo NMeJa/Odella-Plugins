@@ -306,13 +306,13 @@ KA_TO_EN_LOWER = {k.lower(): v for k, v in KA_TO_EN_CATEGORIES.items()}
 
 
 def translate_categories_to_en(ka_cell: str) -> str:
-    parts = [p.strip() for p in ka_cell.split(",") if p.strip()]
+    parts = [p.strip() for p in re.split(r"\s*;\s*", ka_cell) if p.strip()]
     out: list[str] = []
     for p in parts:
         en = KA_TO_EN_LOWER.get(p.lower(), "")
         if en and en not in out:
             out.append(en)
-    return ", ".join(out)
+    return "; ".join(out)
 
 GEORGIAN_TO_LATIN = {
     "ა": "a", "ბ": "b", "გ": "g", "დ": "d", "ე": "e", "ვ": "v", "ზ": "z",
@@ -350,7 +350,7 @@ def split_picture_tokens(cell: str) -> list[str]:
     cell = cell.replace("\r\n", "\n").replace("\r", "\n").strip()
     if not cell:
         return []
-    parts = re.split(r"\s*(?:\||,|\n)\s*", cell)
+    parts = re.split(r"\s*(?:;|\n)\s*", cell)
     return [p.strip() for p in parts if p.strip()]
 
 
@@ -644,7 +644,7 @@ def sync_product_attributes_from_variations(
             continue
         used_groups = groups_by_pid.get(pid, set()) if pid and pid in groups_by_pid else groups_by_psku.get(sku, set())
         # Keep any existing non-variation attribute tokens (e.g. Color), and set exact variation attribute tokens
-        existing_tokens = [t.strip() for t in str(row[attr_col] or "").split(",") if t.strip()]
+        existing_tokens = [t.strip() for t in re.split(r"\s*;\s*", str(row[attr_col] or "")) if t.strip()]
         merged: list[str] = []
         merged_low: set[str] = set()
         for t in existing_tokens:
@@ -658,7 +658,7 @@ def sync_product_attributes_from_variations(
             if t.lower() not in merged_low:
                 merged_low.add(t.lower())
                 merged.append(t)
-        row[attr_col] = ", ".join(merged)
+        row[attr_col] = "; ".join(merged)
 
 
 def save_workbook_payload(target_path: Path, payload: dict[str, Any]) -> str | None:
@@ -807,7 +807,7 @@ def plan_and_execute_fix_and_zip(payload: dict[str, Any]) -> dict[str, Any]:
                 continue
             tokens = split_picture_tokens(cell)
             new_tokens = [process_token(t, label) for t in tokens]
-            row[col] = " | ".join(new_tokens) if is_multi else (new_tokens[0] if new_tokens else "")
+            row[col] = "; ".join(new_tokens) if is_multi else (new_tokens[0] if new_tokens else "")
 
     if preview_only:
         return {
@@ -1242,7 +1242,7 @@ class EditorHandler(BaseHTTPRequestHandler):
                         if len(tokens) >= 2 and hov_c >= 0:
                             row[hov_c] = tokens[1]
                         if gal_c >= 0:
-                            row[gal_c] = " | ".join(tokens)
+                            row[gal_c] = "; ".join(tokens)
 
                 self._send_json({
                     "ok": True,

@@ -21,6 +21,7 @@ require dirname(__DIR__) . '/site/plugins/odella-product-spreadsheet/includes/ht
 require dirname(__DIR__) . '/site/plugins/odella-product-spreadsheet/includes/xlsx.php';
 require dirname(__DIR__) . '/site/plugins/odella-product-spreadsheet/includes/csv.php';
 require dirname(__DIR__) . '/site/plugins/odella-product-spreadsheet/includes/attributes.php';
+require dirname(__DIR__) . '/site/plugins/odella-product-spreadsheet/includes/images.php';
 
 $failed = 0;
 $check = static function (string $name, bool $ok, string $detail = '') use (&$failed): void {
@@ -50,14 +51,18 @@ $terms = [
     ['id' => 4, 'parent' => 0, 'name' => 'Other'],
 ];
 $index = ops_term_index($terms);
-$paths = ops_category_paths('ქალი -> მოსაცმელი ->მოკლე, other');
+$paths = ops_category_paths('  ქალი -> მოსაცმელი ->მოკლე ;   other ; ');
 $matched = ops_match_category_paths($paths, $index);
 sort($matched['ids']);
 $check('paths and case', $matched['ids'] === [1, 2, 3, 4] && $matched['errors'] === [], json_encode($matched));
 $bad = ops_match_category_paths(ops_category_paths('parent-child->child'), $index);
 $check('hyphen is not a separator', $bad['errors'] !== []);
 $label = ops_category_export_label([1, 2, 3, 4], $index['by_id']);
-$check('deepest paths', $label === 'Other->, ქალი->მოსაცმელი->მოკლე' || str_contains($label, 'ქალი->მოსაცმელი->მოკლე'), $label);
+$check('deepest paths', $label === 'Other; ქალი->მოსაცმელი->მოკლე', $label);
+$tags = ops_match_tags(' silk ;  gift ; ', [['id' => 10, 'name' => 'Silk'], ['id' => 11, 'name' => 'Gift']]);
+$check('tags semicolon trimmed', $tags['errors'] === [] && $tags['ids'] === [10, 11], json_encode($tags));
+$pics = ops_split_pictures("  a.jpg ; b.jpg;c.jpg \n d.jpg ; ");
+$check('pictures semicolon trimmed', $pics === ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg'], json_encode($pics));
 
 $html = ops_normalize_html('<strong>silk</strong>');
 $check('strong', $html['errors'] === [] && $html['html'] === '<strong>silk</strong>', json_encode($html));
@@ -97,7 +102,7 @@ $catalog = [[
         ['id' => 2, 'name' => '70x70', 'slug' => '70x70'],
     ],
 ]];
-$parsed = ops_parse_attribute_list('Size: 46x46, Size: 70x70', $catalog);
+$parsed = ops_parse_attribute_list('  Size: 46x46 ;  Size: 70x70 ; ', $catalog);
 $check('attribute list', $parsed['errors'] === [] && isset($parsed['chosen']['pa_size'][1], $parsed['chosen']['pa_size'][2]), json_encode($parsed));
 $unknown = ops_parse_attribute_list('Size: nope', $catalog);
 $check('unknown attribute value', $unknown['errors'] !== []);
