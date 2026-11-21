@@ -193,6 +193,14 @@ function nmj_related_product_ok(int $product_id): bool
         return false;
     }
 
+    if (function_exists('odella_product_has_featured_image')) {
+        if (!odella_product_has_featured_image($product)) {
+            return false;
+        }
+    } elseif ((int) $product->get_image_id() <= 0) {
+        return false;
+    }
+
     if (function_exists('odella_product_has_price')) {
         return odella_product_has_price($product);
     }

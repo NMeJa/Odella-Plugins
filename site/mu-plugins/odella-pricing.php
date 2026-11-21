@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Odella Pricing Guards (MU)
- * Description: Hides published products that have no GEL price, keeps newly unpriced products as drafts, and fills EUR/USD zone prices from the National Bank of Georgia unless a manual zone price is entered.
+ * Description: Hides published products that have no GEL price or no featured image, keeps newly unpriced products as drafts, and fills EUR/USD zone prices from the National Bank of Georgia unless a manual zone price is entered. Pricing & Rates can add a fee and change the rounding.
  * Version: 1.0.0
  */
 
@@ -31,8 +31,18 @@ function odella_product_has_price( WC_Product $product ): bool {
 }
 
 /**
- * Hide a published product with no price, or undo a hide this plugin applied
- * once a price exists. Terms the owner set themselves are left in place.
+ * Featured image is the product's main image. A missing attachment does not count.
+ */
+function odella_product_has_featured_image( WC_Product $product ): bool {
+    $image_id = (int) $product->get_image_id();
+    return $image_id > 0 && wp_attachment_is_image( $image_id );
+}
+
+/**
+ * Hide a published product with no GEL price or no featured image, or undo a
+ * hide this plugin applied once both exist. Terms the owner set themselves
+ * are left in place. Price and image are tracked separately, so fixing one
+ * does not reveal a product that still lacks the other.
  */
 function odella_sync_unpriced_visibility( int $product_id ): void {
     if ( $product_id <= 0 || ! taxonomy_exists( 'product_visibility' ) ) {
@@ -47,25 +57,39 @@ function odella_sync_unpriced_visibility( int $product_id ): void {
         return;
     }
 
-    $auto      = get_post_meta( $product_id, '_odella_auto_hidden', true );
-    $has_price = odella_product_has_price( $product );
-    $managed   = array( 'exclude-from-catalog', 'exclude-from-search' );
+    $has_price  = odella_product_has_price( $product );
+    $has_image  = odella_product_has_featured_image( $product );
+    $price_flag = (bool) get_post_meta( $product_id, '_odella_auto_hidden', true );
+    $image_flag = (bool) get_post_meta( $product_id, '_odella_auto_hidden_image', true );
+    $managed    = array( 'exclude-from-catalog', 'exclude-from-search' );
+    $hide       = 'publish' === $post->post_status && ( ! $has_price || ! $has_image );
 
-    if ( 'publish' === $post->post_status && ! $has_price ) {
-        if ( ! $auto ) {
+    if ( $hide ) {
+        if ( ! $price_flag && ! $image_flag ) {
             $current = wp_get_object_terms( $product_id, 'product_visibility', array( 'fields' => 'slugs' ) );
             if ( is_wp_error( $current ) || ! is_array( $current ) ) {
                 $current = array();
             }
             $to_add = array_values( array_diff( $managed, $current ) );
             // Both terms already present means the owner hid it. Do not claim the hide.
-            if ( $to_add ) {
-                wp_set_object_terms( $product_id, $to_add, 'product_visibility', true );
-                update_post_meta( $product_id, '_odella_auto_hidden', '1' );
-                update_post_meta( $product_id, '_odella_auto_hidden_terms', wp_json_encode( $to_add ) );
+            if ( ! $to_add ) {
+                wc_delete_product_transients( $product_id );
+                return;
             }
+            wp_set_object_terms( $product_id, $to_add, 'product_visibility', true );
+            update_post_meta( $product_id, '_odella_auto_hidden_terms', wp_json_encode( $to_add ) );
         }
-    } elseif ( $has_price && $auto ) {
+        if ( $has_price ) {
+            delete_post_meta( $product_id, '_odella_auto_hidden' );
+        } else {
+            update_post_meta( $product_id, '_odella_auto_hidden', '1' );
+        }
+        if ( $has_image ) {
+            delete_post_meta( $product_id, '_odella_auto_hidden_image' );
+        } else {
+            update_post_meta( $product_id, '_odella_auto_hidden_image', '1' );
+        }
+    } elseif ( $has_price && $has_image && ( $price_flag || $image_flag ) ) {
         $raw   = get_post_meta( $product_id, '_odella_auto_hidden_terms', true );
         $added = is_string( $raw ) ? json_decode( $raw, true ) : array();
         if ( ! is_array( $added ) ) {
@@ -76,6 +100,7 @@ function odella_sync_unpriced_visibility( int $product_id ): void {
             wp_remove_object_terms( $product_id, $added, 'product_visibility' );
         }
         delete_post_meta( $product_id, '_odella_auto_hidden' );
+        delete_post_meta( $product_id, '_odella_auto_hidden_image' );
         delete_post_meta( $product_id, '_odella_auto_hidden_terms' );
     }
 
@@ -289,21 +314,30 @@ function odella_pricing_backfill(): void {
         )
     );
 
-    $hidden   = 0;
-    $restored = 0;
+    $hidden         = 0;
+    $restored       = 0;
+    $image_hidden   = 0;
+    $image_restored = 0;
     foreach ( $ids as $product_id ) {
-        $product_id = (int) $product_id;
-        $before     = (bool) get_post_meta( $product_id, '_odella_auto_hidden', true );
+        $product_id   = (int) $product_id;
+        $before       = (bool) get_post_meta( $product_id, '_odella_auto_hidden', true );
+        $before_image = (bool) get_post_meta( $product_id, '_odella_auto_hidden_image', true );
         odella_sync_unpriced_visibility( $product_id );
-        $after = (bool) get_post_meta( $product_id, '_odella_auto_hidden', true );
+        $after       = (bool) get_post_meta( $product_id, '_odella_auto_hidden', true );
+        $after_image = (bool) get_post_meta( $product_id, '_odella_auto_hidden_image', true );
         if ( ! $before && $after ) {
             $hidden++;
         } elseif ( $before && ! $after ) {
             $restored++;
         }
+        if ( ! $before_image && $after_image ) {
+            $image_hidden++;
+        } elseif ( $before_image && ! $after_image ) {
+            $image_restored++;
+        }
     }
 
-    echo 'hidden=' . $hidden . ' restored=' . $restored . "\n";
+    echo 'hidden=' . $hidden . ' restored=' . $restored . ' image_hidden=' . $image_hidden . ' image_restored=' . $image_restored . "\n";
 }
 
 /**
@@ -360,6 +394,7 @@ function odella_pricing_on_price_meta( $meta_id, $post_id, $meta_key ): void {
         '_regular_price',
         '_price',
         '_sale_price',
+        '_thumbnail_id',
         '_eurozone_regular_price',
         '_eurozone_sale_price',
         '_global_regular_price',
@@ -531,8 +566,33 @@ function odella_update_zone_rates(): void {
 /**
  * 03:30 Asia/Tbilisi. WP-Cron runs on traffic, which is enough for a daily job.
  */
-function odella_pricing_schedule_rates(): void {
-    if ( wp_next_scheduled( 'odella_daily_rates' ) ) {
+/**
+ * @param array<string, array{interval: int, display: string}> $schedules
+ * @return array<string, array{interval: int, display: string}>
+ */
+function odella_pricing_cron_schedules( $schedules ) {
+    if ( ! is_array( $schedules ) ) {
+        $schedules = array();
+    }
+    $hours = (int) odella_pricing_settings()['interval_hours'];
+    if ( $hours === 24 ) {
+        return $schedules;
+    }
+    $key = 'odella_every_' . $hours . '_hours';
+    $schedules[ $key ] = array(
+        'interval' => $hours * HOUR_IN_SECONDS,
+        'display'  => 'Every ' . $hours . ' hours (Odella rates)',
+    );
+    return $schedules;
+}
+
+function odella_pricing_reschedule_rates(): void {
+    if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+        wp_clear_scheduled_hook( 'odella_daily_rates' );
+    }
+    $hours = (int) odella_pricing_settings()['interval_hours'];
+    if ( 24 !== $hours ) {
+        wp_schedule_event( time() + ( $hours * HOUR_IN_SECONDS ), 'odella_every_' . $hours . '_hours', 'odella_daily_rates' );
         return;
     }
     try {
@@ -547,6 +607,16 @@ function odella_pricing_schedule_rates(): void {
         $next->modify( '+1 day' );
     }
     wp_schedule_event( $next->getTimestamp(), 'daily', 'odella_daily_rates' );
+}
+
+function odella_pricing_schedule_rates(): void {
+    $hours = (int) odella_pricing_settings()['interval_hours'];
+    $want  = 24 === $hours ? 'daily' : 'odella_every_' . $hours . '_hours';
+    $event = function_exists( 'wp_get_scheduled_event' ) ? wp_get_scheduled_event( 'odella_daily_rates' ) : null;
+    if ( is_object( $event ) && isset( $event->schedule ) && $event->schedule === $want ) {
+        return;
+    }
+    odella_pricing_reschedule_rates();
 }
 
 /**
@@ -601,6 +671,209 @@ function odella_pricing_sync_one_zone( int $post_id, string $zone_id ): void {
 }
 
 /**
+ * Defaults match the shop as it runs today: bank rate with no fee, round up to a number ending in 9.
+ *
+ * @return array{interval_hours: int, fee_percent: float, rounding: string, reduce_by: string, round_after_tax: int}
+ */
+function odella_pricing_settings_defaults(): array {
+    return array(
+        'interval_hours'  => 24,
+        'fee_percent'     => 0.0,
+        'rounding'        => 'end_in_9',
+        'reduce_by'       => 'off',
+        'round_after_tax' => 0,
+    );
+}
+
+/**
+ * @return array{interval_hours: int, fee_percent: float, rounding: string, reduce_by: string, round_after_tax: int}
+ */
+function odella_pricing_settings( bool $refresh = false ): array {
+    static $cached = null;
+    if ( $refresh ) {
+        $cached = null;
+    }
+    if ( null !== $cached ) {
+        return $cached;
+    }
+    $defaults = odella_pricing_settings_defaults();
+    $stored   = get_option( 'odella_pricing_settings', array() );
+    if ( ! is_array( $stored ) ) {
+        $stored = array();
+    }
+    $hours = isset( $stored['interval_hours'] ) ? (int) $stored['interval_hours'] : $defaults['interval_hours'];
+    if ( $hours < 1 ) {
+        $hours = 1;
+    }
+    if ( $hours > 168 ) {
+        $hours = 168;
+    }
+    $fee = isset( $stored['fee_percent'] ) && is_numeric( $stored['fee_percent'] ) ? (float) $stored['fee_percent'] : 0.0;
+    if ( $fee < 0 ) {
+        $fee = 0.0;
+    }
+    if ( $fee > 100 ) {
+        $fee = 100.0;
+    }
+    $rounding = isset( $stored['rounding'] ) ? (string) $stored['rounding'] : 'end_in_9';
+    if ( ! in_array( $rounding, array( 'end_in_9', 'none', 'whole', 'multiple_10' ), true ) ) {
+        $rounding = 'end_in_9';
+    }
+    $reduce = isset( $stored['reduce_by'] ) ? (string) $stored['reduce_by'] : 'off';
+    if ( ! in_array( $reduce, array( 'off', '0.01', '1' ), true ) ) {
+        $reduce = 'off';
+    }
+    $cached = array(
+        'interval_hours'  => $hours,
+        'fee_percent'     => $fee,
+        'rounding'        => $rounding,
+        'reduce_by'       => $reduce,
+        'round_after_tax' => empty( $stored['round_after_tax'] ) ? 0 : 1,
+    );
+    return $cached;
+}
+
+/**
+ * @param array<string, mixed> $input
+ * @return array<int, string>
+ */
+function odella_pricing_save_settings( array $input ): array {
+    $old  = odella_pricing_settings();
+    $fee_raw = isset( $input['fee_percent'] ) ? str_replace( ',', '.', trim( (string) $input['fee_percent'] ) ) : '0';
+    $fee_raw = str_replace( ' ', '', $fee_raw );
+    $stored  = array(
+        'interval_hours'  => isset( $input['interval_hours'] ) ? (int) $input['interval_hours'] : 24,
+        'fee_percent'     => is_numeric( $fee_raw ) ? (float) $fee_raw : 0.0,
+        'rounding'        => isset( $input['rounding'] ) ? (string) $input['rounding'] : 'end_in_9',
+        'reduce_by'       => isset( $input['reduce_by'] ) ? (string) $input['reduce_by'] : 'off',
+        'round_after_tax' => empty( $input['round_after_tax'] ) ? 0 : 1,
+    );
+    update_option( 'odella_pricing_settings', $stored );
+    $new      = odella_pricing_settings( true );
+    $messages = array( 'Pricing settings saved.' );
+    if ( (int) $old['interval_hours'] !== (int) $new['interval_hours'] ) {
+        odella_pricing_reschedule_rates();
+        $messages[] = 'The rate update schedule was changed.';
+    }
+    $price_changed = abs( (float) $old['fee_percent'] - (float) $new['fee_percent'] ) > 0.00001
+        || $old['rounding'] !== $new['rounding']
+        || $old['reduce_by'] !== $new['reduce_by']
+        || (int) $old['round_after_tax'] !== (int) $new['round_after_tax'];
+    if ( $price_changed ) {
+        odella_pricing_clear_display_cache();
+        $messages[] = 'Shop cache cleared so calculated EUR and USD prices update.';
+    }
+    return $messages;
+}
+
+/**
+ * Fee, then rounding. A zero fee leaves the original value untouched so today's prices stay put.
+ *
+ * @param mixed $value
+ * @param array{interval_hours: int, fee_percent: float, rounding: string, reduce_by: string, round_after_tax: int} $settings
+ * @return mixed
+ */
+function odella_pricing_apply_fee( $value, array $settings ) {
+    if ( '' === $value || null === $value || ! is_numeric( $value ) ) {
+        return $value;
+    }
+    $fee = (float) $settings['fee_percent'];
+    if ( $fee <= 0 ) {
+        return $value;
+    }
+    return (float) $value * ( 1 + ( $fee / 100 ) );
+}
+
+/**
+ * @param mixed $value
+ * @return string|mixed
+ */
+function odella_pricing_format_amount( $value ) {
+    if ( ! is_numeric( $value ) ) {
+        return $value;
+    }
+    $v = round( (float) $value, 2 );
+    if ( abs( $v - round( $v ) ) < 0.00001 ) {
+        return (string) (int) round( $v );
+    }
+    return number_format( $v, 2, '.', '' );
+}
+
+/**
+ * @param mixed $value
+ * @param array{interval_hours: int, fee_percent: float, rounding: string, reduce_by: string, round_after_tax: int} $settings
+ * @return mixed
+ */
+function odella_pricing_apply_rounding( $value, array $settings ) {
+    if ( '' === $value || null === $value || ! is_numeric( $value ) ) {
+        return $value;
+    }
+    $v = (float) $value;
+    if ( $v <= 0 ) {
+        return $value;
+    }
+    if ( 'end_in_9' === $settings['rounding'] ) {
+        return odella_round_up_9( $v );
+    }
+    if ( 'whole' === $settings['rounding'] ) {
+        $v = ceil( $v - 0.0000001 );
+    } elseif ( 'multiple_10' === $settings['rounding'] ) {
+        $v = ceil( ( $v - 0.0000001 ) / 10 ) * 10;
+    }
+    if ( 'none' !== $settings['rounding'] && 'off' !== $settings['reduce_by'] ) {
+        $v -= (float) $settings['reduce_by'];
+    }
+    if ( $v <= 0 ) {
+        return $value;
+    }
+    return odella_pricing_format_amount( $v );
+}
+
+/**
+ * What a shopper would see for a converted amount, after the fee and the rounding.
+ *
+ * @param mixed $value
+ * @return mixed
+ */
+function odella_pricing_preview_amount( $value ) {
+    $settings = odella_pricing_settings();
+    $value    = odella_pricing_apply_fee( $value, $settings );
+    return odella_pricing_apply_rounding( $value, $settings );
+}
+
+function odella_pricing_clear_display_cache(): void {
+    if ( function_exists( 'wc_delete_product_transients' ) ) {
+        wc_delete_product_transients();
+    }
+    if ( class_exists( 'WCPBC_Product_Meta_Data' ) ) {
+        WCPBC_Product_Meta_Data::delete_product_transients();
+    }
+    if ( class_exists( 'WCPBC_Cache_Plugins_Helper' ) ) {
+        WCPBC_Cache_Plugins_Helper::flush_cache();
+    }
+    if ( function_exists( 'wp_cache_flush' ) ) {
+        wp_cache_flush();
+    }
+    if ( function_exists( 'do_action' ) ) {
+        do_action( 'litespeed_purge_all' );
+    }
+}
+
+/**
+ * @param mixed $product
+ */
+function odella_pricing_is_foreign_exchange( $product ): bool {
+    $zone = odella_pricing_active_zone();
+    if ( ! $zone || ! method_exists( $zone, 'get_currency' ) || 'GEL' === $zone->get_currency() ) {
+        return false;
+    }
+    if ( ! is_object( $product ) || ! method_exists( $zone, 'is_exchange_rate_price' ) || ! $zone->is_exchange_rate_price( $product ) ) {
+        return false;
+    }
+    return true;
+}
+
+/**
  * Next whole number ending in 9, never below the value. Empty and non-positive values pass through.
  *
  * @param mixed $v
@@ -637,14 +910,36 @@ function odella_pricing_active_zone() {
  * @return mixed
  */
 function odella_pricing_round_foreign_price( $value, $product ) {
-    $zone = odella_pricing_active_zone();
-    if ( ! $zone || ! method_exists( $zone, 'get_currency' ) || 'GEL' === $zone->get_currency() ) {
+    if ( ! odella_pricing_is_foreign_exchange( $product ) ) {
         return $value;
     }
-    if ( ! is_object( $product ) || ! method_exists( $zone, 'is_exchange_rate_price' ) || ! $zone->is_exchange_rate_price( $product ) ) {
+    $settings = odella_pricing_settings();
+    if ( (float) $settings['fee_percent'] <= 0 && 'end_in_9' === $settings['rounding'] && empty( $settings['round_after_tax'] ) ) {
+        return odella_round_up_9( $value );
+    }
+    $value = odella_pricing_apply_fee( $value, $settings );
+    if ( ! empty( $settings['round_after_tax'] ) ) {
         return $value;
     }
-    return odella_round_up_9( $value );
+    return odella_pricing_apply_rounding( $value, $settings );
+}
+
+/**
+ * When "round after tax" is on, the price getters apply the fee only.
+ * This filter rounds the tax-inclusive amount the shopper sees.
+ *
+ * @param mixed $price
+ * @param mixed $qty
+ * @param mixed $product
+ * @return mixed
+ */
+function odella_pricing_round_including_tax( $price, $qty, $product ) {
+    unset( $qty );
+    $settings = odella_pricing_settings();
+    if ( empty( $settings['round_after_tax'] ) || ! odella_pricing_is_foreign_exchange( $product ) ) {
+        return $price;
+    }
+    return odella_pricing_apply_rounding( $price, $settings );
 }
 
 /**
@@ -674,11 +969,15 @@ function odella_pricing_variation_prices_hash( $hash, $product, $for_display ) {
         $hash = array();
     }
     $zone = odella_pricing_active_zone();
-    $hash[] = 'odella_r9';
-    $hash[] = ( $zone && method_exists( $zone, 'get_id' ) ) ? (string) $zone->get_id() : '';
+    $settings = odella_pricing_settings();
+    $hash[]   = 'odella_r9';
+    $hash[]   = ( $zone && method_exists( $zone, 'get_id' ) ) ? (string) $zone->get_id() : '';
+    $hash[]   = $settings['rounding'] . '|' . $settings['reduce_by'] . '|' . $settings['fee_percent'] . '|' . $settings['round_after_tax'];
     return $hash;
 }
 
+if ( function_exists( 'add_filter' ) ) {
+add_filter( 'cron_schedules', 'odella_pricing_cron_schedules' );
 add_action( 'init', 'odella_pricing_schedule_rates' );
 add_action( 'odella_daily_rates', 'odella_update_zone_rates' );
 
@@ -704,3 +1003,5 @@ foreach (
     add_filter( $odella_price_hook, 'odella_pricing_round_variation_prices', PHP_INT_MAX, 3 );
 }
 add_filter( 'woocommerce_get_variation_prices_hash', 'odella_pricing_variation_prices_hash', 10, 3 );
+add_filter( 'woocommerce_get_price_including_tax', 'odella_pricing_round_including_tax', PHP_INT_MAX, 3 );
+}

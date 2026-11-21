@@ -95,6 +95,21 @@
 		return map[ext] || '';
 	}
 
+	// One file only. A second <source> makes Chrome download the MP4 fallback
+	// even when it is already playing the WebM.
+	function browserCanPlay(url) {
+		var type = guessVideoType(url);
+		if (!type) return true;
+		var probe = document.createElement('video');
+		return !!probe.canPlayType && probe.canPlayType(type) !== '';
+	}
+
+	function chooseHostedSrc(primary, fallback) {
+		if (primary && browserCanPlay(primary)) return { src: primary, reserve: fallback };
+		if (fallback) return { src: fallback, reserve: '' };
+		return { src: primary || '', reserve: '' };
+	}
+
 	function buildIframeUrl(parsed, attrsStr) {
 		var autoplay = attrsStr.indexOf('autoplay') !== -1;
 		var muted = attrsStr.indexOf('muted') !== -1;
@@ -239,19 +254,18 @@
 				video.muted = true;
 			}
 
-			if (newSrc) {
-				var s1 = document.createElement('source');
-				s1.src = newSrc;
-				var t1 = guessVideoType(newSrc);
-				if (t1) s1.type = t1;
-				video.appendChild(s1);
-			}
-			if (newFallback) {
-				var s2 = document.createElement('source');
-				s2.src = newFallback;
-				var t2 = guessVideoType(newFallback);
-				if (t2) s2.type = t2;
-				video.appendChild(s2);
+			var chosen = chooseHostedSrc(newSrc, newFallback);
+			if (!chosen.src) return;
+			video.src = chosen.src;
+			if (chosen.reserve && chosen.reserve !== chosen.src) {
+				video.addEventListener('error', function () {
+					if (video.getAttribute('data-nmj-fallback') === '1') return;
+					video.setAttribute('data-nmj-fallback', '1');
+					video.src = chosen.reserve;
+					if (video.hasAttribute('autoplay') && video.paused) {
+						video.play().catch(function () { });
+					}
+				});
 			}
 
 			container.appendChild(video);

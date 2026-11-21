@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Odella Product Sheet Editor</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%2310b981' stroke-width='8'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="brand">Odella<span>Sheet</span></div>
+      <select id="fileSelect" class="select" title="Open workbook from Odella-excel"></select>
+      <button id="btnImport" class="btn btn-ghost" data-i18n="import" title="Import .xlsx or .csv from anywhere">Import</button>
+      <select id="langSelect" class="select" title="Language columns view">
+        <option value="all">Lang: All (Geo + Eng)</option>
+        <option value="ka">Lang: Geo only</option>
+        <option value="en">Lang: Eng only</option>
+      </select>
+      <button id="btnReload" class="btn btn-ghost" data-i18n="reload" title="Reload current file">Reload</button>
+      <button id="btnAddRow" class="btn btn-ghost" data-i18n="add_product">+ Add</button>
+    </div>
+    <div class="topbar-right">
+      <button id="btnAutoFix" class="btn btn-warn hidden" title="Fix semicolons and known client typos">Auto-Fix (<span id="autoFixCount">0</span>)</button>
+      <button id="btnWarnings" class="btn btn-warn" title="Open Warnings Summary (missing prices, images, drafts, variations, etc.)">⚠ <span data-i18n="warnings">Warnings</span>: <span id="warnCount">0</span></button>
+      <button id="btnErrors" class="btn btn-danger-soft" title="Filter to rows with errors"><span data-i18n="errors">Errors</span>: <span id="errorCount">0</span></button>
+      <button id="btnTranslate" class="btn btn-secondary" data-i18n="translate" title="Auto-translate Georgian to English with Gemini">✨ Translate</button>
+      <button id="btnAutoMatch" class="btn btn-secondary" data-i18n="auto_match" title="Match local images by SKU">Match Images</button>
+      <button id="btnCleanVars" class="btn btn-secondary" title="Remove duplicate or empty variations (keeps the row with valid attribute and price)">Clean Variations</button>
+      <button id="btnDrawer" class="btn btn-secondary" data-i18n="local_images">Local Images</button>
+      <button id="btnFixZip" class="btn btn-accent" data-i18n="fix_zip">Fix Naming &amp; Zip</button>
+      <button id="btnSaveAs" class="btn btn-secondary" data-i18n="save_as">Save As</button>
+      <button id="btnSave" class="btn btn-primary" data-i18n="save">Save</button>
+      <button id="btnTheme" class="btn btn-ghost" title="Toggle Dark / Light theme">☀</button>
+      <button id="btnSettings" class="btn btn-ghost" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <section class="filterbar">
+    <div class="filter-chips">
+      <button class="chip active" data-filter="all">All (<span id="countAll">0</span>)</button>
+      <button class="chip" data-filter="new">New rows (<span id="countNew">0</span>)</button>
+      <button class="chip" data-filter="errors">Errors only (<span id="countErr">0</span>)</button>
+      <button class="chip" data-filter="warnings">Warnings (<span id="countWarn">0</span>)</button>
+      <select id="warnTypeSelect" class="select select-sm" title="Filter warnings by column/type (live counts)">
+        <option value="">All Big Warnings</option>
+        <option value="missing_price">Price: Missing GEL</option>
+        <option value="missing_featured">Featured Image: Missing</option>
+        <option value="bad_vars">Variations: Duplicates / Empty Price</option>
+        <option value="draft">Status: In Draft / Empty</option>
+        <option value="missing_category">Categories: Missing</option>
+        <option value="missing_desc">Description: Empty</option>
+        <option value="missing_en">English (EN): Missing</option>
+        <option value="incomplete_vars">Info — Variations: Fewer Combos</option>
+        <option value="missing_hover">Info — Hover Image: Missing</option>
+        <option value="eur_usd_auto">Info — EUR / USD: Auto NBG Rate</option>
+      </select>
+      <button class="chip" data-filter="ratio" title="Products with images outside 2:3 (±5%) or smaller than 600x900">Bad Ratio (<span id="countRatio">0</span>)</button>
+      <button class="chip" data-filter="variable">Variable (<span id="countVar">0</span>)</button>
+    </div>
+    <div class="search-wrap">
+      <input id="searchInput" type="search" class="input" placeholder="Search SKU, Name, Category, Attributes...">
+      <span id="statusBadge" class="status-badge">Ready</span>
+    </div>
+  </section>
+
+  <section class="bulkbar hidden" id="bulkBar">
+    <strong id="bulkCount">0 rows selected</strong>
+    <div class="row-gap">
+      <select id="bulkColSel" class="select select-sm" title="Choose any column to bulk edit"></select>
+      <select id="bulkColSelect" class="select select-sm hidden" style="min-width:140px;"></select>
+      <input id="bulkColVal" type="text" class="input input-sm" style="width:165px;" placeholder="New value (or (clear))">
+      <button id="btnBulkPick" class="btn btn-sm btn-ghost hidden" title="Pick from list">Pick...</button>
+      <button id="btnBulkColApply" class="btn btn-sm btn-primary">Set Column</button>
+      <span class="rich-sep"></span>
+      <input id="bulkPricePct" type="number" step="1" class="input input-sm" style="width:86px;" placeholder="Price ±%">
+      <button id="btnBulkPrice" class="btn btn-sm btn-secondary">Adjust GEL</button>
+      <span class="rich-sep"></span>
+      <select id="bulkFbSel" class="select select-sm"></select>
+      <button id="btnBulkFb" class="btn btn-sm btn-secondary">Tag Local Imgs</button>
+      <span class="rich-sep"></span>
+      <button id="btnBulkTranslate" class="btn btn-sm btn-accent">✨ Translate</button>
+      <button id="btnBulkCleanVars" class="btn btn-sm btn-warn" title="Remove empty or duplicate variations for the selected products">Clean Variations</button>
+      <button id="btnBulkDelete" class="btn btn-sm btn-danger-soft">🗑 Delete</button>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <div class="grid-container" id="gridContainer">
+      <table class="sheet-table" id="sheetTable">
+        <thead id="sheetHead"></thead>
+        <tbody id="sheetBody"></tbody>
+      </table>
+    </div>
+
+    <aside class="drawer hidden" id="imagesDrawer">
+      <div class="drawer-header">
+        <h3>Local Images</h3>
+        <button id="btnCloseDrawer" class="icon-btn" title="Close">&times;</button>
+      </div>
+      <div class="drawer-controls">
+        <label class="label-sm">Root folder</label>
+        <div class="row-gap">
+          <input id="imagesRootInput" type="text" class="input input-sm" placeholder="C:\...\ზომაზე დაჭრილი">
+          <button id="btnRefreshImages" class="btn btn-sm btn-secondary">Scan</button>
+        </div>
+        <div class="row-gap">
+          <select id="drawerFolderSelect" class="select select-sm"></select>
+          <input id="drawerSearch" type="search" class="input input-sm" placeholder="Filter images...">
+        </div>
+        <div class="drawer-hint">Drag any image onto a product's <b>Hover</b>, <b>Featured</b>, or <b>Gallery</b> cell.</div>
+      </div>
+      <div class="drawer-grid" id="drawerGrid"></div>
+    </aside>
+  </main>
+
+  <!-- Multi-select popover (double-click Categories / Tags / Attributes) -->
+  <div id="multiPopover" class="popover hidden">
+    <div class="popover-header">
+      <strong id="multiTitle">Select</strong>
+      <button id="multiClose" class="icon-btn">&times;</button>
+    </div>
+    <input id="multiSearch" type="search" class="input input-sm" placeholder="Filter options...">
+    <div id="multiSelected" class="selected-chips"></div>
+    <div id="multiList" class="popover-list"></div>
+    <div class="popover-footer">
+      <button id="multiClear" class="btn btn-sm btn-ghost">Clear all</button>
+      <div class="row-gap">
+        <button id="multiCancel" class="btn btn-sm btn-secondary">Cancel</button>
+        <button id="multiApply" class="btn btn-sm btn-primary">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FileBird folder + Override confirmation modal on local image drop -->
+  <div id="dropModal" class="modal-backdrop hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="dropModalTitle">Add Local Image</h3>
+        <button class="icon-btn" data-close="dropModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="dropOverrideWarn" class="alert-warn hidden">
+          This field already has an image. Dropping here will <b>replace</b> the existing image.
+        </div>
+        <div class="drop-preview-row">
+          <img id="dropPreviewImg" class="drop-preview-thumb" alt="">
+          <div>
+            <div id="dropFileName" class="mono"></div>
+            <div id="dropRealPath" class="muted-sm"></div>
+          </div>
+        </div>
+        <label class="label-sm" for="filebirdSelect">FileBird Folder Tag (prefix with <code>/</code>)</label>
+        <select id="filebirdSelect" class="select"></select>
+        <div class="muted-sm" style="margin-top:6px;">
+          Cell value preview: <code id="dropCellPreview"></code>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="dropModal">Cancel</button>
+        <button id="btnDropConfirm" class="btn btn-primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variation Generator Modal -->
+  <div id="varModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 id="varModalTitle">Variable Product — Variations</h3>
+          <div id="varModalSub" class="muted-sm"></div>
+        </div>
+        <button class="icon-btn" data-close="varModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="var-attr-section">
+          <div class="var-section-head">
+            <strong>1. Select Attributes</strong>
+            <button id="btnGenCombos" class="btn btn-sm btn-accent">Generate Combinations</button>
+          </div>
+          <div id="varAttrGroups" class="var-attr-groups"></div>
+        </div>
+
+        <div class="var-table-section">
+          <div class="var-section-head">
+            <strong>2. Variations (<span id="varCount">0</span>)</strong>
+            <div class="row-gap">
+              <button id="btnCleanModalVars" class="btn btn-sm btn-warn" title="Remove empty or duplicate SKU variations for this product">Clean Duplicates</button>
+              <button id="btnAutoSku" class="btn btn-sm btn-secondary" title="Fill incrementing numeric SKUs starting from Parent SKU">Auto-increment SKUs</button>
+              <button id="btnAddVarRow" class="btn btn-sm btn-ghost">+ Row</button>
+            </div>
+          </div>
+          <div class="var-table-wrap">
+            <table class="var-table">
+              <thead id="varTableHead"></thead>
+              <tbody id="varTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <label class="checkbox-row" style="margin-top:10px;">
+          <input type="checkbox" id="chkClearParentPrice" checked>
+          <span>Clear parent Regular/Sale GEL price (recommended for variable products like Pera)</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="varModal">Cancel</button>
+        <button id="btnSaveVars" class="btn btn-primary">Save Variations</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fix Naming & Zip Modal -->
+  <div id="zipModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Fix Local Image Naming &amp; Build Upload Zip</h3>
+        <button class="icon-btn" data-close="zipModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="zipSummary" class="muted-sm" style="margin-bottom:8px;"></div>
+        <div id="zipMissingBox" class="alert-danger hidden"></div>
+        <div class="var-table-wrap" style="max-height:340px;">
+          <table class="var-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>SKU</th>
+                <th>Field</th>
+                <th>Current File</th>
+                <th>New Cell Value (with FileBird)</th>
+              </tr>
+            </thead>
+            <tbody id="zipPreviewBody"></tbody>
+          </table>
+        </div>
+        <label class="checkbox-row" style="margin-top:12px;">
+          <input type="checkbox" id="chkRenameOriginals">
+          <span>Also rename the original files on disk (otherwise only copies inside the zip are renamed)</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="zipModal">Cancel</button>
+        <button id="btnRunZip" class="btn btn-accent">Create Zip &amp; Update Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rich Text Editor Modal (Short description / Description) -->
+  <div id="richModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3 id="richModalTitle">Edit Description</h3>
+          <div id="richModalSub" class="muted-sm"></div>
+        </div>
+        <button class="icon-btn" data-close="richModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="rich-toolbar">
+          <button type="button" class="btn btn-sm btn-ghost" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+          <button type="button" class="btn btn-sm btn-ghost" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+          <button type="button" class="btn btn-sm btn-ghost" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+          <span class="rich-sep"></span>
+          <button type="button" class="btn btn-sm btn-ghost" data-cmd="insertUnorderedList" title="Bullet list">&bull; List</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+          <span class="rich-sep"></span>
+          <button type="button" class="btn btn-sm btn-ghost" id="btnRichLink" title="Insert link">Link</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-cmd="removeFormat" title="Clear formatting">Clear format</button>
+          <span style="flex:1"></span>
+          <button type="button" class="btn btn-sm btn-secondary" id="btnRichHtmlToggle">HTML</button>
+        </div>
+        <div id="richEditor" class="rich-editor" contenteditable="true"></div>
+        <textarea id="richHtmlArea" class="rich-html hidden"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="richModal">Cancel</button>
+        <button id="btnRichSave" class="btn btn-primary">Save Text</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 data-i18n="settings_title">Settings</h3>
+        <button class="icon-btn" data-close="settingsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-grid">
+          <div class="settings-section">
+            <h4>Appearance &amp; Editor</h4>
+            <div class="form-row">
+              <label class="label-sm">Theme</label>
+              <select id="setTheme" class="select">
+                <option value="dark">Dark Mode</option>
+                <option value="light">Light Mode</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="label-sm">UI Language</label>
+              <select id="setUiLang" class="select">
+                <option value="en">English</option>
+                <option value="ka">ქართული (Georgian)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Zoom (<span id="setZoomVal">100</span>%)</label>
+              <input id="setZoom" type="range" min="80" max="130" step="5" value="100">
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Font Size (<span id="setFontVal">13</span>px)</label>
+              <input id="setFont" type="range" min="11" max="18" step="1" value="13">
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Row Density</label>
+              <select id="setDensity" class="select">
+                <option value="compact">Compact</option>
+                <option value="normal">Normal</option>
+                <option value="comfortable">Comfortable</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Extra Blank Rows (for quick paste)</label>
+              <input id="setBlankRows" type="number" min="0" max="200" value="50" class="input">
+            </div>
+            <label class="checkbox-row" style="margin-top:8px;">
+              <input type="checkbox" id="setAutoBackup" checked>
+              <span>Auto-backup .xlsx to <code>Odella-excel/_backups/</code> before saving</span>
+            </label>
+          </div>
+
+          <div class="settings-section">
+            <h4>Gemini AI Auto-Translate (Free API Key)</h4>
+            <div class="form-row">
+              <label class="label-sm">
+                Gemini API Key (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:#60a5fa;">Get Free Key</a>)
+              </label>
+              <div class="row-gap">
+                <input id="setApiKey" type="password" class="input" style="flex:1;" placeholder="AIzaSy...">
+                <button type="button" id="btnToggleKey" class="btn btn-sm btn-ghost">Show</button>
+              </div>
+            </div>
+            <div class="form-row">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label class="label-sm">Model</label>
+                <button type="button" id="btnLoadModels" class="btn btn-sm btn-ghost">Load Models from Key</button>
+              </div>
+              <select id="setModel" class="select">
+                <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended — Free Tier)</option>
+                <option value="gemini-3.8-flash-lite">gemini-3.8-flash-lite (Fastest / Highest Free Quota)</option>
+                <option value="gemini-3.8-pro">gemini-3.8-pro (Highest Quality)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Products per batch (5–25)</label>
+              <input id="setBatchSize" type="number" min="1" max="30" value="12" class="input">
+            </div>
+            <div class="row-gap" style="margin:8px 0;">
+              <button type="button" id="btnTestGemini" class="btn btn-sm btn-secondary">Test Gemini Connection</button>
+              <span id="geminiTestStatus" class="muted-sm"></span>
+            </div>
+            <div class="form-row">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label class="label-sm">Translator System Prompt (role &amp; store context)</label>
+                <button type="button" id="btnResetPrompt" class="btn btn-sm btn-ghost">Reset default</button>
+              </div>
+              <textarea id="setPrompt" class="input" rows="8" style="width:100%;font-size:12px;line-height:1.45;"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="settingsModal">Cancel</button>
+        <button id="btnSaveSettings" class="btn btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gemini Auto-Translate Modal -->
+  <div id="translateModal" class="modal-backdrop hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>✨ Auto-Translate to English (Gemini)</h3>
+        <button class="icon-btn" data-close="translateModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-sm" style="margin-top:0;">
+          Translates <b>Name</b>, <b>Short description</b>, and <b>Description</b> from Georgian to English (preserving HTML formatting). Categories (EN) are already auto-mapped via Polylang.
+        </p>
+        <div class="form-row">
+          <label class="label-sm">Which rows to translate?</label>
+          <select id="translateScope" class="select">
+            <option value="missing">Missing English only (<span id="trCountMissing">0</span>)</option>
+            <option value="selected">Selected rows (<span id="trCountSelected">0</span>)</option>
+            <option value="all">All non-empty rows (<span id="trCountAll">0</span>)</option>
+          </select>
+        </div>
+        <div id="translateProgressWrap" class="hidden" style="margin-top:12px;">
+          <div class="progress-track"><div id="translateProgressBar" class="progress-bar"></div></div>
+          <div id="translateProgressText" class="muted-sm" style="margin-top:6px;">Preparing...</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnCancelTranslate" class="btn btn-secondary" data-close="translateModal">Cancel</button>
+        <button id="btnStartTranslate" class="btn btn-accent">Start Translation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import .xlsx / .csv Modal -->
+  <div id="importModal" class="modal-backdrop hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Import Spreadsheet (.xlsx / .csv)</h3>
+        <button class="icon-btn" data-close="importModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section" style="margin-bottom:12px;">
+          <h4 style="margin-bottom:6px;">Open Original File (Saves Directly to Original)</h4>
+          <p class="muted-sm" style="margin:0 0 8px;">Opens any <code>.xlsx</code> from your PC without copying it — clicking <b>Save (Ctrl+S)</b> overwrites the original file directly.</p>
+          <button type="button" id="btnNativeOpen" class="btn btn-primary" style="width:100%;">Browse &amp; Open Original .xlsx...</button>
+        </div>
+        <div class="settings-section">
+          <h4 style="margin-bottom:6px;">Merge Another File Into Current Sheet</h4>
+          <div class="form-row">
+            <label class="label-sm">Choose .xlsx or .csv to merge (matches by ID/SKU)</label>
+            <input id="importFileInput" type="file" accept=".xlsx,.csv" class="input" style="width:100%;">
+          </div>
+          <input type="hidden" id="importMode" value="merge">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="importModal">Cancel</button>
+        <button id="btnRunImport" class="btn btn-secondary">Merge Selected File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-Match Local Images Modal -->
+  <div id="matchModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Auto-Match Local Images by SKU</h3>
+        <button class="icon-btn" data-close="matchModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="matchSummary" class="muted-sm" style="margin-bottom:8px;"></div>
+        <div class="form-row" style="margin-bottom:10px;">
+          <label class="label-sm">Optional FileBird Folder Tag for matched images</label>
+          <select id="matchFileBird" class="select"></select>
+        </div>
+        <div class="var-table-wrap" style="max-height:300px;">
+          <table class="var-table">
+            <thead>
+              <tr><th>Row</th><th>SKU</th><th>Name</th><th>Matched Image(s)</th></tr>
+            </thead>
+            <tbody id="matchPreviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="matchModal">Cancel</button>
+        <button id="btnApplyMatch" class="btn btn-accent">Apply Matched Images</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warnings Summary Modal -->
+  <div id="warnModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>⚠ Product Health &amp; Warnings Summary</h3>
+        <button class="icon-btn" data-close="warnModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-sm" style="margin-top:0;">
+          Non-blocking warnings that may cause products to be hidden, incomplete, or use default settings on <b>odella.ge</b>. Click any category to filter the grid to those rows.
+        </p>
+        <div id="warnSummaryCards" class="warn-cards"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnClearWarnType" class="btn btn-ghost">Show All Rows</button>
+        <button class="btn btn-primary" data-close="warnModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div id="lightboxModal" class="modal-backdrop hidden">
+    <div class="lightbox-box">
+      <button class="icon-btn lightbox-close" data-close="lightboxModal">&times;</button>
+      <img id="lightboxImg" alt="">
+      <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

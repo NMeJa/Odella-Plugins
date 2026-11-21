@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deploy Odella-owned code to odella.ge.
 
-Targets: plugin (default), mu, theme. Also --check, --rollback, --purge-only, --all.
+Targets: plugin (default), mu, theme, sheet. Also --check, --rollback, --purge-only, --all.
 
 Exit codes:
   1  local/remote mismatch on --check, or post-deploy verify/version check failed
@@ -67,6 +67,12 @@ TARGETS = {
         "root": REPO_ROOT / "site" / "theme-child",
         "includes": None,
         "remote": f"{REMOTE_WP_ROOT}/wp-content/themes/hello-theme-child-master",
+    },
+    "sheet": {
+        "kind": "dir",
+        "root": REPO_ROOT / "site" / "plugins" / "odella-product-spreadsheet",
+        "includes": None,
+        "remote": f"{REMOTE_WP_ROOT}/wp-content/plugins/odella-product-spreadsheet",
     },
 }
 
@@ -855,7 +861,7 @@ def rollback_target(target: str) -> None:
 
 def selected_targets(args: argparse.Namespace) -> list[str]:
     if args.all:
-        return ["plugin", "mu", "theme"]
+        return ["plugin", "mu", "theme", "sheet"]
     return [args.target]
 
 
@@ -866,8 +872,8 @@ def main() -> None:
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(description="Compare, deploy, or roll back Odella site code.")
-    parser.add_argument("--target", choices=["plugin", "mu", "theme"], default="plugin")
-    parser.add_argument("--all", action="store_true", help="plugin, then mu, then theme")
+    parser.add_argument("--target", choices=["plugin", "mu", "theme", "sheet"], default="plugin")
+    parser.add_argument("--all", action="store_true", help="plugin, then mu, then theme, then sheet")
     parser.add_argument("--check", action="store_true", help="Compare local files to the server.")
     parser.add_argument("--no-bump", action="store_true", help="Plugin only: deploy without incrementing the version.")
     parser.add_argument("--rollback", action="store_true", help="Restore the newest remote backup of the target.")

@@ -1,0 +1,22 @@
+{
+  "deployed_at": "2026-11-20T23:21:06Z",
+  "hashes": {
+    "includes/admin.php": "4ab4b1c76760208e1e7ff7365bbdefe9be717818f0f110e29909532936488f41",
+    "includes/apply.php": "68f9c18ea12a3855ea6a6875b10486c4acfeac8c9d29b634c35b26d5b866d712",
+    "includes/attributes.php": "b2ada2a4f060432bb86d509e1d3c64632ee46f22ca08960f51780cd697acb20d",
+    "includes/categories.php": "fad1b9303a72fae6cd4cbbd99fe326483be5c50564a5633e30c7257208ca4987",
+    "includes/columns.php": "a30c1862108bcef96a7e2b2d0013c0e97645d3fc412574c67eef1b0a0162024a",
+    "includes/csv.php": "ce49133bc320a3c5b906e477d64d83db4055104f503efe2c8c8d54f40d05f4d6",
+    "includes/export.php": "11ae1305a45c6eba42c6502da2a1067386eaf0f54a1a9a3e2a3412713f35df00",
+    "includes/html.php": "4e98b38495decdea66637acad8b4e877913505049522a69da14e8670d2d6fa70",
+    "includes/images.php": "8e19288d2788242ba4cdf12b2b95861c9b243c9e51c41d7cc5fdb69b0dc145ab",
+    "includes/meta.php": "ecb057c6a09a39073c7dff27d6ee3574a138a2815be791d11f18d6dca84af660",
+    "includes/prices.php": "f3a357a64ddea1c9308863363752b9d33e1e1454495710da0e440092c2c342f8",
+    "includes/sheet-scripts.php": "362fbc237ed2c462cc795b0ca88d78ae7d8bd052e9bfc52be7607344396e9baf",
+    "includes/validate.php": "b01bd5d07458433324fab459266971af5725071a995a95debb100687640a9850",
+    "includes/xlsx.php": "07c09e21d2716286a51e9e418151d8ece927805bc109f0d2f9949a47b13a8269",
+    "odella-product-spreadsheet.php": "6f114ebc435b97aa95cfe51dee6ed8b797b8941dbe3745ff0c1f601772d03990",
+    "uninstall.php": "ee8fd1558be406308373dd5fb4b3f7eb8ae8c320308b54b02762c12b9c660ef0"
+  },
+  "target": "sheet"
+}

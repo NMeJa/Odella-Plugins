@@ -13,7 +13,7 @@ add_action('wp_ajax_odella_speed_check', 'odella_speed_check_ajax');
 
 function odella_speed_settings_url(): string
 {
-    return admin_url('admin.php?page=odella-settings');
+    return admin_url('admin.php?page=odella-settings1');
 }
 
 function odella_speed_check_assets(string $hook_suffix): void

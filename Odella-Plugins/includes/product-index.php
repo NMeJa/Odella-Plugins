@@ -118,6 +118,7 @@ function nmj_product_index_base_url(): string
 
 /**
  * Published products that belong on the shop, newest first.
+ * Catalog-hidden products, and products with no featured image, are left out.
  *
  * @return array<int, int>
  */
@@ -152,6 +153,14 @@ function nmj_product_index_ids(): array
     return array_map('intval', $query->posts);
 }
 
+function nmj_product_index_has_featured_image(WC_Product $product): bool
+{
+    if (function_exists('odella_product_has_featured_image')) {
+        return odella_product_has_featured_image($product);
+    }
+    return (int) $product->get_image_id() > 0;
+}
+
 /**
  * @return array<string, mixed>|null
  */
@@ -161,8 +170,14 @@ function nmj_product_index_record(int $id): ?array
     if (!$product || $product->get_status() !== 'publish') {
         return null;
     }
+    if (!nmj_product_index_has_featured_image($product)) {
+        return null;
+    }
     $image_id = (int) $product->get_image_id();
-    $image = $image_id ? nmj_product_index_image($image_id) : ['url' => '', 'srcset' => '', 'width' => 0, 'height' => 0];
+    $image = nmj_product_index_image($image_id);
+    if ($image['url'] === '') {
+        return null;
+    }
     $cats = [];
     $terms = get_the_terms($id, 'product_cat');
     if (is_array($terms)) {

@@ -391,6 +391,9 @@
         var orderby = parsed.searchParams.get('orderby') || '';
         var lang = (window.nmjPf && window.nmjPf.lang) || '';
         var list = data.products.filter(function (product) {
+            if (!product.image) {
+                return false;
+            }
             if (lang && product.lang && product.lang !== lang) {
                 return false;
             }
@@ -718,6 +721,9 @@
                 return;
             }
             var total = data.products.filter(function (product) {
+                if (!product.image) {
+                    return false;
+                }
                 if (lang && product.lang && product.lang !== lang) {
                     return false;
                 }

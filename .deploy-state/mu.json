@@ -1,8 +1,8 @@
 {
-  "deployed_at": "2026-11-15T20:38:23Z",
+  "deployed_at": "2026-11-18T15:58:38Z",
   "hashes": {
     "odella-performance.php": "fc99dcd8d74f1b817711c2ed78ef9a0490ab62c54f0bb46083457ed73dd42d33",
-    "odella-pricing.php": "6b715d8a7f8de02550a183034a99375fc6fd7bd0270f06c8d90c6fd055ed6e58"
+    "odella-pricing.php": "fc12c06a92ae023b8603d7aacd34e8286d559210558b4d7f78ac77f020a63eea"
   },
   "target": "mu"
 }

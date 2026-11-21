@@ -448,7 +448,7 @@ function odella_settings_page(): void
 function odella_settings_admin_assets(string $hook_suffix): void
 {
     unset($hook_suffix);
-    if (!isset($_GET['page']) || !is_string($_GET['page']) || $_GET['page'] !== 'odella-settings') {
+    if (!isset($_GET['page']) || !is_string($_GET['page']) || $_GET['page'] !== 'odella-settings1') {
         return;
     }
     if (!current_user_can('manage_options')) {

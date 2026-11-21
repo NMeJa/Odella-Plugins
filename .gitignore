@@ -1,7 +1,57 @@
+# Environment & secrets
 .env
-OdellaPlugins.zip
-reports/raw/
+.env.*
+!.env.example
+
+# Excel workbooks, client data & editor runtime files
+Odella-excel/
+client-excel/
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.odella-paths.json
+_backups/
+Odella-Workbooks/
+odella-editor-settings.json
+
+# Build outputs, published binaries & archives
 Odella-Plugins/.build_temp/
+tools/product-editor/build/
+tools/product-editor/dist/
+tools/product-editor/settings.json
+*.exe
+*.spec
+*.zip
+*.rar
+*.7z
+
+# Test media & raw reports
 Odella-Plugins/Test Videos/
+reports/raw/
+
+# Dependencies & Python caches
 node_modules/
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Temp, log, backup & OS/editor files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Machine-local skill junctions
+.agents/
+.cursor/
+.claude/skills/grill-me
+.claude/skills/improve-codebase-architecture
