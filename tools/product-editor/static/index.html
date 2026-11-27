@@ -1283,6 +1283,32 @@
     </div>
   </div>
 
+  <!-- Image Save Conflict Modal (Replace / Increment / Cancel) -->
+  <div id="studioConflictModal" class="modal-backdrop hidden" style="z-index:260;">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h3>⚠ File Already Exists</h3>
+        <button class="icon-btn" id="btnConflictClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="studioConflictText" class="muted-sm" style="margin-top:0;line-height:1.5;"></p>
+        <div class="insp-group" style="padding:8px 10px;margin:10px 0;">
+          <div class="muted-sm">Existing file: <b id="studioConflictExisting" class="mono" style="color:var(--text);"></b></div>
+          <div class="muted-sm" style="margin-top:4px;">Incremented copy: <b id="studioConflictNext" class="mono" style="color:var(--accent);"></b></div>
+        </div>
+        <label id="studioConflictApplyAllWrap" class="checkbox-row hidden" style="margin-top:8px;">
+          <input type="checkbox" id="chkConflictApplyAll">
+          <span>Apply this choice to all remaining conflicts</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnConflictCancel" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="btnConflictIncrement" class="btn btn-primary">Increment</button>
+        <button type="button" id="btnConflictReplace" class="btn btn-warn">Replace</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Columns (Show / Hide) Modal -->
   <div id="editColsModal" class="modal-backdrop hidden">
     <div class="modal" style="max-width:520px;">

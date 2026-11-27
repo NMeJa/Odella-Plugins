@@ -30,7 +30,7 @@ from typing import Any
 
 from xlsx_io import read_xlsx, write_xlsx
 
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.2.1"
 DEFAULT_UPDATE_REPO = "NMeJa/odella-sheet-editor-releases"
 
 IS_FROZEN = bool(getattr(sys, "frozen", False))
@@ -1857,7 +1857,7 @@ class EditorHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-Type", ctype)
                 self.send_header("Content-Length", str(len(data)))
-                self.send_header("Cache-Control", "max-age=60")
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
                 self.end_headers()
                 self.wfile.write(data)
                 return
@@ -2172,20 +2172,47 @@ class EditorHandler(BaseHTTPRequestHandler):
                     stem = Path(raw_name).stem or "image"
                     # Strip any existing _2x3 suffix to avoid stacking
                     stem = re.sub(r"_2x3(?:_\d+)?$", "", stem)
-                    target_dir = Path(images_root) / "_fixed_images"
-                    target_dir.mkdir(parents=True, exist_ok=True)
+                    try:
+                        target_dir = Path(images_root) / "_fixed_images"
+                        target_dir.mkdir(parents=True, exist_ok=True)
+                    except OSError:
+                        target_dir = EXCEL_DIR / "_fixed_images"
+                        target_dir.mkdir(parents=True, exist_ok=True)
 
                 clean_stem = re.sub(r"_2x3(?:_\d+)?$", "", stem)
-                copy_p = target_dir / f"{clean_stem}_2x3.{ext}"
-                n = 2
-                while copy_p.exists() and (orig_p is None or copy_p.resolve() != orig_p.resolve()):
-                    copy_p = target_dir / f"{clean_stem}_2x3_{n}.{ext}"
-                    n += 1
+                conflict_mode = str(body.get("conflict_mode") or "ask").strip().lower()
+                base_p = target_dir / f"{clean_stem}_2x3.{ext}"
+
+                # Always compute the first available incremented path (_2x3_2, _2x3_3, ...)
+                inc_p = base_p
+                if inc_p.exists():
+                    n = 2
+                    while True:
+                        cand = target_dir / f"{clean_stem}_2x3_{n}.{ext}"
+                        if not cand.exists():
+                            inc_p = cand
+                            break
+                        n += 1
+
+                if base_p.exists() and conflict_mode == "ask":
+                    self._send_json({
+                        "ok": False,
+                        "conflict": True,
+                        "existing_path": str(base_p),
+                        "existing_name": base_p.name,
+                        "incremented_path": str(inc_p),
+                        "incremented_name": inc_p.name,
+                        "folder": str(target_dir),
+                    })
+                    return
+
+                copy_p = inc_p if (base_p.exists() and conflict_mode == "increment") else base_p
                 copy_p.write_bytes(raw)
 
                 overwritten = False
                 if overwrite_orig and orig_p is not None and orig_p.is_file():
-                    orig_p.write_bytes(raw)
+                    if orig_p.resolve() != copy_p.resolve():
+                        orig_p.write_bytes(raw)
                     overwritten = True
 
                 self._send_json({

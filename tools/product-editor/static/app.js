@@ -53,6 +53,7 @@
     frozenRows: new Set(), // realRowIdx pinned to top (ignores search/filters)
     frozenRowsFile: "",
     hiddenCols: new Set(), // lowercased header names cosmetically hidden
+    imgCacheBust: 0,
     deferredValidationActive: false,
     ratioBadRows: new Set(), // realRowIdx
     langView: "all", // all | ka | en
@@ -523,6 +524,7 @@
     if (mapped) qs.set("path", mapped);
     qs.set("token", token);
     if (state.images_root) qs.set("root", state.images_root);
+    if (state.imgCacheBust) qs.set("_v", String(state.imgCacheBust));
     return "/api/local-image?" + qs.toString();
   }
 
@@ -6443,8 +6445,8 @@
           e.stopPropagation();
           openImageStudio([{
             label: item.name,
-            src: "/api/local-image?path=" + encodeURIComponent(item.path),
-            originalPath: item.path,
+            src: item.url ? "/api/proxy-image?url=" + encodeURIComponent(item.url) : "/api/local-image?path=" + encodeURIComponent(item.path),
+            originalPath: item.url ? "" : item.path,
             filename: item.name,
             rIdx: -1,
             ci: -1,
@@ -6871,6 +6873,20 @@
     it.panY = mode === "top" ? maxShift : -maxShift;
   }
 
+  function canvasHasTransparency(canvas) {
+    try {
+      const ctx = canvas.getContext("2d");
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      // Check alpha channel (stride 4 bytes; sample every pixel)
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] < 255) return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   let studioSizeTimer = null;
   function scheduleStudioSizeEstimate() {
     clearTimeout(studioSizeTimer);
@@ -6885,11 +6901,13 @@
       try {
         const off = document.createElement("canvas");
         drawStudioToCanvas(off, it, false);
-        const mime = it.fmt === "png" ? "image/png" : it.fmt === "webp" ? "image/webp" : "image/jpeg";
+        const hasAlpha = canvasHasTransparency(off);
+        const effectiveFmt = hasAlpha ? "png" : it.fmt;
+        const mime = effectiveFmt === "png" ? "image/png" : effectiveFmt === "webp" ? "image/webp" : "image/jpeg";
         const url = off.toDataURL(mime, it.qual);
         const b64Len = url.length - (url.indexOf(",") + 1);
         const kb = Math.max(1, Math.round((b64Len * 0.75) / 1024));
-        badge.textContent = `~${kb} KB`;
+        badge.textContent = hasAlpha ? `~${kb} KB · PNG (transparent)` : `~${kb} KB · ${effectiveFmt.toUpperCase()}`;
       } catch {
         badge.textContent = "";
       }
@@ -6903,6 +6921,7 @@
         return;
       }
       const im = new Image();
+      im.crossOrigin = "anonymous";
       im.onload = () => {
         it.img = im;
         it.error = false;
@@ -6938,8 +6957,7 @@
     }
     ctx.save();
     ctx.clearRect(0, 0, outW, outH);
-    ctx.fillStyle = it.fit === "contain" ? it.bg : "#0f172a";
-    ctx.fillRect(0, 0, outW, outH);
+    // Keep background transparent so any uncovered crop area becomes real transparent pixels (auto-saved as PNG)
 
     const img = it.img;
     if (img && img.naturalWidth && img.naturalHeight) {
@@ -7017,9 +7035,20 @@
     ctx.fillStyle = "#020617";
     ctx.fillRect(0, 0, stageW, stageH);
 
-    // Fill crop box background (visible in 'contain' pad mode)
-    ctx.fillStyle = it.fit === "contain" ? it.bg : "#0f172a";
-    ctx.fillRect(cropX, cropY, cropW, cropH);
+    // Draw subtle transparency checkerboard inside crop box so empty space is clearly visible
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cropX, cropY, cropW, cropH);
+    ctx.clip();
+    const cell = 12;
+    for (let y = cropY; y < cropY + cropH; y += cell) {
+      for (let x = cropX; x < cropX + cropW; x += cell) {
+        const odd = (Math.floor((x - cropX) / cell) + Math.floor((y - cropY) / cell)) % 2 === 1;
+        ctx.fillStyle = odd ? "#1e293b" : "#0f172a";
+        ctx.fillRect(x, y, cell, cell);
+      }
+    }
+    ctx.restore();
 
     const img = it.img;
     if (img && img.naturalWidth && img.naturalHeight) {
@@ -7077,7 +7106,40 @@
     scheduleStudioSizeEstimate();
   }
 
+  function promptStudioConflict(info, hasMore) {
+    return new Promise((resolve) => {
+      const modal = $("studioConflictModal");
+      $("studioConflictText").textContent =
+        `An edited image with the same name already exists in this folder. Choose whether to replace it, save an incremented copy, or cancel.`;
+      $("studioConflictExisting").textContent = info.existing_name || "";
+      $("studioConflictNext").textContent = info.incremented_name || "";
+      const chkWrap = $("studioConflictApplyAllWrap");
+      const chk = $("chkConflictApplyAll");
+      chk.checked = false;
+      chkWrap.classList.toggle("hidden", !hasMore);
+
+      const finish = (action) => {
+        modal.classList.add("hidden");
+        $("btnConflictReplace").onclick = null;
+        $("btnConflictIncrement").onclick = null;
+        $("btnConflictCancel").onclick = null;
+        $("btnConflictClose").onclick = null;
+        resolve({ action, applyAll: hasMore && chk.checked });
+      };
+      $("btnConflictReplace").onclick = () => finish("replace");
+      $("btnConflictIncrement").onclick = () => finish("increment");
+      $("btnConflictCancel").onclick = () => finish("cancel");
+      $("btnConflictClose").onclick = () => finish("cancel");
+      modal.classList.remove("hidden");
+    });
+  }
+
   async function saveStudioItems(indices) {
+    const validIndices = (indices || []).filter((i) => i >= 0 && i < studio.items.length);
+    if (!validIndices.length) {
+      toast("No image selected to save.", true);
+      return;
+    }
     const overwriteOrig = $("studioOverwriteOrig").checked;
     if (overwriteOrig) {
       const ok = confirm(
@@ -7092,36 +7154,67 @@
     btnAll.disabled = true;
     const offscreen = document.createElement("canvas");
     let savedCount = 0;
+    let cancelledCount = 0;
+    let pngAutoCount = 0;
+    let lastSavedName = "";
     let sheetUpdated = false;
+    let lastErr = "";
+    let bulkConflictMode = "ask";
 
     try {
-      for (let k = 0; k < indices.length; k++) {
-        const idx = indices[k];
+      for (let k = 0; k < validIndices.length; k++) {
+        const idx = validIndices[k];
         const it = studio.items[idx];
-        $("studioProgress").textContent = `Saving ${k + 1} / ${indices.length}: ${it.filename}...`;
+        $("studioProgress").textContent = `Saving ${k + 1} / ${validIndices.length}: ${it.filename}...`;
         await loadStudioImage(it);
-        if (!it.img || !it.img.naturalWidth) continue;
-
-        drawStudioToCanvas(offscreen, it, false);
-        const mime = it.fmt === "png" ? "image/png" : it.fmt === "webp" ? "image/webp" : "image/jpeg";
-        const dataUrl = offscreen.toDataURL(mime, it.qual);
-        const b64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
-
-        const res = await apiPost("/api/save-edited-image", {
-          original_path: it.originalPath,
-          filename: it.filename,
-          data_base64: b64,
-          ext: it.fmt,
-          overwrite_original: overwriteOrig,
-          images_root: state.images_root,
-        });
-        if (!res.ok) {
-          toast(res.error || `Failed to save ${it.filename}`, true);
+        if (!it.img || !it.img.naturalWidth) {
+          lastErr = `Could not load "${it.filename}".`;
+          toast(lastErr, true);
           continue;
         }
 
+        drawStudioToCanvas(offscreen, it, false);
+        const hasAlpha = canvasHasTransparency(offscreen);
+        const effectiveFmt = hasAlpha ? "png" : (it.fmt || "jpg");
+        const mime = effectiveFmt === "png" ? "image/png" : effectiveFmt === "webp" ? "image/webp" : "image/jpeg";
+        const dataUrl = offscreen.toDataURL(mime, it.qual);
+        const b64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+
+        const payload = {
+          original_path: it.originalPath,
+          filename: it.filename,
+          data_base64: b64,
+          ext: effectiveFmt,
+          overwrite_original: overwriteOrig,
+          images_root: state.images_root,
+          conflict_mode: bulkConflictMode,
+        };
+
+        let res = await apiPost("/api/save-edited-image", payload);
+        if (!res.ok && res.conflict) {
+          const choice = await promptStudioConflict(res, k < validIndices.length - 1);
+          if (choice.action === "cancel") {
+            cancelledCount++;
+            if (choice.applyAll) break;
+            continue;
+          }
+          if (choice.applyAll) {
+            bulkConflictMode = choice.action;
+          }
+          res = await apiPost("/api/save-edited-image", { ...payload, conflict_mode: choice.action });
+        }
+
+        if (!res.ok) {
+          lastErr = res.error || `Failed to save ${it.filename}`;
+          toast(lastErr, true);
+          continue;
+        }
+
+        if (hasAlpha) pngAutoCount++;
         it.saved = true;
         savedCount++;
+        lastSavedName = res.copy_name || it.filename;
+        state.imgCacheBust = Date.now();
         const newTok = it.folder ? `${it.folder}/${res.copy_name}` : res.copy_name;
         state.paths[newTok] = res.copy_path;
         state.paths[res.copy_name] = res.copy_path;
@@ -7141,6 +7234,10 @@
           sheetUpdated = true;
         }
       }
+    } catch (err) {
+      lastErr = (err && err.message) ? err.message : String(err);
+      console.error("saveStudioItems error:", err);
+      toast(`Save failed: ${lastErr}`, true);
     } finally {
       btnOne.disabled = false;
       btnAll.disabled = false;
@@ -7156,12 +7253,18 @@
       }
       loadLocalImages();
       renderStudioFilmstrip();
+      const pngNote = pngAutoCount > 0 ? " (saved as transparent PNG)" : "";
+      const nameNote = savedCount === 1 && lastSavedName ? ` "${lastSavedName}"` : ` ${savedCount} image(s)`;
       toast(
-        `Saved ${savedCount} resized image copy(ies) in original folder${overwriteOrig ? " (+ updated originals)" : ""}!`
+        `Saved${nameNote}${pngNote}${overwriteOrig ? " (+ updated originals)" : ""}!`
       );
-      if (indices.length === studio.items.length) {
+      if (validIndices.length === studio.items.length && cancelledCount === 0) {
         $("imageStudioModal").classList.add("hidden");
       }
+    } else if (cancelledCount > 0 && !lastErr) {
+      toast("Save cancelled.");
+    } else if (!lastErr) {
+      toast("Nothing was saved — please check that the image loaded properly.", true);
     }
   }
 
