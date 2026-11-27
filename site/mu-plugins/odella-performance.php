@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Performance & Asset Optimizer (MU)
  * Description: Prevents unnecessary admin plugin loading on frontend, eliminates redundant cache purges, and optimizes Mobile & Desktop Core Web Vitals (FCP, LCP, CLS, TBT).
- * Version: 1.5.2
+ * Version: 1.5.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -59,14 +59,15 @@ function odella_is_home_landing(): bool {
  * off public pages. Cron, WP-CLI, and /wp-admin/ do not use this list.
  *
  * ACF Pro stays loaded: product and landing fields are attached to public
- * post types. Retina, term order, and post order stay too, because they
- * change what visitors see.
+ * post types. ACF Options for Polylang stays loaded too: the contact page
+ * and footer read its per-language options (address, hours, email).
+ * Retina, term order, and post order stay, because they change what
+ * visitors see.
  *
  * @return array<int, string>
  */
 function odella_admin_only_plugin_prefixes(): array {
     return [
-        'acf-options-for-polylang/',
         'acf-quickedit-fields/',
         'bulk-edit-',
         'bulky-woocommerce-bulk-edit-products/',
@@ -93,10 +94,25 @@ function odella_is_admin_only_plugin( string $plugin ): bool {
 }
 
 /**
+ * Never let a request with a filtered `option_active_plugins` write that
+ * stripped plugin list back to `wp_options` (which would permanently deactivate
+ * Elementor, ACF, Rank Math, etc. in the database).
+ *
+ * @param mixed $value
+ * @param mixed $old_value
+ * @return mixed
+ */
+function odella_block_active_plugins_write( $value, $old_value ) {
+    unset( $value );
+    return $old_value;
+}
+
+/**
  * 2. Skip admin tools on public frontend visits.
  *    All plugins remain active inside /wp-admin/, WP-CLI, and cron.
  */
 if ( odella_is_public_frontend_request() ) {
+    add_filter( 'pre_update_option_active_plugins', 'odella_block_active_plugins_write', 9999, 2 );
     add_filter( 'option_active_plugins', function( $plugins ) {
         if ( ! is_array( $plugins ) ) {
             return $plugins;
@@ -281,12 +297,14 @@ function odella_filter_registration_plugins( $plugins ) {
 }
 
 if ( odella_is_registration_post() ) {
+    add_filter( 'pre_update_option_active_plugins', 'odella_block_active_plugins_write', 9999, 2 );
     add_filter( 'option_active_plugins', 'odella_filter_registration_plugins', 1 );
 }
 
 if ( odella_is_moderncart_ajax_request() ) {
     // Keep the body buffered so shutdown can still attach the timing headers.
     ob_start();
+    add_filter( 'pre_update_option_active_plugins', 'odella_block_active_plugins_write', 9999, 2 );
     add_filter( 'option_active_plugins', 'odella_filter_moderncart_ajax_plugins', 1 );
     add_action( 'plugins_loaded', static function () use ( $odella_mu_started_at ) {
         add_action( 'shutdown', static function () use ( $odella_mu_started_at ) {

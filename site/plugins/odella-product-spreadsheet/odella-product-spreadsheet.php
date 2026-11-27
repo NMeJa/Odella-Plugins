@@ -28,3 +28,4 @@ require_once OPS_PATH . 'includes/apply.php';
 require_once OPS_PATH . 'includes/export.php';
 require_once OPS_PATH . 'includes/sheet-scripts.php';
 require_once OPS_PATH . 'includes/admin.php';
+require_once OPS_PATH . 'includes/rest-api.php';

@@ -1,5 +1,5 @@
 {
-  "deployed_at": "2026-11-18T15:59:42Z",
+  "deployed_at": "2026-11-25T19:20:24Z",
   "hashes": {
     "assets/css/add-to-cart.css": "d4f121fc7ac303cc4014267ec11e6fb207665ca45277aa608b498a81be77cdba",
     "assets/css/full-page-scroll.css": "e8bdc22d9ee96291fe601e280522f6af7d3b5ba51e72e7711445643b69a34fc4",
@@ -15,9 +15,9 @@
     "assets/js/full-page-scroll.js": "13bdddc46e1388e351548f9f01c72f920a517dd88df1eb3c1de18770f7441900",
     "assets/js/gallery-grid.js": "82ab91b83f67722290e2af55d9fcb5dff20b5cdc5982b9eb27ee43e5eda4fe25",
     "assets/js/page-transition.js": "b9667c068f5bcac3283dfb1eecf27988ce7554a20be2066990355d693522fc3a",
-    "assets/js/product-filter.js": "3ed0009bfe001973c0be24745a7b52a8aa5c6ed5b151de72aeea045d53238cc3",
+    "assets/js/product-filter.js": "c10ef3c69622425a9f64259862cf9fde563951e7ac826d5e42903ad7dab7c9cc",
     "assets/js/responsive-video.js": "8f48c4c9acecd2dd1a5bf4337aa3fbb95732e59fb6426b1cdd84b8e761b36c30",
-    "assets/js/speed-check.js": "ccf2bd04e56c745201c48f42c8051d4ec03b5d621b51f81429ed277369bcac49",
+    "assets/js/speed-check.js": "562c9cd954ca59b3285780e8f210f5fca1d213d8ac808155803d34e85c0b97e8",
     "includes/account.php": "05f867fa7d6a1e41d8a9cd9fc0888ea1225f4df538bdfc4d1127d8bdc4f628d3",
     "includes/admin-menu.php": "97893f307eecc17b05c51f0d582f727f2391d6ef3d153fe4fbc73a2d37a44c33",
     "includes/cache-warmer.php": "c8731e39005430d169e916216289b8f6f362a3836352a5db3dc3ca57389cc5ef",
@@ -25,12 +25,12 @@
     "includes/checkout.php": "02a84fabf004bb22cc12ece09c395bbea5369569e34989cf1f601a50a2156bcd",
     "includes/filter-query.php": "0205efb475b6824ac06deaae03f6875ee59dee570a235bdda0158a4792e21a82",
     "includes/i18n.php": "0c8d9f341164e4a3cfacad451ec24028bda72284915515d412be0e4fbcb824e5",
-    "includes/plugin.php": "2be72cc8787d0efaaf94d1526c8fc93c6ef619a7e86d02c8a6b211de0a3a3c8a",
+    "includes/plugin.php": "37dce2ddd10e356e8cba0b817cedf2298be5c85db63bec383a367afe932084e5",
     "includes/product-index.php": "0fcda36e663c57e6510639ad91030739f5fd3cc03b30c96cb935c5c7eccce21b",
     "includes/related-products.php": "32ac20a9f6ce1a8d39df143f4abe98598f1294f5a82ef0b872f2cee85dbc884e",
-    "includes/settings.php": "673bc79ae4e8d71112c615e1c138e786e584fd9764207b191510480949666cba",
-    "includes/speed-check.php": "77d07b75f4671cf3ffd536585527ce3e4a643d11b02f06eef20891d0b7ad8919",
-    "includes/widgets/add-to-cart-widget.php": "86a28f01ce924245fb6da100d282a2e8e82584fd8be0ece8d273d189b7de252a",
+    "includes/settings.php": "b9a0dbb40c140a9c32acd273abdf6bef74a2b28d202bc306422e295fd0ab3732",
+    "includes/speed-check.php": "f1da680c4d8a09487b73563c0711b93698c9bbdb10d8c66e824b97c731b81989",
+    "includes/widgets/add-to-cart-widget.php": "162d7362778cd05c15639e62003147d6a6a7c1f195374efe9b30740786348a27",
     "includes/widgets/full-page-scroll-widget.php": "d994a971992b976b687b04879779fda326d9b3ba87a0bfb31bdcac57e9ce8072",
     "includes/widgets/gallery-grid-widget.php": "e3a39de7b8b529511647ad5aa2bc3ef3c86d087955214fae919457b0e804594f",
     "includes/widgets/product-filter-widget.php": "f3c2426f78a5a1fe8e0cd42b4ac76699cfdceacd4584ba38aaa9ba0c84ba3ede",
@@ -39,7 +39,7 @@
     "includes/widgets/traits/atc-content-controls.php": "00fba93feda8c09402f5e0470e469fc48b10172e9cdc0c3c69ac24baf21f9be5",
     "includes/widgets/traits/atc-style-controls.php": "e22a20b99f22decb46abb1ce768c70f077a55d720953bcb326f508d8859c2b6f",
     "includes/widgets/variation-selector-widget.php": "4594d6bf2702e51299c4de55f9b9eb060a65e84c40b7e64dd20b7a54eacae71f",
-    "odella-elementor-widgets.php": "d6973e11f795ad69576ceaba9230190eee59dcbe2edd5510dea3d277fb675c08"
+    "odella-elementor-widgets.php": "261e7f165df07baa2dd3cc5292d32963ba53f825e224e3a6d17cb7e189979bbd"
   },
   "target": "plugin"
 }

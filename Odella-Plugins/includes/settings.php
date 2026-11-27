@@ -137,6 +137,36 @@ function odella_sanitize_gemini_model(string $model): string
     return $model;
 }
 
+function odella_detect_hostinger_username(): string
+{
+    if (defined('ABSPATH') && preg_match('#/home/(u[0-9]+)/#', (string) ABSPATH, $m) === 1) {
+        return $m[1];
+    }
+    return '';
+}
+
+function odella_sanitize_hostinger_username(string $username): string
+{
+    $username = trim($username);
+    if ($username === '') {
+        return odella_detect_hostinger_username();
+    }
+    if (preg_match('/^[A-Za-z0-9_-]{2,64}$/', $username) !== 1) {
+        return odella_detect_hostinger_username();
+    }
+    return $username;
+}
+
+function odella_hostinger_site_domain(): string
+{
+    $host = (string) parse_url(home_url('/'), PHP_URL_HOST);
+    $host = strtolower(trim($host));
+    if (str_starts_with($host, 'www.')) {
+        $host = substr($host, 4);
+    }
+    return $host;
+}
+
 /**
  * @param mixed $input
  * @return array<int, string>
@@ -169,6 +199,8 @@ function odella_sanitize_report_languages($input): array
  *     psi_key_enc: string,
  *     gemini_key_enc: string,
  *     gemini_model: string,
+ *     hostinger_key_enc: string,
+ *     hostinger_username: string,
  *     languages: array<int, string>,
  *     use_custom_prompt: bool,
  *     custom_prompt: string
@@ -180,6 +212,8 @@ function odella_get_speed_settings(): array
         'psi_key_enc' => '',
         'gemini_key_enc' => '',
         'gemini_model' => 'gemini-flash-latest',
+        'hostinger_key_enc' => '',
+        'hostinger_username' => odella_detect_hostinger_username(),
         'languages' => ['en'],
         'use_custom_prompt' => false,
         'custom_prompt' => '',
@@ -192,6 +226,8 @@ function odella_get_speed_settings(): array
     $settings['psi_key_enc'] = is_string($settings['psi_key_enc']) ? $settings['psi_key_enc'] : '';
     $settings['gemini_key_enc'] = is_string($settings['gemini_key_enc']) ? $settings['gemini_key_enc'] : '';
     $settings['gemini_model'] = odella_sanitize_gemini_model(is_string($settings['gemini_model']) ? $settings['gemini_model'] : '');
+    $settings['hostinger_key_enc'] = is_string($settings['hostinger_key_enc']) ? $settings['hostinger_key_enc'] : '';
+    $settings['hostinger_username'] = odella_sanitize_hostinger_username(is_string($settings['hostinger_username']) ? $settings['hostinger_username'] : '');
     $settings['languages'] = odella_sanitize_report_languages($settings['languages'] ?? []);
     $flag = $settings['use_custom_prompt'];
     $settings['use_custom_prompt'] = $flag === true || $flag === 1 || $flag === '1';
@@ -200,6 +236,8 @@ function odella_get_speed_settings(): array
         'psi_key_enc' => $settings['psi_key_enc'],
         'gemini_key_enc' => $settings['gemini_key_enc'],
         'gemini_model' => $settings['gemini_model'],
+        'hostinger_key_enc' => $settings['hostinger_key_enc'],
+        'hostinger_username' => $settings['hostinger_username'],
         'languages' => $settings['languages'],
         'use_custom_prompt' => $settings['use_custom_prompt'],
         'custom_prompt' => $settings['custom_prompt'],
@@ -211,6 +249,8 @@ function odella_get_speed_settings(): array
  *     psi_key_enc: string,
  *     gemini_key_enc: string,
  *     gemini_model: string,
+ *     hostinger_key_enc: string,
+ *     hostinger_username: string,
  *     languages: array<int, string>,
  *     use_custom_prompt: bool,
  *     custom_prompt: string
@@ -224,6 +264,8 @@ function odella_store_speed_settings(array $settings): void
             'psi_key_enc' => $settings['psi_key_enc'],
             'gemini_key_enc' => $settings['gemini_key_enc'],
             'gemini_model' => odella_sanitize_gemini_model($settings['gemini_model']),
+            'hostinger_key_enc' => $settings['hostinger_key_enc'],
+            'hostinger_username' => odella_sanitize_hostinger_username($settings['hostinger_username']),
             'languages' => odella_sanitize_report_languages($settings['languages']),
             'use_custom_prompt' => $settings['use_custom_prompt'],
             'custom_prompt' => $settings['custom_prompt'],
@@ -292,6 +334,26 @@ function odella_save_speed_settings_from_post(): array
         }
     }
 
+    $hostinger_enc = $current['hostinger_key_enc'];
+    if (!empty($_POST['remove_hostinger_key'])) {
+        $hostinger_enc = '';
+    } elseif (isset($_POST['hostinger_key']) && is_string($_POST['hostinger_key'])) {
+        $typed = trim(wp_unslash($_POST['hostinger_key']));
+        if ($typed !== '') {
+            $encrypted = odella_encrypt_secret($typed);
+            $typed = '';
+            if ($encrypted === '') {
+                $errors[] = 'The Hostinger API token could not be saved. The previous token was kept.';
+            } else {
+                $hostinger_enc = $encrypted;
+            }
+        }
+    }
+
+    $posted_hostinger_user = isset($_POST['hostinger_username']) && is_string($_POST['hostinger_username'])
+        ? wp_unslash($_POST['hostinger_username'])
+        : '';
+
     $use_custom = !empty($_POST['use_custom_prompt']);
     $custom_prompt = $current['custom_prompt'];
     if ($use_custom && isset($_POST['custom_prompt']) && is_string($_POST['custom_prompt'])) {
@@ -309,6 +371,8 @@ function odella_save_speed_settings_from_post(): array
         'psi_key_enc' => $psi_enc,
         'gemini_key_enc' => $gemini_enc,
         'gemini_model' => odella_sanitize_gemini_model($posted_model),
+        'hostinger_key_enc' => $hostinger_enc,
+        'hostinger_username' => odella_sanitize_hostinger_username($posted_hostinger_user),
         'languages' => odella_sanitize_report_languages($posted_languages),
         'use_custom_prompt' => $use_custom,
         'custom_prompt' => $custom_prompt,
@@ -342,6 +406,8 @@ function odella_settings_page(): void
     $settings = odella_get_speed_settings();
     $psi_badge = odella_secret_badge($settings['psi_key_enc']);
     $gemini_badge = odella_secret_badge($settings['gemini_key_enc']);
+    $hostinger_badge = odella_secret_badge($settings['hostinger_key_enc']);
+    $site_domain = odella_hostinger_site_domain();
     $use_custom = $settings['use_custom_prompt'];
     $default_prompt = odella_default_ai_prompt();
     $prompt_value = $default_prompt;
@@ -408,6 +474,30 @@ function odella_settings_page(): void
                     <td>
                         <input type="text" class="regular-text" id="odella-gemini-model" name="gemini_model" value="<?php echo esc_attr($settings['gemini_model']); ?>" maxlength="128" spellcheck="false">
                         <p class="description">Default is gemini-flash-latest.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Hostinger API Token (CDN Purge)</th>
+                    <td>
+                        <p><strong><?php echo esc_html($hostinger_badge); ?></strong></p>
+                        <p>
+                            <input type="password" class="regular-text" id="odella-hostinger-key" name="hostinger_key" value="" autocomplete="new-password" placeholder="Leave empty to keep current token">
+                        </p>
+                        <p>
+                            <label for="odella-hostinger-username">Account username:</label>
+                            <input type="text" class="regular-text" id="odella-hostinger-username" name="hostinger_username" value="<?php echo esc_attr($settings['hostinger_username']); ?>" maxlength="64" spellcheck="false" style="max-width:180px;">
+                        </p>
+                        <p>
+                            <label>
+                                <input type="checkbox" name="remove_hostinger_key" value="1">
+                                Remove stored Hostinger token
+                            </label>
+                        </p>
+                        <p>
+                            <button type="button" class="button" id="odella-test-hostinger-key">Test Hostinger Token</button>
+                            <span id="odella-hostinger-key-status" role="status"></span>
+                        </p>
+                        <p class="description">Optional. When set, "Force Purge &amp; Rebuild Cache" in Speed Check also purges Hostinger Edge CDN for <?php echo esc_html($site_domain !== '' ? $site_domain : 'this domain'); ?> automatically.</p>
                     </td>
                 </tr>
                 <tr>
@@ -573,6 +663,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var model = document.getElementById('odella-gemini-model');
             body.set('model', model ? model.value : '');
         }
+        if (which === 'hostinger') {
+            var user = document.getElementById('odella-hostinger-username');
+            body.set('username', user ? user.value : '');
+        }
         fetch(ajaxUrl, {
             method: 'POST',
             credentials: 'same-origin',
@@ -597,6 +691,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (geminiButton) {
         geminiButton.addEventListener('click', function () {
             testKey('gemini', 'odella-gemini-key', 'odella-gemini-key-status');
+        });
+    }
+    var hostingerButton = document.getElementById('odella-test-hostinger-key');
+    if (hostingerButton) {
+        hostingerButton.addEventListener('click', function () {
+            testKey('hostinger', 'odella-hostinger-key', 'odella-hostinger-key-status');
         });
     }
 });
@@ -660,7 +760,17 @@ function odella_ajax_test_api_key(): void
         odella_test_gemini_key($key, $model);
     }
 
-    wp_send_json_error(['message' => 'Choose a PageSpeed or Gemini key to test.']);
+    if ($which === 'hostinger') {
+        $key = $candidate !== '' ? $candidate : odella_decrypt_secret($settings['hostinger_key_enc']);
+        if ($key === '') {
+            wp_send_json_error(['message' => 'No Hostinger API token is set.']);
+        }
+        $posted_user = isset($_POST['username']) && is_string($_POST['username']) ? wp_unslash($_POST['username']) : '';
+        $username = odella_sanitize_hostinger_username($posted_user !== '' ? $posted_user : $settings['hostinger_username']);
+        odella_test_hostinger_key($key, $username);
+    }
+
+    wp_send_json_error(['message' => 'Choose a PageSpeed, Gemini, or Hostinger key to test.']);
 }
 
 function odella_test_pagespeed_key(string $key): void
@@ -734,4 +844,101 @@ function odella_test_gemini_key(string $key, string $model): void
         $fallback = 'Gemini returned no reply.';
     }
     wp_send_json_error(['message' => odella_api_error_message($body, $fallback, $key)]);
+}
+
+function odella_hostinger_error_message($body, string $fallback, string $secret): string
+{
+    $message = $fallback;
+    if (is_array($body)) {
+        if (isset($body['message']) && is_string($body['message']) && $body['message'] !== '') {
+            $message = $body['message'];
+        } elseif (isset($body['error']['message']) && is_string($body['error']['message']) && $body['error']['message'] !== '') {
+            $message = $body['error']['message'];
+        }
+    }
+    return odella_redact_secret($message, $secret);
+}
+
+function odella_test_hostinger_key(string $key, string $username): void
+{
+    $domain = odella_hostinger_site_domain();
+    if ($username === '' || $domain === '') {
+        wp_send_json_error(['message' => 'Missing Hostinger account username or site domain.']);
+    }
+
+    $url = 'https://developers.hostinger.com/api/hosting/v1/accounts/'
+        . rawurlencode($username)
+        . '/websites/'
+        . rawurlencode($domain)
+        . '/cdn/status';
+
+    $response = wp_remote_get($url, [
+        'timeout' => 20,
+        'headers' => [
+            'Authorization' => 'Bearer ' . $key,
+            'Accept' => 'application/json',
+        ],
+    ]);
+    if (is_wp_error($response)) {
+        wp_send_json_error(['message' => odella_redact_secret($response->get_error_message(), $key)]);
+    }
+
+    $code = (int) wp_remote_retrieve_response_code($response);
+    $body = json_decode((string) wp_remote_retrieve_body($response), true);
+    if ($code >= 200 && $code < 300) {
+        wp_send_json_success(['message' => 'Hostinger token valid for ' . $domain . ' (HTTP ' . $code . ').']);
+    }
+
+    $fallback = $code > 0 ? 'Hostinger API failed (HTTP ' . $code . ').' : 'Hostinger API request failed.';
+    wp_send_json_error(['message' => odella_hostinger_error_message($body, $fallback, $key)]);
+}
+
+/**
+ * Purge Hostinger Edge CDN via API when a Hostinger token is configured.
+ *
+ * @return array{attempted: bool, ok: bool, message: string}
+ */
+function odella_purge_hostinger_cdn(): array
+{
+    $settings = odella_get_speed_settings();
+    $key = odella_decrypt_secret($settings['hostinger_key_enc']);
+    $username = $settings['hostinger_username'];
+    $domain = odella_hostinger_site_domain();
+
+    if ($key === '' || $username === '' || $domain === '') {
+        return ['attempted' => false, 'ok' => false, 'message' => ''];
+    }
+
+    $url = 'https://developers.hostinger.com/api/hosting/v1/accounts/'
+        . rawurlencode($username)
+        . '/websites/'
+        . rawurlencode($domain)
+        . '/cdn/purge';
+
+    $response = wp_remote_request($url, [
+        'method' => 'DELETE',
+        'timeout' => 20,
+        'headers' => [
+            'Authorization' => 'Bearer ' . $key,
+            'Accept' => 'application/json',
+        ],
+    ]);
+
+    if (is_wp_error($response)) {
+        $msg = odella_redact_secret($response->get_error_message(), $key);
+        unset($key);
+        return ['attempted' => true, 'ok' => false, 'message' => 'Hostinger CDN purge failed: ' . $msg];
+    }
+
+    $code = (int) wp_remote_retrieve_response_code($response);
+    $body = json_decode((string) wp_remote_retrieve_body($response), true);
+    if ($code >= 200 && $code < 300) {
+        unset($key);
+        return ['attempted' => true, 'ok' => true, 'message' => 'Hostinger Edge CDN purged for ' . $domain . '.'];
+    }
+
+    $fallback = $code > 0 ? 'HTTP ' . $code : 'request failed';
+    $err = odella_hostinger_error_message($body, $fallback, $key);
+    unset($key);
+    return ['attempted' => true, 'ok' => false, 'message' => 'Hostinger CDN purge failed (' . $err . ').'];
 }

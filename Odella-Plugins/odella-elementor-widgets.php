@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Odella Elementor Widgets
  * Description:       A growing library of custom Elementor widgets with WooCommerce support.
- * Version:           1.0.95
+ * Version:           1.0.99
  * Requires at least: 6.3
  * Requires PHP:      8.1
  * Author:            NMJ
@@ -18,11 +18,24 @@
 defined('ABSPATH') || exit;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-define('NMJ_VERSION', '1.0.95');
+define('NMJ_VERSION', '1.0.99');
 define('NMJ_FILE', __FILE__);
 define('NMJ_PATH', plugin_dir_path(__FILE__));
 define('NMJ_URL', plugin_dir_url(__FILE__));
 define('NMJ_WIDGETS_DIR', NMJ_PATH . 'includes/widgets/');
+
+// ── WooCommerce Feature Compatibility ──────────────────────────────────────────
+// Must be registered at file load, before `plugins_loaded` priority 20, because
+// `before_woocommerce_init` fires earlier during WooCommerce bootstrap.
+add_action('before_woocommerce_init', static function () {
+    if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'custom_order_tables',
+            NMJ_FILE,
+            true
+        );
+    }
+});
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────────
 /**
@@ -80,18 +93,7 @@ add_action('plugins_loaded', static function () {
         return;
     }
 
-    // 3. Declare HPOS compatibility (WooCommerce 7+).
-    add_action('before_woocommerce_init', static function () {
-        if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
-            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-                'custom_order_tables',
-                NMJ_FILE,
-                true
-            );
-        }
-    });
-
-    // 4. Load the plugin core.
+    // 3. Load the plugin core.
     require_once NMJ_PATH . 'includes/plugin.php';
     \NMJ\Plugin::instance();
 

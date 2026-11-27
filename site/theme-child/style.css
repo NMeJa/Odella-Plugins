@@ -751,8 +751,22 @@ body .elementor-location-header {
 }
 
 .elementor-widget-loop-grid > .elementor-widget-container > .elementor-loop-container {
-    flex: 1 0 100%;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     order: 0;
+}
+
+.elementor-widget-loop-grid > .elementor-widget-container > .elementor-loop-container > .e-loop-item {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 767px) {
+    .elementor-grid-mobile-2 .elementor-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
 }
 
 .elementor-widget-loop-grid .e-load-more-anchor {

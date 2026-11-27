@@ -18,22 +18,42 @@
         <option value="ka">Lang: Geo only</option>
         <option value="en">Lang: Eng only</option>
       </select>
+      <div class="col-vis-group">
+        <button id="btnEditCols" class="btn btn-ghost" title="Show or hide columns (cosmetic view only)">Columns</button>
+        <button id="btnResetCols" class="btn btn-ghost btn-icon-only hidden" title="Show all columns (restore hidden columns)">↺</button>
+      </div>
       <button id="btnReload" class="btn btn-ghost" data-i18n="reload" title="Reload current file">Reload</button>
       <button id="btnAddRow" class="btn btn-ghost" data-i18n="add_product">+ Add</button>
+      <button id="btnNewCategory" class="btn btn-ghost" title="Create a new category (Georgian + English) on odella.ge">+ Category</button>
+      <button id="btnUndo" class="btn btn-ghost" title="Undo (Ctrl+Z)" disabled>↶</button>
+      <button id="btnRedo" class="btn btn-ghost" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>↷</button>
     </div>
     <div class="topbar-right">
+      <span id="wpConnDot" class="conn-dot" title="odella.ge connection status (configure in Settings)"></span>
+      <button id="btnWpPull" class="btn btn-secondary" title="Pull fresh products .xlsx from odella.ge">⬇ Pull</button>
+      <button id="btnWpPush" class="btn btn-accent" title="Push changes directly to odella.ge in batches">⬆ Push</button>
+      <button id="btnWpPurge" class="btn btn-secondary" title="Purge caches (incl. Hostinger CDN), Reindex, Warm Cache &amp; Check Speed">⚡ Purge &amp; Speed</button>
       <button id="btnAutoFix" class="btn btn-warn hidden" title="Normalize legacy separators (, / |) to ; and fix known client typos">Auto-Fix (<span id="autoFixCount">0</span>)</button>
-      <button id="btnWarnings" class="btn btn-warn" title="Open Warnings Summary (missing prices, images, drafts, variations, etc.)">⚠ <span data-i18n="warnings">Warnings</span>: <span id="warnCount">0</span></button>
+      <button id="btnWarnings" class="btn btn-warn" title="Open Warnings Summary (missing prices, images, drafts, variations, etc.)">⚠ <span data-i18n="warnings">Warnings Summary</span>: <span id="warnCount">0</span></button>
       <button id="btnErrors" class="btn btn-danger-soft" title="Filter to rows with errors"><span data-i18n="errors">Errors</span>: <span id="errorCount">0</span></button>
       <button id="btnTranslate" class="btn btn-secondary" data-i18n="translate" title="Auto-translate Georgian to English with Gemini">✨ Translate</button>
       <button id="btnAutoMatch" class="btn btn-secondary" data-i18n="auto_match" title="Match local images by SKU">Match Images</button>
       <button id="btnCleanVars" class="btn btn-secondary" title="Remove duplicate or empty variations (keeps the row with valid attribute and price)">Clean Variations</button>
+      <button id="btnInspector" class="btn btn-secondary" title="Toggle vertical Row Inspector panel (edit selected product without horizontal scrolling)">Row Inspector</button>
       <button id="btnDrawer" class="btn btn-secondary" data-i18n="local_images">Local Images</button>
+      <button id="btnWebDrawer" class="btn btn-secondary" title="Browse all web images currently in the sheet">Web Images</button>
       <button id="btnFixZip" class="btn btn-accent" data-i18n="fix_zip">Fix Naming &amp; Zip</button>
+      <button id="btnRenameWeb" class="btn btn-secondary" title="Rename already-uploaded web images on odella.ge to match SKU &amp; Name">🌐 Rename Web Imgs</button>
       <button id="btnSaveAs" class="btn btn-secondary" data-i18n="save_as">Save As</button>
       <button id="btnSave" class="btn btn-primary" data-i18n="save">Save</button>
+      <button id="btnAppUpdate" class="btn btn-ghost" title="Check for app updates on GitHub">⬇ v1.1.0</button>
       <button id="btnTheme" class="btn btn-ghost" title="Toggle Dark / Light theme">☀</button>
       <button id="btnSettings" class="btn btn-ghost" title="Settings">⚙</button>
+      <div class="zoom-controls" title="Zoom In / Out">
+        <button id="btnZoomOut" class="btn btn-ghost btn-zoom" title="Zoom Out (−5%)">−</button>
+        <button id="btnZoomReset" class="btn btn-ghost btn-zoom-pct" title="Reset Zoom to 100%">100%</button>
+        <button id="btnZoomIn" class="btn btn-ghost btn-zoom" title="Zoom In (+5%)">+</button>
+      </div>
     </div>
   </header>
 
@@ -52,12 +72,21 @@
         <option value="missing_category">Categories: Missing</option>
         <option value="missing_desc">Description: Empty</option>
         <option value="missing_en">English (EN): Missing</option>
+        <option value="dup_sku">Duplicates: SKU</option>
+        <option value="dup_name_ka">Duplicates: Name (KA)</option>
+        <option value="dup_name_en">Duplicates: Name (EN)</option>
         <option value="incomplete_vars">Info — Variations: Fewer Combos</option>
         <option value="missing_hover">Info — Hover Image: Missing</option>
         <option value="eur_usd_auto">Info — EUR / USD: Auto NBG Rate</option>
+        <option value="shared_images">Info — Shared Images</option>
       </select>
       <button class="chip" data-filter="ratio" title="Products with images outside 2:3 (±5%) or smaller than 600x900">Bad Ratio (<span id="countRatio">0</span>)</button>
+      <button id="btnOpenStudioBadRatio" class="btn btn-sm btn-warn" title="Open Bulk Image Crop / Rotate / Resize Studio for all Bad Ratio images">✂ Fix Bad Ratios</button>
       <button class="chip" data-filter="variable">Variable (<span id="countVar">0</span>)</button>
+      <button id="btnSelectAllVisible" class="btn btn-sm btn-secondary" title="Select or deselect all currently visible non-empty product rows">☑ Select Visible (0)</button>
+      <button id="btnUnfreezeRows" class="btn btn-sm btn-secondary hidden" title="Unfreeze all pinned rows">📌 Frozen (<span id="frozenRowsCount">0</span>) · Unfreeze All</button>
+      <button id="btnClearColFilters" class="btn btn-sm btn-secondary hidden" title="Clear all active column filters">✕ Clear Column Filters (<span id="colFiltersCount">0</span>)</button>
+      <button id="btnDeferredWarnBadge" class="btn btn-sm btn-warn hidden" title="Click to Save and refresh warning/error labels &amp; filtered rows">💾 Unsaved edits — Save to refresh warnings</button>
     </div>
     <div class="search-wrap">
       <input id="searchInput" type="search" class="input" placeholder="Search SKU, Name, Category, Attributes...">
@@ -77,10 +106,17 @@
       <input id="bulkPricePct" type="number" step="1" class="input input-sm" style="width:86px;" placeholder="Price ±%">
       <button id="btnBulkPrice" class="btn btn-sm btn-secondary">Adjust GEL</button>
       <span class="rich-sep"></span>
+      <input id="bulkSaleVal" type="text" class="input input-sm" style="width:112px;" placeholder="Sale: 20% or 30" title="Type xx% for percentage off, or plain xx for GEL units off">
+      <button id="btnBulkSaleApply" class="btn btn-sm btn-secondary" title="Apply % or GEL-off sale to selected simple products and variations of selected variable products">Apply Sale</button>
+      <button id="btnBulkSaleClear" class="btn btn-sm btn-ghost" title="Clear sale price on selected rows &amp; variations">Clear</button>
+      <button id="btnBulkSaleToUnit" class="btn btn-sm btn-ghost" title="Convert % discounts to GEL units off without changing the number (e.g. 20% → 20)">% → GEL</button>
+      <button id="btnBulkSaleToPct" class="btn btn-sm btn-ghost" title="Convert GEL unit discounts to % off without changing the number (e.g. 20 → 20%)">GEL → %</button>
+      <span class="rich-sep"></span>
       <select id="bulkFbSel" class="select select-sm"></select>
       <button id="btnBulkFb" class="btn btn-sm btn-secondary">Tag Local Imgs</button>
       <span class="rich-sep"></span>
       <button id="btnBulkTranslate" class="btn btn-sm btn-accent">✨ Translate</button>
+      <button id="btnBulkRenameWeb" class="btn btn-sm btn-secondary" title="Rename web images on odella.ge for selected rows">🌐 Rename Web Imgs</button>
       <button id="btnBulkCleanVars" class="btn btn-sm btn-warn" title="Remove empty or duplicate variations for the selected products">Clean Variations</button>
       <button id="btnBulkDelete" class="btn btn-sm btn-danger-soft">🗑 Delete</button>
     </div>
@@ -95,23 +131,58 @@
     </div>
 
     <aside class="drawer hidden" id="imagesDrawer">
+      <div id="drawerResizeHandle" class="drawer-resize-handle" title="Drag to resize Local Images pane"></div>
       <div class="drawer-header">
-        <h3>Local Images</h3>
-        <button id="btnCloseDrawer" class="icon-btn" title="Close">&times;</button>
+        <h3 id="drawerTitle">Local Images</h3>
+        <div class="row-gap">
+          <div class="drawer-size-presets" title="Pane width presets">
+            <button type="button" class="btn btn-sm btn-ghost drawer-preset-btn" data-width="260" title="Narrow">S</button>
+            <button type="button" class="btn btn-sm btn-ghost drawer-preset-btn" data-width="420" title="Medium">M</button>
+            <button type="button" class="btn btn-sm btn-ghost drawer-preset-btn" data-width="640" title="Wide">L</button>
+          </div>
+          <button id="btnCloseDrawer" class="icon-btn" title="Close">&times;</button>
+        </div>
       </div>
       <div class="drawer-controls">
-        <label class="label-sm">Root folder</label>
-        <div class="row-gap">
-          <input id="imagesRootInput" type="text" class="input input-sm" placeholder="C:\...\ზომაზე დაჭრილი">
-          <button id="btnRefreshImages" class="btn btn-sm btn-secondary">Scan</button>
+        <div class="drawer-tabs">
+          <button type="button" id="tabDrawerLocal" class="drawer-tab active">Local Images</button>
+          <button type="button" id="tabDrawerWeb" class="drawer-tab">Web Images (<span id="webImgCount">0</span>)</button>
+        </div>
+        <div id="localRootWrap">
+          <label class="label-sm">Root folder (paste path, drag &amp; drop folder, or click Browse)</label>
+          <div id="rootFolderDropZone" class="root-drop-zone" title="Paste a path, drag &amp; drop a folder, or click Browse">
+            <div class="row-gap">
+              <input id="imagesRootInput" type="text" class="input input-sm" placeholder="Paste folder path or click Browse...">
+              <button id="btnBrowseRoot" class="btn btn-sm btn-primary" title="Open Explorer to select folder">Browse</button>
+              <button id="btnRefreshImages" class="btn btn-sm btn-secondary" title="Rescan current folder">Scan</button>
+            </div>
+          </div>
+          <div class="drawer-formats-hint">Permitted formats: <b>JPG</b>, <b>JPEG</b>, <b>PNG</b>, <b>WebP</b>, <b>GIF</b></div>
         </div>
         <div class="row-gap">
           <select id="drawerFolderSelect" class="select select-sm"></select>
           <input id="drawerSearch" type="search" class="input input-sm" placeholder="Filter images...">
         </div>
-        <div class="drawer-hint">Drag any image onto a product's <b>Hover</b>, <b>Featured</b>, or <b>Gallery</b> cell.</div>
+        <div id="drawerHint" class="drawer-hint">Drag onto <b>Hover</b>, <b>Featured</b>, or <b>Gallery</b>. Select an image &amp; press <b>F2</b> to rename original file.</div>
       </div>
       <div class="drawer-grid" id="drawerGrid"></div>
+    </aside>
+
+    <aside class="inspector hidden" id="rowInspector">
+      <div class="drawer-header">
+        <div>
+          <h3 id="inspectorTitle">Row Inspector</h3>
+          <div id="inspectorSub" class="muted-sm">Select any product row</div>
+        </div>
+        <div class="row-gap">
+          <button id="btnInspPrev" class="btn btn-sm btn-ghost" title="Previous row">◀</button>
+          <button id="btnInspNext" class="btn btn-sm btn-ghost" title="Next row">▶</button>
+          <button id="btnCloseInspector" class="icon-btn" title="Close">&times;</button>
+        </div>
+      </div>
+      <div class="inspector-body" id="inspectorBody">
+        <div class="muted-sm" style="padding:16px;">Click any product row in the sheet to inspect and edit all its fields vertically here.</div>
+      </div>
     </aside>
   </main>
 
@@ -208,6 +279,79 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" data-close="varModal">Cancel</button>
         <button id="btnSaveVars" class="btn btn-primary">Save Variations</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Web Images Modal -->
+  <div id="webRenameModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3>🌐 Rename Web Images on odella.ge</h3>
+          <div class="muted-sm">Renames already-uploaded WordPress media files in-place (keeps Attachment ID, FileBird folder &amp; thumbnails) and updates URLs in your sheet.</div>
+        </div>
+        <button class="icon-btn" data-close="webRenameModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="webRenameStep1">
+          <div class="row-gap" style="justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+            <div class="row-gap" style="align-items:center;">
+              <label class="label-sm" style="margin:0;">Scope:</label>
+              <button type="button" id="btnWebRenameScopeAll" class="btn btn-sm btn-primary">All Rows</button>
+              <button type="button" id="btnWebRenameScopeSel" class="btn btn-sm btn-secondary">Selected Rows (0)</button>
+            </div>
+            <label class="check-row" style="margin:0;">
+              <input type="checkbox" id="chkWebRenamePurge" checked>
+              <span>⚡ Run Purge &amp; Speed after renaming</span>
+            </label>
+          </div>
+          <div id="webRenameSummary" class="muted-sm" style="margin-bottom:8px;font-weight:600;">Scanning web images...</div>
+          <div class="var-table-wrap" style="max-height:360px;">
+            <table class="var-table">
+              <thead>
+                <tr>
+                  <th style="width:30px;"><input type="checkbox" id="chkWebRenameAll" checked title="Select / deselect all"></th>
+                  <th style="width:46px;">Img</th>
+                  <th style="width:120px;">Row / SKU</th>
+                  <th>Current Filename</th>
+                  <th>New Filename (editable)</th>
+                  <th style="width:74px;">Shared</th>
+                </tr>
+              </thead>
+              <tbody id="webRenameBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="webRenameStep2" class="hidden">
+          <div class="alert-warn" style="margin-bottom:10px;">
+            <b>Confirm Live Rename on odella.ge:</b> The files below will be renamed in-place in WordPress Media Library (keeping the same Attachment IDs, FileBird folders &amp; thumbnails) and their URLs will be updated in your sheet.
+          </div>
+          <div id="webRenameConfirmSummary" class="muted-sm" style="margin-bottom:8px;font-weight:600;"></div>
+          <div id="webRenameProgressWrap" class="hidden" style="margin-bottom:10px;">
+            <div class="progress-track"><div id="webRenameProgressFill" class="progress-fill" style="width:0%;"></div></div>
+            <div id="webRenameProgressText" class="muted-sm" style="margin-top:4px;"></div>
+          </div>
+          <div class="var-table-wrap" style="max-height:300px;">
+            <table class="var-table">
+              <thead>
+                <tr>
+                  <th style="width:120px;">Row / SKU</th>
+                  <th>Current Filename</th>
+                  <th>→ New Filename</th>
+                </tr>
+              </thead>
+              <tbody id="webRenameConfirmBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="webRenameModal">Cancel</button>
+        <button type="button" id="btnWebRenameBack" class="btn btn-secondary hidden">← Back to Edit</button>
+        <button id="btnRunWebRename" class="btn btn-primary">Review &amp; Confirm Rename...</button>
+        <button type="button" id="btnConfirmWebRenameNow" class="btn btn-accent hidden">Yes, Rename on odella.ge Now</button>
       </div>
     </div>
   </div>
@@ -331,6 +475,41 @@
               <input type="checkbox" id="setAutoBackup" checked>
               <span>Auto-backup .xlsx to <code>Odella-excel/_backups/</code> before saving</span>
             </label>
+
+            <h4 style="margin-top:16px;">WordPress Sync (odella.ge — Application Password)</h4>
+            <div class="form-row">
+              <label class="label-sm">Site URL</label>
+              <input id="setWpUrl" type="text" class="input" placeholder="https://odella.ge">
+            </div>
+            <div class="form-row">
+              <label class="label-sm">WordPress Username</label>
+              <input id="setWpUser" type="text" class="input" placeholder="e.g. admin">
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Application Password (Users → Profile → Application Passwords)</label>
+              <div class="row-gap">
+                <input id="setWpPass" type="password" class="input" style="flex:1;" placeholder="xxxx xxxx xxxx xxxx xxxx xxxx">
+                <button type="button" id="btnToggleWpPass" class="btn btn-sm btn-ghost">Show</button>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Push Batch Size (<span id="setPushBatchVal">10</span> products/batch, 5–25)</label>
+              <input id="setPushBatch" type="range" min="5" max="25" step="1" value="10">
+            </div>
+            <div class="form-row">
+              <label class="label-sm">Hostinger API Token (optional — enables Edge CDN purge)</label>
+              <input id="setHostingerToken" type="password" class="input" placeholder="Optional Bearer token">
+            </div>
+            <div class="row-gap" style="margin:8px 0;">
+              <button type="button" id="btnTestWp" class="btn btn-sm btn-secondary">Test WordPress Connection</button>
+              <span id="wpTestStatus" class="muted-sm"></span>
+            </div>
+
+            <h4 style="margin-top:16px;">App Updates (GitHub Releases)</h4>
+            <div class="form-row">
+              <label class="label-sm">GitHub Releases Repository (<code>owner/repo</code>)</label>
+              <input id="setUpdateRepo" type="text" class="input" placeholder="NMeJa/odella-sheet-editor-releases">
+            </div>
           </div>
 
           <div class="settings-section">
@@ -419,23 +598,17 @@
         <button class="icon-btn" data-close="importModal">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="settings-section" style="margin-bottom:12px;">
-          <h4 style="margin-bottom:6px;">Open Original File (Saves Directly to Original)</h4>
-          <p class="muted-sm" style="margin:0 0 8px;">Opens any <code>.xlsx</code> from your PC without copying it — clicking <b>Save (Ctrl+S)</b> overwrites the original file directly.</p>
-          <button type="button" id="btnNativeOpen" class="btn btn-primary" style="width:100%;">Browse &amp; Open Original .xlsx...</button>
-        </div>
         <div class="settings-section">
-          <h4 style="margin-bottom:6px;">Merge Another File Into Current Sheet</h4>
+          <h4 style="margin-bottom:6px;">Open Spreadsheet File</h4>
           <div class="form-row">
-            <label class="label-sm">Choose .xlsx or .csv to merge (matches by ID/SKU)</label>
+            <label class="label-sm">Choose an <code>.xlsx</code> or <code>.csv</code> file to import and open</label>
             <input id="importFileInput" type="file" accept=".xlsx,.csv" class="input" style="width:100%;">
           </div>
-          <input type="hidden" id="importMode" value="merge">
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-close="importModal">Cancel</button>
-        <button id="btnRunImport" class="btn btn-secondary">Merge Selected File</button>
+        <button id="btnRunImport" class="btn btn-primary">Import &amp; Open</button>
       </div>
     </div>
   </div>
@@ -489,14 +662,669 @@
     </div>
   </div>
 
+  <!-- Auto-Fix Confirmation Modal -->
+  <div id="autoFixModal" class="modal-backdrop hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Auto-Fix Preview &amp; Confirmation</h3>
+        <button class="icon-btn" data-close="autoFixModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-sm" style="margin-top:0;">
+          Auto-Fix will standardize formatting across your sheet without changing product data:
+        </p>
+        <ul class="muted-sm" style="margin:0 0 10px;padding-left:18px;line-height:1.5;">
+          <li><b>Categories, Tags, Attributes:</b> replaces comma separators (<code>,</code>) with semicolons (<code>; </code>) and removes trailing semicolons.</li>
+          <li><b>Category typo fix:</b> replaces <code>კაცი-&gt;</code> with <code>მამაკაცი-&gt;</code>.</li>
+          <li><b>Gallery images:</b> normalizes pipe (<code>|</code>) and comma (<code>,</code>) separators to <code>; </code>.</li>
+        </ul>
+        <div id="autoFixSummary" class="muted-sm" style="margin-bottom:8px;font-weight:600;"></div>
+        <div class="var-table-wrap" style="max-height:320px;">
+          <table class="var-table">
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>SKU</th>
+                <th>Column</th>
+                <th>Current Value</th>
+                <th>New Value</th>
+              </tr>
+            </thead>
+            <tbody id="autoFixPreviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="autoFixModal">No</button>
+        <button id="btnConfirmAutoFix" class="btn btn-primary">Yes, Apply Auto-Fix</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add New Product Modal -->
+  <div id="addProductModal" class="modal-backdrop modal-backdrop-passthrough hidden">
+    <div class="modal modal-lg modal-add-product">
+      <div class="modal-header">
+        <div>
+          <h3>+ Add New Product</h3>
+          <div class="muted-sm">Fill out the fields below to add one product. Local Images stays usable on the right (drag or click F / H / +G).</div>
+        </div>
+        <div class="row-gap">
+          <button type="button" id="btnAddToggleDrawer" class="btn btn-sm btn-secondary">Local Images</button>
+          <button class="icon-btn" data-close="addProductModal">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div id="addProdWarn" class="alert-warn hidden" style="margin-bottom:10px;"></div>
+        <div class="insp-group" style="margin-bottom:10px;padding:8px 10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <label class="label-sm" for="addTemplateSearch" style="margin:0;">Quick Template (copy Category, Price, Attributes, Variations &amp; Descriptions):</label>
+            <div id="addTemplateWrap" class="tpl-combobox">
+              <input id="addTemplateSearch" type="text" class="input input-sm tpl-search-input" placeholder="Search product by SKU or Name..." autocomplete="off">
+              <button type="button" id="btnClearTemplate" class="tpl-clear-btn hidden" title="Clear selected template">&times;</button>
+              <button type="button" id="btnToggleTemplateList" class="tpl-caret-btn" title="Show products">&#9662;</button>
+              <div id="addTemplateList" class="tpl-dropdown hidden"></div>
+            </div>
+          </div>
+        </div>
+        <div class="add-prod-grid">
+          <div class="insp-group">
+            <h4>Core Info &amp; Pricing</h4>
+            <div class="insp-grid-2">
+              <div class="insp-field">
+                <label for="addSku">SKU *</label>
+                <input id="addSku" type="text" class="input input-sm" placeholder="e.g. 5111099">
+              </div>
+              <div class="insp-field">
+                <label for="addStatus">Status</label>
+                <select id="addStatus" class="select select-sm">
+                  <option value="draft">draft</option>
+                  <option value="publish">publish</option>
+                </select>
+              </div>
+            </div>
+            <div class="insp-field">
+              <label for="addNameKa">Name (Georgian) *</label>
+              <input id="addNameKa" type="text" class="input input-sm" placeholder="მაგ. აბრეშუმის თავსაბურავი Pera">
+            </div>
+            <div class="insp-field">
+              <label for="addNameEn">Name (English)</label>
+              <input id="addNameEn" type="text" class="input input-sm" placeholder="Optional — can also auto-translate later">
+            </div>
+            <div class="insp-grid-2">
+              <div class="insp-field">
+                <label for="addType">Product Type</label>
+                <select id="addType" class="select select-sm">
+                  <option value="simple">simple</option>
+                  <option value="variable">variable</option>
+                </select>
+              </div>
+              <div class="insp-field">
+                <label for="addRegPrice">Regular Price (GEL)</label>
+                <input id="addRegPrice" type="text" class="input input-sm" placeholder="e.g. 190">
+              </div>
+            </div>
+            <div class="insp-grid-2">
+              <div class="insp-field">
+                <label for="addSalePrice">Sale Price (GEL)</label>
+                <input id="addSalePrice" type="text" class="input input-sm" placeholder="Optional">
+              </div>
+              <div class="insp-field">
+                <label for="addSaleDiscount">Sale Discount (% or GEL off)</label>
+                <input id="addSaleDiscount" type="text" class="input input-sm" placeholder="e.g. 20% or 40">
+              </div>
+            </div>
+          </div>
+
+          <div class="insp-group">
+            <h4>Categories, Tags &amp; Attributes</h4>
+            <div class="insp-field">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label>Categories</label>
+                <button type="button" id="btnAddPickCat" class="btn btn-sm btn-ghost">Pick...</button>
+              </div>
+              <input id="addCategories" type="text" class="input input-sm" placeholder="Click Pick... to choose categories" readonly style="cursor:pointer;">
+            </div>
+            <div class="insp-field">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label>Tags</label>
+                <button type="button" id="btnAddPickTag" class="btn btn-sm btn-ghost">Pick...</button>
+              </div>
+              <input id="addTags" type="text" class="input input-sm" placeholder="Optional" readonly style="cursor:pointer;">
+            </div>
+            <div class="insp-field">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label>Attributes</label>
+                <button type="button" id="btnAddPickAttr" class="btn btn-sm btn-ghost">Pick...</button>
+              </div>
+              <input id="addAttributes" type="text" class="input input-sm" placeholder="e.g. Size: S; Size: M" readonly style="cursor:pointer;">
+            </div>
+          </div>
+        </div>
+
+        <div id="addVarPreviewBox" class="insp-group hidden" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+            <h4 style="margin:0;">Auto-Generated Variations Preview (<span id="addVarPreviewCount">0</span>)</h4>
+            <span id="addVarPreviewHint" class="muted-sm">SKUs auto-increment from the product SKU above; prices copied from template.</span>
+          </div>
+          <div class="var-table-wrap" style="max-height:170px;">
+            <table class="var-table">
+              <thead>
+                <tr>
+                  <th>Variation SKU</th>
+                  <th>Attributes</th>
+                  <th style="width:95px;">Regular (GEL)</th>
+                  <th style="width:95px;">Sale (GEL)</th>
+                  <th style="width:95px;">Discount</th>
+                  <th style="width:76px;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="addVarPreviewBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="insp-group" style="margin-top:10px;">
+          <h4>Descriptions (Georgian &amp; English — or reuse from an existing product)</h4>
+          <div class="add-prod-grid">
+            <div class="insp-field">
+              <div class="desc-head-row">
+                <label for="addShortDesc">Short Description (KA)</label>
+                <select id="addReuseShortKa" class="select select-sm desc-reuse-sel" title="Copy Short Description (KA) from another product"></select>
+              </div>
+              <textarea id="addShortDesc" class="input input-sm" rows="2" placeholder="Optional Georgian short summary..."></textarea>
+            </div>
+            <div class="insp-field">
+              <div class="desc-head-row">
+                <label for="addShortDescEn">Short Description (EN)</label>
+                <select id="addReuseShortEn" class="select select-sm desc-reuse-sel" title="Copy Short Description (EN) from another product"></select>
+              </div>
+              <textarea id="addShortDescEn" class="input input-sm" rows="2" placeholder="Optional English short summary..."></textarea>
+            </div>
+            <div class="insp-field">
+              <div class="desc-head-row">
+                <label for="addDesc">Description (KA)</label>
+                <select id="addReuseDescKa" class="select select-sm desc-reuse-sel" title="Copy Description (KA) from another product"></select>
+              </div>
+              <textarea id="addDesc" class="input input-sm" rows="3" placeholder="Fabric, dimensions, care instructions (KA)..."></textarea>
+            </div>
+            <div class="insp-field">
+              <div class="desc-head-row">
+                <label for="addDescEn">Description (EN)</label>
+                <select id="addReuseDescEn" class="select select-sm desc-reuse-sel" title="Copy Description (EN) from another product"></select>
+              </div>
+              <textarea id="addDescEn" class="input input-sm" rows="3" placeholder="Fabric, dimensions, care instructions (EN)..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="insp-group" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <h4 style="margin:0;">Images (Choose, or drag / click F · H · +G from Local Images)</h4>
+            <div class="row-gap" style="align-items:center;">
+              <label class="label-sm" for="addFileBird" style="margin:0;">FileBird Folder:</label>
+              <select id="addFileBird" class="select select-sm" style="min-width:190px;"></select>
+            </div>
+          </div>
+          <div class="add-prod-img-row">
+            <div class="insp-field add-img-drop" data-add-target="feat">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label>Featured Image (1)</label>
+                <button type="button" id="btnAddPickFeat" class="btn btn-sm btn-ghost">+ Choose</button>
+              </div>
+              <div id="addFeatPreview" class="img-list"></div>
+            </div>
+            <div class="insp-field add-img-drop" data-add-target="hover">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label>Hover Image (1)</label>
+                <button type="button" id="btnAddPickHover" class="btn btn-sm btn-ghost">+ Choose</button>
+              </div>
+              <div id="addHoverPreview" class="img-list"></div>
+            </div>
+            <div class="insp-field add-img-drop" data-add-target="gallery">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label>Gallery Images (Multiple)</label>
+                <button type="button" id="btnAddPickGal" class="btn btn-sm btn-ghost">+ Add</button>
+              </div>
+              <div id="addGalPreview" class="img-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="addProductModal">Cancel</button>
+        <button id="btnConfirmAddAnother" class="btn btn-secondary" title="Add this product and keep the form open for the next similar item">Save &amp; Add Another</button>
+        <button id="btnConfirmAddProduct" class="btn btn-primary">Confirm &amp; Add Product</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Crop / Rotate / Resize Studio Modal (BIRME-style Bulk Editor) -->
+  <div id="imageStudioModal" class="modal-backdrop hidden">
+    <div class="modal modal-studio">
+      <div class="modal-header">
+        <div>
+          <h3>✂ Image Crop, Rotate &amp; Resize Studio</h3>
+          <div id="studioSubtitle" class="muted-sm">Drag on the preview to adjust crop position · Scroll or slide to zoom · Bulk edit &amp; save copies in the same folder</div>
+        </div>
+        <button class="icon-btn" data-close="imageStudioModal">&times;</button>
+      </div>
+      <div class="studio-layout">
+        <aside class="studio-filmstrip" id="studioFilmstrip"></aside>
+
+        <section class="studio-stage">
+          <div class="studio-canvas-wrap" id="studioCanvasWrap">
+            <canvas id="studioCanvas"></canvas>
+            <div id="studioLoading" class="studio-loading hidden">Loading image...</div>
+          </div>
+          <div class="studio-stage-bar">
+            <div class="row-gap">
+              <button type="button" id="btnStudioRotL" class="btn btn-sm btn-secondary" title="Rotate Left 90°">↺ 90°</button>
+              <button type="button" id="btnStudioRotR" class="btn btn-sm btn-secondary" title="Rotate Right 90°">↻ 90°</button>
+              <button type="button" id="btnStudioFlipH" class="btn btn-sm btn-secondary" title="Flip Horizontal">⇄ Flip H</button>
+              <button type="button" id="btnStudioFlipV" class="btn btn-sm btn-secondary" title="Flip Vertical">⇅ Flip V</button>
+              <span class="rich-sep"></span>
+              <button type="button" id="btnStudioAlignTop" class="btn btn-sm btn-ghost" title="Snap crop to Top (best for model headshots)">Top</button>
+              <button type="button" id="btnStudioAlignCenter" class="btn btn-sm btn-ghost" title="Snap crop to Center">Center</button>
+              <button type="button" id="btnStudioAlignBottom" class="btn btn-sm btn-ghost" title="Snap crop to Bottom">Bottom</button>
+              <button type="button" id="btnStudioReset" class="btn btn-sm btn-ghost" title="Reset crop, zoom &amp; rotation">Reset</button>
+            </div>
+            <div class="row-gap" style="align-items:center;">
+              <label class="label-sm" for="studioStraighten" style="margin:0;cursor:pointer;" id="lblStudioStraighten" title="Click to reset straighten to 0°">Tilt: <span id="studioStraightenVal">0.0</span>°</label>
+              <input id="studioStraighten" type="range" min="-15" max="15" step="0.5" value="0" style="width:92px;">
+              <label class="label-sm" for="studioZoom" style="margin:0;">Zoom: <span id="studioZoomVal">1.00</span>×</label>
+              <input id="studioZoom" type="range" min="1" max="3" step="0.02" value="1" style="width:96px;">
+              <span id="studioDimBadge" class="muted-sm mono"></span>
+              <span id="studioSizeBadge" class="muted-sm mono" style="color:var(--accent);"></span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="studio-controls">
+          <div class="insp-group">
+            <h4>Target Size (Odella 2:3)</h4>
+            <div class="insp-field">
+              <label for="studioPreset">Preset</label>
+              <select id="studioPreset" class="select select-sm">
+                <option value="1000x1500" selected>1000 × 1500 (2:3 Recommended)</option>
+                <option value="800x1200">800 × 1200 (2:3 Compact)</option>
+                <option value="1200x1800">1200 × 1800 (2:3 High-Res)</option>
+                <option value="600x900">600 × 900 (2:3 Minimum)</option>
+                <option value="custom">Custom Width × Height</option>
+              </select>
+            </div>
+            <div class="insp-grid-2">
+              <div class="insp-field">
+                <label for="studioW">Width (px)</label>
+                <input id="studioW" type="number" min="100" max="4000" value="1000" class="input input-sm">
+              </div>
+              <div class="insp-field">
+                <label for="studioH">Height (px)</label>
+                <input id="studioH" type="number" min="100" max="4000" value="1500" class="input input-sm">
+              </div>
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="studioLock23" checked>
+              <span>Lock 2:3 portrait ratio</span>
+            </label>
+          </div>
+
+          <div class="insp-group">
+            <h4>Crop &amp; Output</h4>
+            <div class="insp-field">
+              <label for="studioFit">Fit Mode</label>
+              <select id="studioFit" class="select select-sm">
+                <option value="cover" selected>Crop to Fill (BIRME default)</option>
+                <option value="contain">Fit Inside + Background Pad</option>
+              </select>
+            </div>
+            <div class="insp-field hidden" id="studioBgRow">
+              <label for="studioBgColor">Pad Background Color</label>
+              <input id="studioBgColor" type="color" value="#ffffff" style="width:100%;height:28px;border:1px solid var(--border);border-radius:4px;background:transparent;">
+            </div>
+            <div class="insp-grid-2">
+              <div class="insp-field">
+                <label for="studioFmt">Format</label>
+                <select id="studioFmt" class="select select-sm">
+                  <option value="jpg" selected>JPEG (.jpg)</option>
+                  <option value="webp">WebP (.webp)</option>
+                  <option value="png">PNG (.png)</option>
+                </select>
+              </div>
+              <div class="insp-field">
+                <label for="studioQual">Quality (<span id="studioQualVal">88</span>%)</label>
+                <input id="studioQual" type="range" min="60" max="100" step="2" value="88">
+              </div>
+            </div>
+            <button type="button" id="btnStudioApplyAll" class="btn btn-sm btn-secondary" style="width:100%;">Apply Size/Fit/Format to All Images</button>
+          </div>
+
+          <div class="insp-group">
+            <h4>Save Options</h4>
+            <p class="muted-sm" style="margin:0;line-height:1.4;">
+              Saves a fixed copy (<code>*_2x3</code>) in the <b>same folder as the original</b> and updates the product cell automatically.
+            </p>
+            <label class="checkbox-row" style="margin-top:4px;">
+              <input type="checkbox" id="studioOverwriteOrig">
+              <span>Also overwrite the original file on disk</span>
+            </label>
+          </div>
+        </aside>
+      </div>
+      <div class="modal-footer">
+        <div id="studioProgress" class="muted-sm" style="margin-right:auto;"></div>
+        <button class="btn btn-secondary" data-close="imageStudioModal">Cancel</button>
+        <button id="btnStudioSaveOne" class="btn btn-secondary">Save Current</button>
+        <button id="btnStudioSaveAll" class="btn btn-primary">Save All (<span id="studioCount">0</span>)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename Local Image Modal (F2) -->
+  <div id="renameImageModal" class="modal-backdrop hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Rename Original Image</h3>
+        <button class="icon-btn" data-close="renameImageModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-sm" style="margin-top:0;">This will rename the actual file on disk and update any matching references in the current sheet.</p>
+        <div class="form-row">
+          <label class="label-sm" for="renameImageInput">New filename</label>
+          <div class="row-gap">
+            <input id="renameImageInput" type="text" class="input" style="flex:1;" autocomplete="off">
+            <span id="renameImageExt" class="mono muted-sm"></span>
+          </div>
+        </div>
+        <div id="renameImagePath" class="muted-sm mono" style="margin-top:6px;word-break:break-all;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="renameImageModal">Cancel</button>
+        <button id="btnConfirmRenameImage" class="btn btn-primary">Rename</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pull from odella.ge Modal -->
+  <div id="pullModal" class="modal-backdrop hidden">
+    <div class="modal modal-md">
+      <div class="modal-header">
+        <h3>⬇ Pull Products from odella.ge</h3>
+        <button class="icon-btn" data-close="pullModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert-warn" style="margin-bottom:10px;border-color:var(--primary);background:rgba(59,130,246,0.12);color:var(--text);">
+          This will create a <b>brand-new <code>.xlsx</code> file</b> in your workbooks folder and open it in the editor.
+        </div>
+        <div id="pullDirtyWarn" class="alert-warn hidden" style="margin-bottom:10px;">
+          You have unsaved changes in the current sheet. Save first if you don't want to lose them.
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="label-sm" style="margin:0;">Choose which columns to pull:</label>
+          <div class="row-gap">
+            <button type="button" id="btnPullColsDefault" class="btn btn-sm btn-ghost">Defaults</button>
+            <button type="button" id="btnPullColsAll" class="btn btn-sm btn-ghost">Select All</button>
+          </div>
+        </div>
+        <div id="pullColGrid" class="pull-col-grid"></div>
+        <div id="pullStatusText" class="muted-sm" style="margin-top:10px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="pullModal">Cancel</button>
+        <button id="btnStartPull" class="btn btn-primary">Pull &amp; Create New .xlsx</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Push to odella.ge Modal -->
+  <div id="pushModal" class="modal-backdrop hidden">
+    <div class="modal modal-md">
+      <div class="modal-header">
+        <h3>⬆ Push Changes to odella.ge</h3>
+        <button class="icon-btn" data-close="pushModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="pushSummaryBox" class="insp-group" style="margin-bottom:10px;"></div>
+        <div class="insp-group" style="margin-bottom:10px;">
+          <h4>Push Scope</h4>
+          <label class="checkbox-row">
+            <input type="radio" name="pushScope" id="pushScopeChanged" value="changed" checked>
+            <span><b>Changed &amp; New rows only</b> (fastest — <span id="pushChangedCount">0</span> row(s))</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="radio" name="pushScope" id="pushScopeAll" value="all">
+            <span><b>Full sheet</b> (all <span id="pushAllCount">0</span> product row(s))</span>
+          </label>
+        </div>
+        <div class="insp-group" style="margin-bottom:10px;">
+          <h4>Options</h4>
+          <label class="checkbox-row">
+            <input type="checkbox" id="chkPushImages" checked>
+            <span><b>Upload local images too</b> (automatically runs <b>Fix Naming &amp; Zip</b> first — <span id="pushLocalImgCount">0</span> local image(s) found)</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="chkPushPurgeAfter" checked>
+            <span><b>Purge caches, Reindex &amp; Warm Cache automatically</b> right after push completes</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="chkPushTrashMissing">
+            <span>Move products deleted from sheet to Trash on website <i>(Full sheet only, off by default)</i></span>
+          </label>
+        </div>
+        <div id="pushProgressWrap" class="hidden" style="margin-top:10px;">
+          <div class="progress-track"><div id="pushProgressBar" class="progress-bar"></div></div>
+          <div id="pushProgressText" class="muted-sm" style="margin-top:6px;">Preparing...</div>
+        </div>
+        <div id="pushErrorBox" class="alert-danger hidden" style="margin-top:10px;max-height:180px;overflow-y:auto;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="pushModal">Close</button>
+        <button id="btnStartPush" class="btn btn-accent">Start Push to odella.ge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purge, Reindex, Warm Cache & Speed Check Modal -->
+  <div id="purgeModal" class="modal-backdrop hidden">
+    <div class="modal modal-md">
+      <div class="modal-header">
+        <h3>⚡ Purge, Reindex, Cache Warm &amp; Speed Check</h3>
+        <button class="icon-btn" data-close="purgeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted-sm" style="margin-top:0;">
+          Rebuilds the product catalog index, clears WooCommerce transients, WordPress/Elementor/LiteSpeed caches, purges Hostinger Edge CDN (if token set), and automatically warms page caches afterwards.
+        </p>
+        <div class="row-gap" style="margin-bottom:12px;">
+          <button type="button" id="btnRunPurgeWarm" class="btn btn-primary">⚡ Purge, Reindex &amp; Warm Cache</button>
+          <button type="button" id="btnRunSpeedCheck" class="btn btn-secondary">⏱ Check Website Speed</button>
+        </div>
+        <div id="purgeProgressWrap" class="hidden" style="margin-bottom:10px;">
+          <div class="progress-track"><div id="purgeProgressBar" class="progress-bar"></div></div>
+          <div id="purgeProgressText" class="muted-sm" style="margin-top:6px;">Running...</div>
+        </div>
+        <div id="purgeLogBox" class="insp-group hidden" style="margin-bottom:10px;font-size:12px;line-height:1.5;"></div>
+        <div id="speedResultsBox" class="hidden">
+          <table class="var-table">
+            <thead>
+              <tr><th>Page</th><th>Status</th><th>Speed (TTFB)</th><th>Cache</th></tr>
+            </thead>
+            <tbody id="speedResultsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" data-close="purgeModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Category Creation 4-Step Wizard Modal -->
+  <div id="newCatModal" class="modal-backdrop hidden">
+    <div class="modal modal-md">
+      <div class="modal-header">
+        <div>
+          <h3>+ Create New Category on odella.ge</h3>
+          <div id="newCatStepLabel" class="muted-sm">Step 1 of 4 — Important Warning</div>
+        </div>
+        <button class="icon-btn" data-close="newCatModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Step 1: Warning -->
+        <div id="newCatStep1" class="cat-step">
+          <div class="alert-warn" style="line-height:1.6;">
+            <b>Please read carefully before creating a new category:</b>
+            <ul style="margin:8px 0 0;padding-left:18px;">
+              <li>This category <b>will NOT appear in the website navigation menu</b> — it will only appear in shop filters.</li>
+              <li>If you place the category under the wrong parent (for example under <b>Men</b> instead of <b>Women</b>), <b>it will stay there until someone fixes it manually on the website</b>.</li>
+              <li>You must enter <b>both Georgian and English names</b> so both language versions are created and linked together.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Step 2: Parent & Names -->
+        <div id="newCatStep2" class="cat-step hidden">
+          <div class="insp-field" style="margin-bottom:10px;">
+            <label for="newCatParent">Parent Category</label>
+            <select id="newCatParent" class="select"></select>
+          </div>
+          <div class="insp-field" style="margin-bottom:10px;">
+            <label for="newCatNameKa">New Category Name (Georgian) *</label>
+            <input id="newCatNameKa" type="text" class="input" placeholder="მაგ. აბრეშუმის კაბა">
+          </div>
+          <div class="insp-field">
+            <label for="newCatNameEn">New Category Name (English) *</label>
+            <input id="newCatNameEn" type="text" class="input" placeholder="e.g. Silk Dress">
+          </div>
+        </div>
+
+        <!-- Step 3: Preview -->
+        <div id="newCatStep3" class="cat-step hidden">
+          <p class="muted-sm" style="margin-top:0;">Review the exact category paths that will be created on <b>odella.ge</b>:</p>
+          <div class="insp-group">
+            <div class="insp-field">
+              <label>Georgian Category Path (KA)</label>
+              <div id="newCatPreviewKa" class="mono" style="font-size:13.5px;color:var(--accent);font-weight:600;"></div>
+            </div>
+            <div class="insp-field" style="margin-top:6px;">
+              <label>English Category Path (EN)</label>
+              <div id="newCatPreviewEn" class="mono" style="font-size:13.5px;color:#93c5fd;font-weight:600;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Final Confirmation -->
+        <div id="newCatStep4" class="cat-step hidden">
+          <div class="alert-warn" style="line-height:1.6;">
+            <b>Final Confirmation — Are you sure?</b>
+            <p style="margin:8px 0 6px;">Clicking <b>Yes, Create Category</b> will immediately create both the Georgian and English categories live on <b>odella.ge</b>:</p>
+            <div id="newCatFinalSummary" class="mono" style="margin:6px 0;font-weight:600;"></div>
+            <p style="margin:6px 0 0;">Remember: it will only appear in <b>filters</b> (not the top menu), and parent placement can only be changed later from WordPress admin.</p>
+          </div>
+        </div>
+        <div id="newCatError" class="alert-danger hidden" style="margin-top:10px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="newCatModal">Cancel</button>
+        <button id="btnNewCatBack" class="btn btn-secondary hidden">← Back</button>
+        <button id="btnNewCatNext" class="btn btn-primary">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Update Modal (GitHub Releases) -->
+  <div id="updateModal" class="modal-backdrop hidden">
+    <div class="modal modal-md">
+      <div class="modal-header">
+        <div>
+          <h3>⬇ App Update (GitHub Releases)</h3>
+          <div id="updateModalSub" class="muted-sm">Checks public GitHub Releases directly</div>
+        </div>
+        <button class="icon-btn" data-close="updateModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="update-version-row">
+          <div class="update-ver-box">
+            <span class="muted-sm">Current Version</span>
+            <strong id="updateCurrentVer" class="mono">v1.1.0</strong>
+          </div>
+          <div class="update-ver-arrow">→</div>
+          <div class="update-ver-box">
+            <span class="muted-sm">Latest on GitHub</span>
+            <strong id="updateLatestVer" class="mono">Checking...</strong>
+          </div>
+        </div>
+        <div id="updateStatusBanner" class="insp-group" style="margin-top:10px;">
+          Checking GitHub Releases...
+        </div>
+        <div id="updateDirtyWarn" class="alert-warn hidden" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span><b>You have unsaved changes</b> in the current spreadsheet. Save first so you don't lose edits when the app restarts.</span>
+            <button type="button" id="btnUpdateSaveFirst" class="btn btn-sm btn-primary">Save Sheet First</button>
+          </div>
+        </div>
+        <div id="updateNotesWrap" class="hidden" style="margin-top:10px;">
+          <label class="label-sm">Release Notes</label>
+          <pre id="updateNotes" class="update-notes"></pre>
+        </div>
+        <div id="updateProgressWrap" class="hidden" style="margin-top:12px;">
+          <div class="progress-track"><div id="updateProgressBar" class="progress-bar"></div></div>
+          <div id="updateProgressText" class="muted-sm" style="margin-top:6px;">Preparing update...</div>
+        </div>
+        <div id="updateErrorBox" class="alert-danger hidden" style="margin-top:10px;"></div>
+      </div>
+      <div class="modal-footer">
+        <a id="linkUpdateRelease" class="btn btn-ghost hidden" href="#" target="_blank" rel="noopener">Open on GitHub</a>
+        <span style="flex:1;"></span>
+        <button class="btn btn-secondary" data-close="updateModal">Close</button>
+        <button type="button" id="btnCheckUpdateAgain" class="btn btn-secondary">Check Again</button>
+        <button type="button" id="btnInstallUpdate" class="btn btn-accent hidden">Download &amp; Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Columns (Show / Hide) Modal -->
+  <div id="editColsModal" class="modal-backdrop hidden">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <div>
+          <h3>Show / Hide Columns</h3>
+          <div class="muted-sm">Quick cosmetic view only — hidden columns are still saved normally.</div>
+        </div>
+        <button class="icon-btn" data-close="editColsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row-gap" style="margin-bottom:10px;align-items:center;">
+          <input id="editColsSearch" type="search" class="input input-sm" style="flex:1;" placeholder="Filter columns...">
+          <button type="button" id="btnColsShowAll" class="btn btn-sm btn-secondary">Show All</button>
+          <button type="button" id="btnColsHideAll" class="btn btn-sm btn-ghost" title="Uncheck all columns so you can pick only the ones you need">Clear All</button>
+        </div>
+        <div id="editColsList" class="edit-cols-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnColsResetFooter" class="btn btn-ghost">Reset All</button>
+        <button type="button" class="btn btn-primary" data-close="editColsModal">Done</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Lightbox Modal -->
   <div id="lightboxModal" class="modal-backdrop hidden">
     <div class="lightbox-box">
       <button class="icon-btn lightbox-close" data-close="lightboxModal">&times;</button>
-      <img id="lightboxImg" alt="">
-      <div id="lightboxCaption" class="lightbox-caption"></div>
+      <button id="lightboxPrev" class="lightbox-nav lightbox-prev hidden" title="Previous image (←)">&#8249;</button>
+      <img id="lightboxImg" alt="" draggable="false">
+      <button id="lightboxNext" class="lightbox-nav lightbox-next hidden" title="Next image (→)">&#8250;</button>
+      <div class="lightbox-footer">
+        <span id="lightboxCounter" class="lightbox-counter hidden"></span>
+        <div id="lightboxCaption" class="lightbox-caption"></div>
+        <div id="lightboxActions" class="lightbox-actions hidden"></div>
+      </div>
     </div>
   </div>
+
+  <!-- Custom Right-Click Context Menu -->
+  <div id="contextMenu" class="ctx-menu hidden"></div>
 
   <div id="toast" class="toast hidden"></div>
 

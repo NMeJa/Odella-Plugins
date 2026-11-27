@@ -470,7 +470,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             if (cdn) {
-                cdn.textContent = 'hPanel → Websites → odella.ge → Performance → CDN → Purge all';
+                var cdnResult = purged.data && purged.data.cdn ? purged.data.cdn : null;
+                if (cdnResult && cdnResult.attempted && cdnResult.ok) {
+                    cdn.textContent = cdnResult.message || 'Hostinger Edge CDN purged.';
+                } else if (cdnResult && cdnResult.attempted && !cdnResult.ok) {
+                    cdn.textContent = (cdnResult.message || 'Hostinger CDN purge failed.') + ' Manual fallback: hPanel → Websites → odella.ge → Performance → CDN → Purge all';
+                } else {
+                    cdn.textContent = 'hPanel → Websites → odella.ge → Performance → CDN → Purge all';
+                }
                 cdn.hidden = false;
             }
             state.autoWarm = 'reindex_and_warm';

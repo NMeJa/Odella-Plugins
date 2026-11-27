@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Odella Pricing Guards (MU)
  * Description: Hides published products that have no GEL price or no featured image, keeps newly unpriced products as drafts, and fills EUR/USD zone prices from the National Bank of Georgia unless a manual zone price is entered. Pricing & Rates can add a fee and change the rounding.
- * Version: 1.0.0
+ * Version: 1.0.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -161,7 +161,8 @@ function odella_pricing_collect( int $post_id ): void {
 
 /**
  * WooCommerce leaves `_price` empty when only `_regular_price` was written.
- * Saving the product rebuilds `_price` and the lookup table.
+ * A plain save() does not fill it, because WooCommerce rewrites `_price`
+ * only when the regular or sale price prop changed in this request.
  */
 function odella_pricing_rebuild_price_if_needed( int $product_id ): void {
     $regular = get_post_meta( $product_id, '_regular_price', true );
@@ -170,15 +171,56 @@ function odella_pricing_rebuild_price_if_needed( int $product_id ): void {
         return;
     }
     $product = wc_get_product( $product_id );
-    if ( $product instanceof WC_Product ) {
-        odella_pricing_recursion( true );
-        try {
-            $product->save();
-        } finally {
-            odella_pricing_recursion( false );
+    if ( ! $product instanceof WC_Product ) {
+        return;
+    }
+    $sale   = (string) $product->get_sale_price( 'edit' );
+    $active = ( '' !== $sale && (float) $sale < (float) $regular ) ? $sale : (string) $regular;
+    odella_pricing_recursion( true );
+    try {
+        $product->set_price( $active );
+        $product->save();
+        if ( '' === (string) get_post_meta( $product_id, '_price', true ) ) {
+            update_post_meta( $product_id, '_price', $active );
         }
+    } finally {
+        odella_pricing_recursion( false );
     }
 }
+
+/**
+ * Fill `_price` once for products that already have a regular price and an
+ * empty active price. Later edits are handled on shutdown.
+ */
+function odella_pricing_repair_active_prices_once(): void {
+    if ( get_option( 'odella_price_active_repair_v2' ) === '1' ) {
+        return;
+    }
+    if ( ! function_exists( 'wc_get_product' ) ) {
+        return;
+    }
+    $ids = get_posts(
+        array(
+            'post_type'              => 'product',
+            'post_status'            => array( 'publish', 'draft', 'private' ),
+            'posts_per_page'         => -1,
+            'fields'                 => 'ids',
+            'suppress_filters'       => true,
+            'no_found_rows'          => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+        )
+    );
+    foreach ( $ids as $product_id ) {
+        odella_pricing_rebuild_price_if_needed( (int) $product_id );
+    }
+    if ( function_exists( 'nmj_product_index_build_all' ) ) {
+        nmj_product_index_build_all();
+    }
+    update_option( 'odella_price_active_repair_v2', '1', false );
+}
+
+add_action( 'admin_init', 'odella_pricing_repair_active_prices_once' );
 
 /**
  * A product published with no price in this request goes back to Draft.

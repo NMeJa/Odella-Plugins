@@ -66,20 +66,14 @@ function ops_admin_page(): void
         <h1>Product spreadsheet</h1>
         <p>Download Georgian products, edit the file in the Odella Desktop Sheet Editor (or Excel / Google Sheets), then upload it. Column titles and status values are in English (<code>publish</code>, <code>draft</code>). Blank cells stay as they are. <code>(clear)</code> wipes a cell. One problem anywhere stops the import, and every problem is listed together. The Variations sheet is included when the file is Excel.</p>
         <?php
-        $uploads = wp_upload_dir();
-        $tool_rel = '/odella-tools/Odella-Sheet-Editor-Windows.zip';
-        $tool_path = rtrim((string) ($uploads['basedir'] ?? ''), '/\\') . $tool_rel;
-        $tool_url = rtrim((string) ($uploads['baseurl'] ?? ''), '/\\') . $tool_rel;
-        if (file_exists($tool_path)) :
-            $size_mb = round(filesize($tool_path) / (1024 * 1024), 1);
-            ?>
-            <div class="notice notice-info" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;">
-                <div>
-                    <strong>Odella Desktop Sheet Editor (Windows)</strong> — standalone app (no installation needed). Supports image previews, drag-and-drop FileBird tagging, multi-select categories, variation generator, Georgian/English translation, and automatic zipping.
-                </div>
-                <a class="button button-primary" href="<?php echo esc_url($tool_url); ?>" download>Download App (<?php echo esc_html((string) $size_mb); ?> MB)</a>
+        $github_download_url = 'https://github.com/NMeJa/odella-sheet-editor-releases/releases/latest/download/Odella-Sheet-Editor-Windows.zip';
+        ?>
+        <div class="notice notice-info" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;">
+            <div>
+                <strong>Odella Desktop Sheet Editor (Windows)</strong> — standalone app (no installation needed). Supports image previews, drag-and-drop FileBird tagging, multi-select categories, variation generator, Georgian/English translation, sale discounts, and automatic updates from GitHub.
             </div>
-        <?php endif; ?>
+            <a class="button button-primary" href="<?php echo esc_url($github_download_url); ?>" target="_blank" rel="noopener">Download Latest App (GitHub)</a>
+        </div>
         <?php if (!class_exists('ZipArchive')) : ?>
             <div class="notice notice-error"><p>PHP ZipArchive is missing, so .xlsx files cannot be built on this server.</p></div>
         <?php endif; ?>

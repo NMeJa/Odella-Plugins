@@ -1318,7 +1318,10 @@ function odella_speed_purge_only(): void
     }
     wp_cache_flush();
     do_action('litespeed_purge_all');
-    wp_send_json_success(['ok' => true]);
+    $cdn = function_exists('odella_purge_hostinger_cdn')
+        ? odella_purge_hostinger_cdn()
+        : ['attempted' => false, 'ok' => false, 'message' => ''];
+    wp_send_json_success(['ok' => true, 'cdn' => $cdn]);
 }
 
 /**

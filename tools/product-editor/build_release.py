@@ -3,6 +3,10 @@
 
 from __future__ import annotations
 
+import argparse
+import base64
+import hashlib
+import re
 import shutil
 import struct
 import subprocess
@@ -11,10 +15,130 @@ import zipfile
 from pathlib import Path
 
 EDITOR_DIR = Path(__file__).resolve().parent
+SERVER_PY = EDITOR_DIR / "server.py"
 DIST_DIR = EDITOR_DIR / "dist"
 BUILD_DIR = EDITOR_DIR / "build"
 ICON_PATH = EDITOR_DIR / "odella.ico"
 ZIP_OUT = DIST_DIR / "Odella-Sheet-Editor-Windows.zip"
+CHECKSUMS_OUT = DIST_DIR / "SHA256SUMS.txt"
+DEFAULT_RELEASE_REPO = "NMeJa/odella-sheet-editor-releases"
+
+
+def read_app_version() -> str:
+    src = SERVER_PY.read_text(encoding="utf-8")
+    m = re.search(r'^APP_VERSION\s*=\s*"([^"]+)"', src, re.M)
+    if not m:
+        raise SystemExit("Could not find APP_VERSION in server.py")
+    return m.group(1).strip()
+
+
+def write_app_version(new_version: str) -> str:
+    clean = re.sub(r"^[vV]", "", new_version.strip())
+    if not re.match(r"^\d+\.\d+\.\d+$", clean):
+        raise SystemExit(f"Invalid version '{new_version}'. Expected semantic version like 1.2.0.")
+    src = SERVER_PY.read_text(encoding="utf-8")
+    updated, count = re.subn(
+        r'^(APP_VERSION\s*=\s*)"[^"]+"',
+        rf'\g<1>"{clean}"',
+        src,
+        count=1,
+        flags=re.M,
+    )
+    if count != 1:
+        raise SystemExit("Failed to update APP_VERSION in server.py")
+    SERVER_PY.write_text(updated, encoding="utf-8")
+    return clean
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(65536)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def ensure_repo_has_initial_commit(repo: str) -> None:
+    """GitHub Releases require at least one commit on the default branch."""
+    chk_commits = subprocess.run(
+        ["gh", "api", f"repos/{repo}/commits?per_page=1"],
+        capture_output=True,
+        text=True,
+    )
+    if chk_commits.returncode == 0 and chk_commits.stdout.strip().startswith("["):
+        return
+    print(f"Repository {repo} is empty; creating initial README.md commit...")
+    readme_b64 = base64.b64encode(
+        (
+            "# Odella Product Sheet Editor — Releases\n\n"
+            "Public release binaries for **Odella Product Sheet Editor (Windows)**.\n\n"
+            "Download the latest `Odella-Sheet-Editor-Windows.zip` from the **Releases** tab, "
+            "or update directly inside the app via the topbar **Update** button.\n"
+        ).encode("utf-8")
+    ).decode("ascii")
+    subprocess.run(
+        [
+            "gh", "api", f"repos/{repo}/contents/README.md",
+            "-X", "PUT",
+            "-f", "message=Initialize releases repository",
+            "-f", f"content={readme_b64}",
+        ],
+        check=True,
+    )
+
+
+def publish_github_release(repo: str, version: str, exe_path: Path, zip_path: Path, checksums_path: Path, notes: str) -> None:
+    if not shutil.which("gh"):
+        raise SystemExit("GitHub CLI ('gh') not found in PATH. Install gh and run 'gh auth login' first.")
+    tag = f"v{version}"
+    print(f"Checking GitHub releases repository: {repo} ...")
+    chk_repo = subprocess.run(["gh", "repo", "view", repo], capture_output=True, text=True)
+    if chk_repo.returncode != 0:
+        print(f"Repository {repo} does not exist yet. Creating public releases repo...")
+        subprocess.run(
+            [
+                "gh", "repo", "create", repo,
+                "--public",
+                "--add-readme",
+                "--description", "Public compiled Windows releases for Odella Product Sheet Editor",
+            ],
+            check=True,
+        )
+    ensure_repo_has_initial_commit(repo)
+
+    release_notes = notes.strip() or (
+        f"Odella Product Sheet Editor {tag}\n\n"
+        "- Download `Odella-Sheet-Editor-Windows.zip` for fresh installs.\n"
+        "- Existing users can update automatically inside the app via the topbar Update button."
+    )
+    chk_rel = subprocess.run(["gh", "release", "view", tag, "--repo", repo], capture_output=True, text=True)
+    if chk_rel.returncode == 0:
+        print(f"Release {tag} already exists in {repo}; updating assets with --clobber...")
+        subprocess.run(
+            [
+                "gh", "release", "upload", tag,
+                str(exe_path), str(zip_path), str(checksums_path),
+                "--clobber",
+                "--repo", repo,
+            ],
+            check=True,
+        )
+    else:
+        print(f"Creating GitHub Release {tag} in {repo}...")
+        subprocess.run(
+            [
+                "gh", "release", "create", tag,
+                str(exe_path), str(zip_path), str(checksums_path),
+                "--repo", repo,
+                "--title", f"Odella Sheet Editor {tag}",
+                "--notes", release_notes,
+            ],
+            check=True,
+        )
+    print(f"Published {tag} to https://github.com/{repo}/releases/tag/{tag}")
 
 
 def generate_icon(path: Path) -> None:
@@ -83,6 +207,26 @@ HOW TO USE (ENGLISH):
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Build (and optionally publish) Odella Product Sheet Editor for Windows.")
+    parser.add_argument("--version", default="", help="Optional new version (e.g. 1.2.0) to write into server.py before building")
+    parser.add_argument("--publish", action="store_true", help="Publish built .exe, .zip & SHA256SUMS.txt to GitHub Releases via gh CLI")
+    parser.add_argument("--publish-only", action="store_true", help="Skip PyInstaller build and publish existing dist/ artifacts to GitHub Releases")
+    parser.add_argument("--repo", default=DEFAULT_RELEASE_REPO, help=f"GitHub releases repo (default: {DEFAULT_RELEASE_REPO})")
+    parser.add_argument("--notes", default="", help="Optional release notes for GitHub Release")
+    args = parser.parse_args()
+
+    version = write_app_version(args.version) if args.version else read_app_version()
+    if args.publish_only:
+        exe_path = DIST_DIR / "OdellaSheetEditor.exe"
+        if not exe_path.is_file():
+            exe_path = BUILD_DIR / "stage" / "OdellaSheetEditor.exe"
+        if not exe_path.is_file() or not ZIP_OUT.is_file() or not CHECKSUMS_OUT.is_file():
+            raise SystemExit("Existing build artifacts not found in dist/. Run without --publish-only first.")
+        publish_github_release(args.repo, version, exe_path, ZIP_OUT, CHECKSUMS_OUT, args.notes)
+        return
+
+    print(f"Building Odella Product Sheet Editor v{version}...")
+
     generate_icon(ICON_PATH)
     stage_dir = BUILD_DIR / "stage"
     stage_dir.mkdir(parents=True, exist_ok=True)
@@ -108,10 +252,12 @@ def main() -> None:
     if not exe_path.is_file():
         raise SystemExit("Build failed: OdellaSheetEditor.exe not found.")
 
+    dist_exe = DIST_DIR / "OdellaSheetEditor.exe"
     try:
-        shutil.copy2(exe_path, DIST_DIR / "OdellaSheetEditor.exe")
+        shutil.copy2(exe_path, dist_exe)
     except PermissionError:
         print("Note: dist/OdellaSheetEditor.exe is currently running; updated zip cleanly.")
+        dist_exe = exe_path
 
     readme_path = DIST_DIR / "README.txt"
     readme_path.write_text(README_TEXT, encoding="utf-8")
@@ -120,8 +266,18 @@ def main() -> None:
         zf.write(exe_path, arcname="OdellaSheetEditor.exe")
         zf.write(readme_path, arcname="README.txt")
 
+    checksum_lines = [
+        f"{sha256_file(exe_path)}  OdellaSheetEditor.exe",
+        f"{sha256_file(ZIP_OUT)}  {ZIP_OUT.name}",
+    ]
+    CHECKSUMS_OUT.write_text("\n".join(checksum_lines) + "\n", encoding="utf-8")
+
     size_mb = ZIP_OUT.stat().st_size / (1024 * 1024)
-    print(f"Publish package ready: {ZIP_OUT} ({size_mb:.1f} MB)")
+    print(f"Publish package ready (v{version}): {ZIP_OUT} ({size_mb:.1f} MB)")
+    print(f"Checksums written: {CHECKSUMS_OUT}")
+
+    if args.publish:
+        publish_github_release(args.repo, version, exe_path, ZIP_OUT, CHECKSUMS_OUT, args.notes)
 
 
 if __name__ == "__main__":

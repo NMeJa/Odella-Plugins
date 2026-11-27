@@ -368,7 +368,17 @@
         if (cardTemplate) {
             return;
         }
-        var live = document.querySelector('.e-loop-item');
+        var items = document.querySelectorAll('.e-loop-item');
+        var live = null;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].querySelector('.nmj-price-in-stock')) {
+                live = items[i];
+                break;
+            }
+        }
+        if (!live && items.length) {
+            live = items[0];
+        }
         if (live) {
             cardTemplate = live.cloneNode(true);
         }
@@ -458,10 +468,38 @@
         }
         var button = grid.querySelector('.e-loop__load-more');
         var ended = end >= list.length;
+        if (!ended && !button) {
+            button = ensureLoadMoreButton(grid);
+        }
         grid.classList.toggle('e-load-more-pagination-end', ended);
         if (button) {
             button.style.display = ended ? 'none' : '';
         }
+    }
+
+    function ensureLoadMoreButton(grid) {
+        var existing = grid.querySelector('.e-loop__load-more');
+        if (existing) {
+            return existing;
+        }
+        var label = (window.nmjPf && window.nmjPf.loadMore) || 'Load More';
+        var wrap = document.createElement('div');
+        wrap.className = 'e-loop__load-more elementor-button-wrapper';
+        var anchor = document.createElement('a');
+        anchor.className = 'elementor-button-link elementor-button';
+        anchor.setAttribute('role', 'button');
+        anchor.href = '#';
+        var content = document.createElement('span');
+        content.className = 'elementor-button-content-wrapper';
+        var text = document.createElement('span');
+        text.className = 'elementor-button-text';
+        text.textContent = label;
+        content.appendChild(text);
+        anchor.appendChild(content);
+        wrap.appendChild(anchor);
+        var host = grid.querySelector('.elementor-widget-container') || grid;
+        host.appendChild(wrap);
+        return wrap;
     }
 
     function showMore(widget) {
@@ -477,9 +515,36 @@
     function pageSize(widget, grid) {
         if (!widget._nmjPageSize) {
             var existing = grid.querySelectorAll('.e-loop-item').length;
-            widget._nmjPageSize = existing || parseInt(widget.dataset.perPage, 10) || 24;
+            var configured = parseInt(widget.dataset.perPage, 10) || 24;
+            widget._nmjPageSize = Math.max(existing, configured);
         }
         return widget._nmjPageSize;
+    }
+
+    var wcpbcTimer = 0;
+
+    function refreshPrices(root) {
+        if (!root) {
+            return;
+        }
+        var pending = root.querySelectorAll('.wcpbc-price.loading');
+        if (!pending.length) {
+            return;
+        }
+        if (window.jQuery) {
+            window.jQuery(document.body).trigger('wc_price_based_country_ajax_geolocation');
+        }
+        window.clearTimeout(wcpbcTimer);
+        wcpbcTimer = window.setTimeout(function () {
+            root.querySelectorAll('.wcpbc-price.loading').forEach(function (el) {
+                el.classList.remove('loading');
+                el.style.visibility = '';
+                el.style.display = '';
+            });
+            root.querySelectorAll('.wcpbc-placeholder').forEach(function (dot) {
+                dot.remove();
+            });
+        }, 3500);
     }
 
     function fillCard(widget, product, first) {
@@ -840,6 +905,7 @@
         var live = document.querySelector('.nmj-pf') || widget;
         showEmpty(live, grid, url);
         watchProgress(live);
+        refreshPrices(grid);
         if (grid) {
             grid.classList.remove('nmj-pf-loading');
             var top = grid.getBoundingClientRect().top;
@@ -914,6 +980,7 @@
                 }
                 if (!node || !node.closest || !node.closest('.nmj-pf-progress')) {
                     updateProgress(widget, grid);
+                    refreshPrices(grid);
                     return;
                 }
             }

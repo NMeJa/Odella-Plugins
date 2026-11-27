@@ -367,7 +367,7 @@ class Add_To_Cart_Widget extends Widget_Base
 
             <?php // Hidden icon templates for JS state swaps ?>
             <?php foreach ($icons as $st => $html): ?>
-                <span class="nmj-atc-icon-tpl" data-state="<?php echo esc_attr($st); ?>"><?php echo $html; ?></span>
+                <span class="nmj-atc-icon-tpl" data-state="<?php echo esc_attr($st); ?>" hidden aria-hidden="true"><?php echo $html; ?></span>
             <?php endforeach; ?>
 
         </div>

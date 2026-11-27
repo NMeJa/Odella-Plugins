@@ -294,13 +294,13 @@ function ops_preflight(array $grid, array $zip_files): array
             }
         }
         if (array_key_exists('featured', $raw)) {
-            $plan['featured'] = ops_picture_plan($raw['featured'], false, $zip_files, $row_number, 'featured', $errors, $used_files);
+            $plan['featured'] = ops_picture_plan($raw['featured'], false, $zip_files, $row_number, 'featured', $errors, $used_files, true);
         }
         if (array_key_exists('hover', $raw)) {
-            $plan['hover'] = ops_picture_plan($raw['hover'], false, $zip_files, $row_number, 'hover', $errors, $used_files);
+            $plan['hover'] = ops_picture_plan($raw['hover'], false, $zip_files, $row_number, 'hover', $errors, $used_files, true);
         }
         if (array_key_exists('gallery', $raw)) {
-            $plan['gallery'] = ops_picture_plan($raw['gallery'], true, $zip_files, $row_number, 'gallery', $errors, $used_files);
+            $plan['gallery'] = ops_picture_plan($raw['gallery'], true, $zip_files, $row_number, 'gallery', $errors, $used_files, true);
         }
         foreach ($raw as $key => $text) {
             if (!is_string($key) || !str_starts_with($key, 'meta:') || !function_exists('ops_meta_field')) {
@@ -487,11 +487,11 @@ function ops_tag_plan(string $cell, array $tags, int $row, array &$errors): ?arr
  * @param array<string, bool> $used_files
  * @return array<string, mixed>|null
  */
-function ops_picture_plan(string $cell, bool $many, array $zip_files, int $row, string $key, array &$errors, array &$used_files): ?array
+function ops_picture_plan(string $cell, bool $many, array $zip_files, int $row, string $key, array &$errors, array &$used_files, bool $clear_on_blank = false): ?array
 {
     $trim = trim($cell);
     if ($trim === '') {
-        return null;
+        return $clear_on_blank ? ['clear' => true, 'items' => []] : null;
     }
     $tokens = ops_split_pictures($trim);
     if (count($tokens) === 1 && mb_strtolower($tokens[0], 'UTF-8') === '(clear)') {

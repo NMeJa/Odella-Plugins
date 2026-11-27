@@ -69,6 +69,8 @@ function ops_apply_plan(array $plan, array $zip_files): array
         $product->set_name((string) ($plan['values']['name'] ?? ''));
         $product->set_status((string) ($plan['values']['status'] ?? 'draft'));
         $product->set_sku((string) ($plan['values']['sku'] ?? ''));
+        $product->set_manage_stock(false);
+        $product->set_stock_status('instock');
         $product->save();
         $id = $product->get_id();
         $created = true;
@@ -164,8 +166,12 @@ function ops_apply_plan(array $plan, array $zip_files): array
         $before = (int) $product->get_image_id();
         $after = ops_resolve_featured($plan['featured'], $zip_files, $id, $before);
         if ($before !== $after) {
-            $touch('Featured image', $before ? (string) wp_get_attachment_url($before) : '', $after ? (string) wp_get_attachment_url($after) : '');
+            $touch('Featured image', $before ? (string) wp_get_attachment_url($before) : '', $after ? (string) wp_get_attachment_url($after) : '(clear)');
             $product->set_image_id($after);
+            if ($after <= 0) {
+                delete_post_thumbnail($id);
+                delete_post_meta($id, '_thumbnail_id');
+            }
         }
     }
     if (is_array($plan['hover'] ?? null)) {
@@ -188,8 +194,11 @@ function ops_apply_plan(array $plan, array $zip_files): array
         $before = array_map('intval', $product->get_gallery_image_ids());
         $after = ops_resolve_gallery($plan['gallery'], $zip_files, $id);
         if ($before !== $after) {
-            $touch('Gallery images', (string) count($before), (string) count($after));
+            $touch('Gallery images', (string) count($before), $after ? (string) count($after) : '(clear)');
             $product->set_gallery_image_ids($after);
+            if (!$after) {
+                delete_post_meta($id, '_product_image_gallery');
+            }
         }
     }
 
@@ -252,6 +261,8 @@ function ops_sync_english_translation(int $ka_id, array $plan, bool $ka_changed 
         $en_name = trim((string) ($vals['name_en'] ?? '')) !== '' ? (string) $vals['name_en'] : $ka_product->get_name();
         $en_product->set_name($en_name);
         $en_product->set_status($ka_product->get_status());
+        $en_product->set_manage_stock(false);
+        $en_product->set_stock_status('instock');
         $en_product->save();
         $en_id = (int) $en_product->get_id();
         pll_set_post_language($en_id, 'en');
@@ -327,13 +338,22 @@ function ops_sync_english_translation(int $ka_id, array $plan, bool $ka_changed 
         $en_product->set_regular_price((string) $ka_product->get_regular_price());
         $en_product->set_sale_price((string) $ka_product->get_sale_price());
     }
-    $en_product->set_image_id((int) $ka_product->get_image_id());
-    $en_product->set_gallery_image_ids($ka_product->get_gallery_image_ids());
+    $ka_img_id = (int) $ka_product->get_image_id();
+    $ka_gal_ids = $ka_product->get_gallery_image_ids();
+    $en_product->set_image_id($ka_img_id);
+    $en_product->set_gallery_image_ids($ka_gal_ids);
     $ka_sku = (string) $ka_product->get_sku();
     if ($ka_sku !== '' && $en_product->get_sku() !== $ka_sku) {
         update_post_meta($en_id, '_sku', $ka_sku);
     }
     $en_product->save();
+    if ($ka_img_id <= 0) {
+        delete_post_thumbnail($en_id);
+        delete_post_meta($en_id, '_thumbnail_id');
+    }
+    if (!$ka_gal_ids) {
+        delete_post_meta($en_id, '_product_image_gallery');
+    }
 
     if ($en_product->get_type() !== $ka_type) {
         wp_set_object_terms($en_id, $ka_type, 'product_type');

@@ -16,7 +16,7 @@ function ops_split_pictures(string $cell): array
     if ($cell === '') {
         return [];
     }
-    $parts = preg_split('/\s*(?:;|\n)\s*/u', $cell) ?: [];
+    $parts = preg_split('/\s*(?:;|\||\n)\s*|,\s*(?=https?:\/\/)/iu', $cell) ?: [];
     $out = [];
     foreach ($parts as $part) {
         $part = trim((string) $part);

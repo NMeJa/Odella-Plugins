@@ -47,13 +47,37 @@ final class Plugin
     {
         add_action('elementor/elements/categories_registered', [$this, 'register_widget_categories']);
         add_action('elementor/widgets/register', [$this, 'register_widgets']);
-        add_action('elementor/frontend/after_enqueue_scripts', [$this, 'enqueue_frontend_assets']);
+        add_action('elementor/frontend/after_register_styles', [$this, 'register_frontend_styles']);
+        add_action('elementor/frontend/after_enqueue_styles', [$this, 'enqueue_frontend_styles']);
+        add_action('elementor/frontend/after_register_scripts', [$this, 'register_frontend_scripts']);
         add_action('elementor/editor/after_enqueue_scripts', [$this, 'enqueue_editor_assets']);
         add_action('wp_head', [$this, 'print_page_transition_css'], 1);
         add_action('wp_body_open', [$this, 'print_page_transition']);
 
         add_action('wp_ajax_nmj_load_quick_view', [$this, 'load_quick_view_template']);
         add_action('wp_ajax_nopriv_nmj_load_quick_view', [$this, 'load_quick_view_template']);
+        add_action('acf/save_post', [$this, 'purge_caches_on_acf_options_save'], 20);
+    }
+
+    /**
+     * Saving an ACF Options page (e.g. Odella Settings in EN or KA) does not
+     * invalidate Elementor's element cache or LiteSpeed Cache by itself, which
+     * leaves pages like Contact Us showing stale/wrong-language values.
+     *
+     * @param mixed $post_id
+     */
+    public function purge_caches_on_acf_options_save($post_id): void
+    {
+        if (!is_string($post_id) || strpos($post_id, 'option') !== 0) {
+            return;
+        }
+        if (class_exists('\Elementor\Plugin')) {
+            $elementor = \Elementor\Plugin::$instance;
+            if ($elementor && isset($elementor->files_manager) && method_exists($elementor->files_manager, 'clear_cache')) {
+                $elementor->files_manager->clear_cache();
+            }
+        }
+        do_action('litespeed_purge_all');
     }
 
     // ── Quick View AJAX Handler ────────────────────────────────────────────────
@@ -174,15 +198,11 @@ final class Plugin
         return file_exists($path) ? (string) filemtime($path) : NMJ_VERSION;
     }
 
-    public function enqueue_frontend_assets(): void
+    public function register_frontend_styles(): void
     {
-        $js_path = NMJ_PATH . 'assets/js/add-to-cart.js';
-        $fps_js_path = NMJ_PATH . 'assets/js/full-page-scroll.js';
-        $gg_js_path = NMJ_PATH . 'assets/js/gallery-grid.js';
-
-        // Per-widget CSS — register only; each widget declares its handle in
-        // get_style_depends() so Elementor enqueues it lazily on pages that
-        // actually contain the widget.
+        // Register per-widget CSS during wp_enqueue_scripts (<head>) rather than
+        // wp_footer, so Elementor can print declared style dependencies in <head>
+        // before product cards render.
         foreach ([
             'nmj-add-to-cart'          => 'assets/css/add-to-cart.css',
             'nmj-full-page-scroll'     => 'assets/css/full-page-scroll.css',
@@ -195,6 +215,37 @@ final class Plugin
             $abs = NMJ_PATH . $rel_path;
             wp_register_style($handle, NMJ_URL . $rel_path, [], $this->get_asset_version($abs));
         }
+    }
+
+    public function enqueue_frontend_styles(): void
+    {
+        // Loop Item templates (e.g. product cards inside Loop Grid/Carousel) are
+        // not discovered by Elementor until <body> renders. Enqueue the two card
+        // stylesheets in <head> on storefront pages so hidden icon templates and
+        // hidden OOS labels never flash visibly on cold/uncached loads.
+        $is_storefront = is_front_page()
+            || is_home()
+            || (function_exists('is_page') && is_page(13863))
+            || (function_exists('is_woocommerce') && is_woocommerce());
+
+        if ($is_storefront) {
+            wp_enqueue_style('nmj-add-to-cart');
+            wp_enqueue_style('nmj-product-price');
+        }
+
+        if ($this->skip_page_transition()) {
+            return;
+        }
+
+        $pt_css = NMJ_PATH . 'assets/css/page-transition.css';
+        wp_enqueue_style('nmj-page-transition', NMJ_URL . 'assets/css/page-transition.css', [], $this->get_asset_version($pt_css));
+    }
+
+    public function register_frontend_scripts(): void
+    {
+        $js_path = NMJ_PATH . 'assets/js/add-to-cart.js';
+        $fps_js_path = NMJ_PATH . 'assets/js/full-page-scroll.js';
+        $gg_js_path = NMJ_PATH . 'assets/js/gallery-grid.js';
 
         // JS — register only; lazy-enqueued via get_script_depends().
         wp_register_script('nmj-add-to-cart', NMJ_URL . 'assets/js/add-to-cart.js', ['jquery', 'wc-add-to-cart'], $this->get_asset_version($js_path), true);
@@ -222,6 +273,7 @@ final class Plugin
             'showing' => nmj_t('showing_x_of_y'),
             'showing_ka' => nmj_catalog()['showing_x_of_y']['ka'],
             'showing_en' => nmj_catalog()['showing_x_of_y']['en'],
+            'loadMore' => nmj_t('load_more'),
             'nothingFound' => nmj_t('nothing_found'),
             'searchAll' => nmj_t('search_all_store'),
             'countLabel' => nmj_t('products_count'),
@@ -233,9 +285,7 @@ final class Plugin
             return;
         }
 
-        $pt_css = NMJ_PATH . 'assets/css/page-transition.css';
         $pt_js = NMJ_PATH . 'assets/js/page-transition.js';
-        wp_enqueue_style('nmj-page-transition', NMJ_URL . 'assets/css/page-transition.css', [], $this->get_asset_version($pt_css));
         wp_enqueue_script(
             'nmj-page-transition',
             NMJ_URL . 'assets/js/page-transition.js',
